@@ -1,1 +1,1 @@
-{{- $domain := .Values.clusterDomain | default "apps.cluster.example.com" -}}
+{{- $domain := include "neuroface.clusterDomain" . -}}

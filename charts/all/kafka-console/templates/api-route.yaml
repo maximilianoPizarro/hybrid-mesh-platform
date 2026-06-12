@@ -35,7 +35,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  host: kafka-console.{{ .Values.clusterDomain }}
+  host: kafka-console.{{ include "kafka-console.clusterDomain" . }}
   path: /api/auth
   port:
     targetPort: 3000
@@ -57,7 +57,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  host: kafka-console.{{ .Values.clusterDomain }}
+  host: kafka-console.{{ include "kafka-console.clusterDomain" . }}
   path: /api
   port:
     targetPort: http

@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  host: gitea-gitea.{{ .Values.clusterDomain }}
+  host: gitea-gitea.{{ include "gitea.clusterDomain" . }}
   port:
     targetPort: http
   tls:

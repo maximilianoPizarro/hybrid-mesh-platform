@@ -8,7 +8,7 @@ metadata:
     haproxy.router.openshift.io/timeout: 3600s
     haproxy.router.openshift.io/hsts_header: max-age=0
 spec:
-  host: industrial-edge.{{ .Values.clusterDomain }}
+  host: industrial-edge.{{ include "hub-gateway.clusterDomain" . }}
   port:
     targetPort: http
   to:

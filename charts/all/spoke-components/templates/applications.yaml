@@ -1,4 +1,4 @@
-{{- $clusterDomain := .Values.clusterDomain -}}
+{{- $clusterDomain := include "spoke-components.clusterDomain" . -}}
 {{- if not $clusterDomain -}}
 {{- if eq .Values.clusterName "east" -}}
 {{- $clusterDomain = .Values.eastDomain -}}
@@ -31,12 +31,12 @@ spec:
         clusterDomain: {{ $clusterDomain | quote }}
         clusterName: {{ $.Values.clusterName | quote }}
         clusterRole: {{ $.Values.clusterRole | quote }}
-        hubClusterDomain: {{ $.Values.hubClusterDomain | quote }}
+        hubClusterDomain: {{ include "spoke-components.hubClusterDomain" $ | quote }}
         subscriptions:
 {{- $.Values.subscriptions | toYaml | nindent 10 }}
         global:
           localClusterDomain: {{ $clusterDomain | quote }}
-          hubClusterDomain: {{ $.Values.hubClusterDomain | quote }}
+          hubClusterDomain: {{ include "spoke-components.hubClusterDomain" $ | quote }}
   destination:
     name: {{ $.Values.clusterName | quote }}
     namespace: {{ .namespace | quote }}

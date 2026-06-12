@@ -1,6 +1,6 @@
 {{- if .Values.demos.catalog.enabled }}
-{{- $hub := .Values.hubClusterDomain | default .Values.clusterDomain -}}
-{{- $east := .Values.eastClusterDomain | default .Values.clusterDomain -}}
+{{- $hub := include "workshop-demos.hubClusterDomain" . -}}
+{{- $east := .Values.eastClusterDomain | default (include "workshop-demos.clusterDomain" .) -}}
 ---
 apiVersion: v1
 kind: ConfigMap

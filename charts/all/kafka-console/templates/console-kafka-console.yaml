@@ -7,7 +7,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  hostname: kafka-console.{{ .Values.clusterDomain }}
+  hostname: kafka-console.{{ include "kafka-console.clusterDomain" . }}
   kafkaClusters:
     - name: prod-cluster-east
       properties:

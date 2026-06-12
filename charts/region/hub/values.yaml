@@ -7,7 +7,6 @@ main:
 clusterGroup:
   name: hub
   namespaces:
-    open-cluster-management: {}
     stackrox: {}
     openshift-gitops: {}
     developer-hub: {}

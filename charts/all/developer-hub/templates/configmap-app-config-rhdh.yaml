@@ -11,11 +11,11 @@ data:
   app-config.yaml: |
     app:
       title: Developer Hub
-      baseUrl: https://developer-hub.{{ .Values.clusterDomain }}
+      baseUrl: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
     backend:
-      baseUrl: https://developer-hub.{{ .Values.clusterDomain }}
+      baseUrl: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
       cors:
-        origin: https://developer-hub.{{ .Values.clusterDomain }}
+        origin: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
       reading:
         allow:
           - host: "*.redhatworkshops.io"
@@ -153,7 +153,7 @@ data:
               timeout: { minutes: 10 }
         keycloakOrg:
           default:
-            baseUrl: https://sso.{{ .Values.clusterDomain }}
+            baseUrl: https://sso.{{ include "developer-hub.clusterDomain" . }}
             loginRealm: backstage
             clientId: developer-hub-catalog
             clientSecret: ${OIDC_CLIENT_SECRET}
@@ -165,17 +165,17 @@ data:
         - type: config
           instances:
             - name: default
-              url: https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}
+              url: https://openshift-gitops-server-openshift-gitops.{{ include "developer-hub.clusterDomain" . }}
               token: ${K8S_SA_TOKEN}
     quay:
-      baseUrl: https://quay-registry.{{ .Values.clusterDomain }}
+      baseUrl: https://quay-registry.{{ include "developer-hub.clusterDomain" . }}
       dangerouslyAllowInsecureConnections: true
       skipTLSVerify: true
-      uiUrl: https://quay-registry.{{ .Values.clusterDomain }}
-      apiUrl: https://quay-registry.{{ .Values.clusterDomain }}
+      uiUrl: https://quay-registry.{{ include "developer-hub.clusterDomain" . }}
+      apiUrl: https://quay-registry.{{ include "developer-hub.clusterDomain" . }}
       readOnly: false
       defaultVisibility: public
-      allowedRegistries: ['quay-registry.{{ .Values.clusterDomain }}']
+      allowedRegistries: ['quay-registry.{{ include "developer-hub.clusterDomain" . }}']
       allowedRepositories: ['workshop/*']
       allowedTags: ['latest', 'stable']
     techdocs:
@@ -229,12 +229,12 @@ data:
           headers:
             Authorization: Bearer ${RHACS_API_TOKEN}
         '/gitea':
-          target: https://gitea-gitea.{{ .Values.clusterDomain }}/api/v1
+          target: https://gitea-gitea.{{ include "developer-hub.clusterDomain" . }}/api/v1
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
             Authorization: token ${GITEA_TOKEN}
         '/quay':
-          target: https://quay-registry.{{ .Values.clusterDomain }}/api/v1
+          target: https://quay-registry.{{ include "developer-hub.clusterDomain" . }}/api/v1
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
           changeOrigin: true
         '/k8s-api':
@@ -248,8 +248,8 @@ data:
         - host: github.com
           apiBaseUrl: https://api.github.com
           rawBaseUrl: https://raw.githubusercontent.com
-        - host: gitea-gitea.{{ .Values.clusterDomain }}
-          apiBaseUrl: https://gitea-gitea.{{ .Values.clusterDomain }}/api/v1
+        - host: gitea-gitea.{{ include "developer-hub.clusterDomain" . }}
+          apiBaseUrl: https://gitea-gitea.{{ include "developer-hub.clusterDomain" . }}/api/v1
           token: ${GITEA_TOKEN}
     # -- Azure DevOps integration (uncomment when AZURE_TOKEN and AZURE_ORG are set) --
     # integrations:

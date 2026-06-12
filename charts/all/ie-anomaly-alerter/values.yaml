@@ -3,8 +3,8 @@ clusterName: ""
 hubClusterDomain: ""
 
 global:
-  hubClusterDomain: apps.cluster.example.com
-  localClusterDomain: apps.cluster.example.com
+  hubClusterDomain: ""
+  localClusterDomain: ""
 
 mqtt:
   host: messaging

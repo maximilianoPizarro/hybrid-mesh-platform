@@ -1,4 +1,4 @@
-{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" }}
+{{- $hub := include "developer-hub.clusterDomain" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

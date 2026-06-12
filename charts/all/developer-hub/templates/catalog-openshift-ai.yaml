@@ -1,5 +1,5 @@
 {{- $count := int (.Values.userCount | default 50) }}
-{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" }}
+{{- $hub := include "developer-hub.clusterDomain" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

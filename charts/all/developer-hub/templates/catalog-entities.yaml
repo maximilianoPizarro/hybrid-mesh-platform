@@ -3,7 +3,7 @@
   Domain placeholders __HUB_APPS_DOMAIN__ / __EAST_APPS_DOMAIN__ / __WEST_APPS_DOMAIN__
   are replaced from RHDP-injected clusterDomain and spoke domains.
 */ -}}
-{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" -}}
+{{- $hub := include "developer-hub.clusterDomain" . -}}
 {{- $east := .Values.spokeDomains.east | default "apps.cluster-east.example.com" -}}
 {{- $west := .Values.spokeDomains.west | default "apps.cluster-west.example.com" -}}
 {{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" -}}

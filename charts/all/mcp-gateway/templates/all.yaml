@@ -644,7 +644,7 @@ spec:
     name: mcp-gateway
     namespace: mcp-system
     sectionName: mcp
-  publicHost: mcp-gateway.{{ .Values.clusterDomain }}
+  publicHost: mcp-gateway.{{ include "mcp-gateway.clusterDomain" . }}
   trustedHeadersKey:
     secretName: trusted-headers-public-key
 ---
@@ -679,7 +679,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   hostnames:
-    - mcp-gateway.{{ .Values.clusterDomain }}
+    - mcp-gateway.{{ include "mcp-gateway.clusterDomain" . }}
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
@@ -798,7 +798,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   hostnames:
-    - mcp-gateway.{{ .Values.clusterDomain }}
+    - mcp-gateway.{{ include "mcp-gateway.clusterDomain" . }}
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
@@ -953,7 +953,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   hostnames:
-    - mcp-gateway.{{ .Values.clusterDomain }}
+    - mcp-gateway.{{ include "mcp-gateway.clusterDomain" . }}
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
@@ -994,7 +994,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  host: mcp-gateway.{{ .Values.clusterDomain }}
+  host: mcp-gateway.{{ include "mcp-gateway.clusterDomain" . }}
   to:
     kind: Service
     name: mcp-gateway-istio

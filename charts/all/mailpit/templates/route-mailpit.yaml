@@ -8,7 +8,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  host: mailpit.{{ .Values.clusterDomain }}
+  host: mailpit.{{ include "mailpit.clusterDomain" . }}
   to:
     kind: Service
     name: mailpit

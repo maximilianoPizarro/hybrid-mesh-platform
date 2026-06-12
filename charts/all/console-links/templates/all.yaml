@@ -1,8 +1,9 @@
-{{- $domain := .Values.clusterDomain | default .Values.global.localClusterDomain | default .Values.global.hubClusterDomain | default "apps.cluster.example.com" -}}
-{{- $hubDomain := .Values.hubClusterDomain | default .Values.global.hubClusterDomain | default $domain -}}
+{{- $g := .Values.global | default dict -}}
+{{- $domain := .Values.clusterDomain | default $g.localClusterDomain | default $g.hubClusterDomain | default "apps.cluster.example.com" -}}
+{{- $hubDomain := .Values.hubClusterDomain | default $g.hubClusterDomain | default $domain -}}
 {{- $role := .Values.clusterRole -}}
 {{- if not $role -}}
-{{- if and .Values.global.localClusterDomain .Values.global.hubClusterDomain (ne .Values.global.localClusterDomain .Values.global.hubClusterDomain) -}}
+{{- if and $g.localClusterDomain $g.hubClusterDomain (ne $g.localClusterDomain $g.hubClusterDomain) -}}
 {{- $role = "spoke" -}}
 {{- else -}}
 {{- $role = "hub" -}}

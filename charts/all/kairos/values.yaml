@@ -1,6 +1,6 @@
 clusterRole: hub
 clusterName: hub
-clusterDomain: apps.cluster.example.com
+clusterDomain: ""
 
 operator:
   channel: stable

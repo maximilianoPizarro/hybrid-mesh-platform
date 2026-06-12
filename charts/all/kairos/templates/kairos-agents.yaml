@@ -23,7 +23,7 @@ spec:
   hubReporting:
     enabled: true
     clusterName: {{ .Values.clusterName | quote }}
-    endpoint: "https://kairos-console-kairos-system.{{ .Values.clusterDomain }}"
+    endpoint: "https://kairos-console-kairos-system.{{ include "kairos.clusterDomain" . }}"
   {{- end }}
   correctionPolicy:
     dryRun: {{ .Values.clusterAgent.dryRun }}

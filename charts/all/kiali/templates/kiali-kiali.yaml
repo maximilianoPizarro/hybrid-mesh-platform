@@ -42,7 +42,7 @@ spec:
     grafana:
       enabled: true
       in_cluster_url: http://grafana-service.openshift-cluster-observability-operator.svc:3000
-      url: https://grafana.{{ .Values.clusterDomain }}
+      url: https://grafana.{{ include "kiali.clusterDomain" . }}
     prometheus:
       auth:
         insecure_skip_verify: true

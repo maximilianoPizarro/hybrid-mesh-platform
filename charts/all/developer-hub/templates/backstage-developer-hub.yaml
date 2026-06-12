@@ -62,7 +62,7 @@ spec:
             - "*"
     route:
       enabled: true
-      host: developer-hub.{{ .Values.clusterDomain }}
+      host: developer-hub.{{ include "developer-hub.clusterDomain" . }}
 {{- if include "developer-hub.lightspeedEnabled" . }}
     extraEnvs:
       secrets:

@@ -11,6 +11,6 @@ spec:
   replicas: 1
   route:
     enabled: true
-    host: "kairos-console-kairos-system.{{ .Values.clusterDomain }}"
+    host: "kairos-console-kairos-system.{{ include "kairos.clusterDomain" . }}"
     tlsEnabled: true
 {{- end }}

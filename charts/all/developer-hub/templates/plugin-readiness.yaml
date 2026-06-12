@@ -23,7 +23,7 @@ spec:
             - -c
             - |
               set -e
-              BASE="https://developer-hub.{{ .Values.clusterDomain }}"
+              BASE="https://developer-hub.{{ include "developer-hub.clusterDomain" . }}"
               echo "Checking Developer Hub health at $BASE/healthcheck"
               for i in $(seq 1 40); do
                 if curl -sk -o /dev/null -w "%{http_code}" "$BASE/healthcheck" | grep -qE '200|401'; then

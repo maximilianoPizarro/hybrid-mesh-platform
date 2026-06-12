@@ -19,6 +19,6 @@ spec:
       admin_password: openshift
   route:
     spec:
-      host: grafana.{{ .Values.clusterDomain }}
+      host: grafana.{{ include "observability.clusterDomain" . }}
       tls:
         termination: edge

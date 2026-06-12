@@ -10,7 +10,7 @@ spec:
     - name: hub-gateway
       namespace: hub-gateway-system
   hostnames:
-    - industrial-edge.{{ .Values.clusterDomain }}
+    - industrial-edge.{{ include "hub-gateway.clusterDomain" . }}
   rules:
     {{- $apiW := .Values.gateway.apiWeights | default dict }}
     {{- if and .Values.clusters.east.domain .Values.clusters.west.domain }}

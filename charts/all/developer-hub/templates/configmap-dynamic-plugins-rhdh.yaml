@@ -105,7 +105,7 @@ data:
             clientId: backstage
             clusters:
               - name: hub-kafka
-                dashboardUrl: https://kafka-console-kafka-console.{{ .Values.clusterDomain }}
+                dashboardUrl: https://kafka-console-kafka-console.{{ include "developer-hub.clusterDomain" . }}
                 brokers:
                   - my-cluster-kafka-bootstrap.kafka-cdc.svc.cluster.local:9092
       - package: ./dynamic-plugins/dist/backstage-community-plugin-kafka
@@ -180,7 +180,7 @@ data:
               - type: config
                 instances:
                   - name: default
-                    url: https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}
+                    url: https://openshift-gitops-server-openshift-gitops.{{ include "developer-hub.clusterDomain" . }}
                     token: ${K8S_SA_TOKEN}
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-redhat-argocd:bs_1.45.3__2.3.0
         disabled: {{ not (.Values.plugins.argocd.enabled | default false) }}
@@ -216,7 +216,7 @@ data:
             providers:
               keycloakOrg:
                 default:
-                  baseUrl: https://sso.{{ .Values.clusterDomain }}
+                  baseUrl: https://sso.{{ include "developer-hub.clusterDomain" . }}
                   loginRealm: backstage
                   realm: backstage
                   clientId: developer-hub-catalog

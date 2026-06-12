@@ -120,7 +120,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  host: kubecost.{{ .Values.clusterDomain }}
+  host: kubecost.{{ include "kubecost.clusterDomain" . }}
   to:
     kind: Service
     name: kubecost-cost-analyzer

@@ -22,7 +22,7 @@ spec:
             - -c
             - |
               set -e
-              URL="https://quay-registry.{{ .Values.clusterDomain }}/api/v1/discovery"
+              URL="https://quay-registry.{{ include "quay-registry.clusterDomain" . }}/api/v1/discovery"
               echo "Polling $URL"
               for i in $(seq 1 60); do
                 if curl -sk -o /dev/null -w "%{http_code}" "$URL" | grep -q 200; then

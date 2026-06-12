@@ -124,7 +124,7 @@ spec:
           image: registry.redhat.io/openshift4/ose-cli:latest
           env:
             - name: QUAY_HOST
-              value: "quay-registry.{{ .Values.clusterDomain }}"
+              value: "quay-registry.{{ include "quay-registry.clusterDomain" . }}"
             - name: QUAY_ORG
               value: {{ .Values.workshopOrg | default "workshop" | quote }}
             - name: ROBOT_NAME

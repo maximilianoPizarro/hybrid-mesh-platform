@@ -40,9 +40,9 @@ spec:
         clientAuthenticatorType: client-secret
         secret: {{ .Values.keycloakOidcClientSecret | default "CHANGEME-set-via-helm-or-sync-secret" | quote }}
         redirectUris:
-          - "https://developer-hub.{{ .Values.clusterDomain }}/api/auth/oidc/handler/frame"
+          - "https://developer-hub.{{ include "developer-hub.clusterDomain" . }}/api/auth/oidc/handler/frame"
         webOrigins:
-          - "https://developer-hub.{{ .Values.clusterDomain }}"
+          - "https://developer-hub.{{ include "developer-hub.clusterDomain" . }}"
         standardFlowEnabled: true
         directAccessGrantsEnabled: true
         publicClient: false

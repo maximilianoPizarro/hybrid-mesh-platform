@@ -1,4 +1,4 @@
-{{- $giteaUrl := .Values.gitea.url | default (printf "https://gitea-gitea.%s" (.Values.hubClusterDomain | default .Values.clusterDomain)) -}}
+{{- $giteaUrl := .Values.gitea.url | default (printf "https://gitea-gitea.%s" (include "workshop-demos.hubClusterDomain" .)) -}}
 ---
 apiVersion: batch/v1
 kind: Job

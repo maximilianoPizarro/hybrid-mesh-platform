@@ -44,7 +44,7 @@ spec:
             gitops:
               repoUrl: {{ .Values.gitops.repoUrl | quote }}
               revision: {{ .Values.gitops.revision | default "main" | quote }}
-            hubClusterDomain: {{ .Values.clusters.hub.domain | default "" | quote }}
+            hubClusterDomain: {{ .Values.clusters.hub.domain | default (include "acm-hub-spoke.hubClusterDomain" .) | quote }}
             eastDomain: {{ .Values.clusters.east.domain | default "" | quote }}
             westDomain: {{ .Values.clusters.west.domain | default "" | quote }}
       destination:
