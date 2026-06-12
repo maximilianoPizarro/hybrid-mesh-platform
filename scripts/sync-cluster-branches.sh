@@ -59,11 +59,10 @@ EOF
 sync_spoke_branch() {
   local branch="$1"
   local keep="$2"
-  local start_branch
-  start_branch="$(git branch --show-current)"
+  local main_ref="$3"
 
   echo "== Sync branch ${branch} (keep ${keep}) =="
-  git checkout -B "${branch}" "${start_branch}"
+  git checkout -B "${branch}" "${main_ref}"
 
   set_global_cluster_group "${branch}"
 
@@ -88,6 +87,8 @@ main() {
   require_clean
   local start
   start="$(git branch --show-current)"
+  local main_ref
+  main_ref="$(git rev-parse HEAD)"
 
   if [[ "${start}" != "main" ]]; then
     echo "ERROR: run from main (current: ${start})" >&2
@@ -118,7 +119,7 @@ EOF
   for entry in "${CLUSTER_VALUES[@]}"; do
     branch="${entry%%:*}"
     keep="${entry##*:}"
-    sync_spoke_branch "${branch}" "${keep}"
+    sync_spoke_branch "${branch}" "${keep}" "${main_ref}"
   done
 
   git checkout main
