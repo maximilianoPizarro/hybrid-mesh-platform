@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Restore all.yaml from legacy for charts where naive split broke Helm templates."""
+
 from __future__ import annotations
 
 import shutil
@@ -8,7 +9,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LEGACY = Path(__file__).resolve().parents[2] / "platform-hub-spoke-config" / "components"
+LEGACY = (
+    Path(__file__).resolve().parents[2] / "platform-hub-spoke-config" / "components"
+)
 
 
 def main() -> None:

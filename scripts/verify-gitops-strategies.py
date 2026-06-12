@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate PUSH/PULL workload partition in values files."""
+
 from __future__ import annotations
 
 import sys
@@ -25,7 +26,9 @@ def main() -> int:
         if overlap:
             errors.append(f"{fname}: PULL must not include PUSH apps {overlap}")
         if "operators" in apps:
-            errors.append(f"{fname}: legacy 'operators' app must be replaced by operators-edge")
+            errors.append(
+                f"{fname}: legacy 'operators' app must be replaced by operators-edge"
+            )
         if "operators-edge" not in apps:
             errors.append(f"{fname}: missing operators-edge (PULL)")
     hub = yaml.safe_load((ROOT / "values-hub.yaml").open(encoding="utf-8"))

@@ -13,7 +13,10 @@ DEST = ROOT / "docs" / "validatedpatterns-docs"
 
 REPLACEMENTS = [
     (r"platform-hub-spoke-config", "hybrid-mesh-platform"),
-    (r"maximilianopizarro\.github\.io/platform-hub-spoke-config", "validatedpatterns.io/patterns/hybrid-mesh-platform"),
+    (
+        r"maximilianopizarro\.github\.io/platform-hub-spoke-config",
+        "validatedpatterns.io/patterns/hybrid-mesh-platform",
+    ),
     (r"components/([a-z0-9-]+)", r"charts/all/\1"),
     (r"helm upgrade --install field-content \.", "./pattern.sh install"),
     (r"helm install platform-hub-spoke \.", "./pattern.sh install"),
@@ -74,7 +77,9 @@ def main() -> None:
         for md in products_src.glob("*.md"):
             raw = md.read_text(encoding="utf-8")
             title = md.stem.replace("-", " ").title()
-            (products_dest / md.name).write_text(to_hugo(raw, title, weight), encoding="utf-8")
+            (products_dest / md.name).write_text(
+                to_hugo(raw, title, weight), encoding="utf-8"
+            )
             weight += 1
             print(f"  migrated products/{md.name}")
 

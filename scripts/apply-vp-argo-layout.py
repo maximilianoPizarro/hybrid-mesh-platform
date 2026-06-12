@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Apply Argo Project taxonomy and PUSH/PULL split to values-hub/east/west.yaml."""
+
 from __future__ import annotations
 
 from pathlib import Path

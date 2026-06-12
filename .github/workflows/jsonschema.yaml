@@ -41,6 +41,8 @@ jobs:
           rm -f ./values-secret.yaml
 
       - name: Verify ClusterGroup values.schema.json against values-*yaml files
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           set -e
           BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"

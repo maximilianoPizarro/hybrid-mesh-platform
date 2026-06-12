@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Split templates/all.yaml into per-resource template files."""
+
 from __future__ import annotations
 
 import argparse
@@ -114,7 +115,9 @@ def main() -> None:
             split_count += 1
             if not args.dry_run and not args.skip_lint:
                 if not helm_lint(chart_dir):
-                    print(f"WARN: helm lint failed for {chart_dir.name}", file=sys.stderr)
+                    print(
+                        f"WARN: helm lint failed for {chart_dir.name}", file=sys.stderr
+                    )
 
     print(f"Processed {split_count} charts")
 

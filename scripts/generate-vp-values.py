@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate VP values-hub/east/west from platform-hub-spoke-config (read-only source)."""
+
 from __future__ import annotations
 
 import re
@@ -62,12 +63,28 @@ APP_ARGO_PROJECT: dict[str, str] = {
 }
 
 HUB_ARGO_PROJECTS = [
-    "platform", "operators-platform", "fleet", "fleet-push", "fleet-pull",
-    "security", "mesh", "observability", "workshop", "ai", "external-secrets",
+    "platform",
+    "operators-platform",
+    "fleet",
+    "fleet-push",
+    "fleet-pull",
+    "security",
+    "mesh",
+    "observability",
+    "workshop",
+    "ai",
+    "external-secrets",
 ]
 SPOKE_ARGO_PROJECTS = [
-    "platform", "operators-edge", "security", "mesh", "observability",
-    "industrial-edge", "workshop", "external-secrets", "fleet-pull",
+    "platform",
+    "operators-edge",
+    "security",
+    "mesh",
+    "observability",
+    "industrial-edge",
+    "workshop",
+    "external-secrets",
+    "fleet-pull",
 ]
 
 HUB_SKIP = {"spoke-components", "spoke-meta-push", "acs-secured-cluster"}
@@ -166,7 +183,8 @@ def main() -> None:
     east_src = load_yaml(SOURCE / "east" / "values.yaml")
 
     hub_apps = [
-        a for a in hub_src.get("connectivityLink", {}).get("apps", [])
+        a
+        for a in hub_src.get("connectivityLink", {}).get("apps", [])
         if a.get("enabled", True) and a["id"] not in HUB_SKIP
     ]
 
@@ -180,7 +198,9 @@ def main() -> None:
         east_apps.append(a)
 
     hub_subs = subscriptions_block(
-        hub_src.get("connectivityLink", {}).get("operators", {}).get("subscriptions", [])
+        hub_src.get("connectivityLink", {})
+        .get("operators", {})
+        .get("subscriptions", [])
     )
     hub_subs["acm"] = {
         "name": "advanced-cluster-management",
@@ -193,7 +213,9 @@ def main() -> None:
         "channel": "stable-v1",
     }
 
-    spoke_subs = subscriptions_block(east_src.get("operators", {}).get("subscriptions", []))
+    spoke_subs = subscriptions_block(
+        east_src.get("operators", {}).get("subscriptions", [])
+    )
     spoke_subs["eso"] = {
         "name": "openshift-external-secrets-operator",
         "namespace": "external-secrets-operator",
@@ -201,25 +223,42 @@ def main() -> None:
     }
 
     managed = {
-        "east": {"name": "east", "acmlabels": [{"name": "clusterGroup", "value": "east"}]},
-        "west": {"name": "west", "acmlabels": [{"name": "clusterGroup", "value": "west"}]},
+        "east": {
+            "name": "east",
+            "acmlabels": [{"name": "clusterGroup", "value": "east"}],
+        },
+        "west": {
+            "name": "west",
+            "acmlabels": [{"name": "clusterGroup", "value": "west"}],
+        },
     }
 
     hub_cg = build_cluster_group(
-        "hub", hub_apps, {}, hub_subs, HUB_ARGO_PROJECTS, managed_cluster_groups=managed,
+        "hub",
+        hub_apps,
+        {},
+        hub_subs,
+        HUB_ARGO_PROJECTS,
+        managed_cluster_groups=managed,
     )
     hub_cg["applications"]["operators-platform"] = hub_cg["applications"].pop(
-        "operators", hub_cg["applications"].get("operators-platform", {
-            "name": "operators-platform",
-            "namespace": "openshift-operators",
-            "argoProject": "operators-platform",
-            "path": "charts/all/operators-platform",
-            "syncWave": "0",
-        }),
+        "operators",
+        hub_cg["applications"].get(
+            "operators-platform",
+            {
+                "name": "operators-platform",
+                "namespace": "openshift-operators",
+                "argoProject": "operators-platform",
+                "path": "charts/all/operators-platform",
+                "syncWave": "0",
+            },
+        ),
     )
     hub_cg["applications"]["operators-platform"]["name"] = "operators-platform"
     hub_cg["applications"]["operators-platform"]["argoProject"] = "operators-platform"
-    hub_cg["applications"]["operators-platform"]["path"] = "charts/all/operators-platform"
+    hub_cg["applications"]["operators-platform"][
+        "path"
+    ] = "charts/all/operators-platform"
     hub_cg["applications"]["fleet-pull-overview"] = {
         "name": "fleet-pull-overview",
         "namespace": "openshift-gitops",
@@ -228,21 +267,32 @@ def main() -> None:
         "syncWave": "1",
     }
     hub_cg["applications"]["vault"] = {
-        "name": "vault", "namespace": "vault", "argoProject": "external-secrets",
-        "chart": "hashicorp-vault", "chartVersion": "0.1.*",
+        "name": "vault",
+        "namespace": "vault",
+        "argoProject": "external-secrets",
+        "chart": "hashicorp-vault",
+        "chartVersion": "0.1.*",
     }
     hub_cg["applications"]["openshift-external-secrets"] = {
-        "name": "openshift-external-secrets", "namespace": "external-secrets",
-        "argoProject": "external-secrets", "chart": "openshift-external-secrets",
+        "name": "openshift-external-secrets",
+        "namespace": "external-secrets",
+        "argoProject": "external-secrets",
+        "chart": "openshift-external-secrets",
         "chartVersion": "0.0.*",
     }
 
-    east_cg = build_cluster_group("east", east_apps, {}, spoke_subs, SPOKE_ARGO_PROJECTS)
-    west_cg = build_cluster_group("west", east_apps, {}, spoke_subs, SPOKE_ARGO_PROJECTS)
+    east_cg = build_cluster_group(
+        "east", east_apps, {}, spoke_subs, SPOKE_ARGO_PROJECTS
+    )
+    west_cg = build_cluster_group(
+        "west", east_apps, {}, spoke_subs, SPOKE_ARGO_PROJECTS
+    )
     for cg in (east_cg, west_cg):
         cg["applications"]["openshift-external-secrets"] = {
-            "name": "openshift-external-secrets", "namespace": "external-secrets",
-            "argoProject": "external-secrets", "chart": "openshift-external-secrets",
+            "name": "openshift-external-secrets",
+            "namespace": "external-secrets",
+            "argoProject": "external-secrets",
+            "chart": "openshift-external-secrets",
             "chartVersion": "0.0.*",
         }
 
@@ -256,7 +306,9 @@ def main() -> None:
             encoding="utf-8",
         )
     print("Wrote values-hub/east/west.yaml from legacy source")
-    subprocess.run([sys.executable, str(ROOT / "scripts" / "apply-vp-argo-layout.py")], check=True)
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "apply-vp-argo-layout.py")], check=True
+    )
 
 
 if __name__ == "__main__":

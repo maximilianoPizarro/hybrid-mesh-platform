@@ -51,7 +51,10 @@ def wait_for_quay():
         if status == 200:
             print("Quay discovery OK", file=sys.stderr)
             return
-        print("Quay not ready ({0}), retry {1}/90".format(status, attempt + 1), file=sys.stderr)
+        print(
+            "Quay not ready ({0}), retry {1}/90".format(status, attempt + 1),
+            file=sys.stderr,
+        )
         time.sleep(10)
     print("Quay API not ready", file=sys.stderr)
     sys.exit(1)
@@ -81,7 +84,9 @@ def load_bearer_token():
     token = os.environ.get("QUAY_ADMIN_TOKEN", "").strip()
     if not token:
         return None
-    status, body = request("GET", "/user/", headers={"Authorization": "Bearer " + token})
+    status, body = request(
+        "GET", "/user/", headers={"Authorization": "Bearer " + token}
+    )
     if status == 200 and body.get("username") == user:
         print("Using Quay admin bearer token", file=sys.stderr)
         return token
@@ -91,10 +96,17 @@ def load_bearer_token():
 def save_bearer_token(token):
     manifest = subprocess.check_output(
         [
-            "oc", "create", "secret", "generic", "quay-admin-api-token",
+            "oc",
+            "create",
+            "secret",
+            "generic",
+            "quay-admin-api-token",
             "--from-literal=token=" + token,
-            "-n", "quay-registry",
-            "--dry-run=client", "-o", "yaml",
+            "-n",
+            "quay-registry",
+            "--dry-run=client",
+            "-o",
+            "yaml",
         ]
     )
     subprocess.run(
@@ -144,4 +156,8 @@ if not robot_token:
     print("robot token missing: {0}".format(body), file=sys.stderr)
     sys.exit(1)
 auth = base64.b64encode((robot_user + ":" + robot_token).encode()).decode()
-print(json.dumps({"auths": {quay_host: {"auth": auth, "email": robot_user + "@quay.local"}}}))
+print(
+    json.dumps(
+        {"auths": {quay_host: {"auth": auth, "email": robot_user + "@quay.local"}}}
+    )
+)
