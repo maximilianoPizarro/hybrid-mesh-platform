@@ -78,7 +78,7 @@ The OpenShift / ACM UI may report *no Argo applications* when any link in this c
 
 6. **`GitOpsCluster` `hub-spoke-gitops`** is reconciled so Argo registers the same clusters (**Settings → Clusters** in Argo CD).
 7. **RBAC**: Role **`applicationset-placementdecisions`** binds **`openshift-gitops-applicationset-controller`** so the **clusterDecisionResource** generator can **list** `placementdecisions`.
-8. **Spoke folders exist**: `values-east.yaml` (ACM PULL) and `values-west.yaml` (ACM PULL) directories must exist in the repository with valid Helm charts (`Chart.yaml`, `values.yaml`, `templates/`).
+8. **Region paths exist**: `charts/region/east/` and `charts/region/west/` must contain bootstrap `Chart.yaml`, `values.yaml`, and `templates/` (same layout as hub).
 
 ## Step-by-step deployment
 
@@ -93,7 +93,7 @@ The OpenShift / ACM UI may report *no Argo applications* when any link in this c
 9. **Observe sync waves** — lower waves (namespaces, operators) complete before application workloads.
 10. **Camel Dashboard (spokes):** after wave 3, verify `camel-dashboard-openshift-all-{east,west}` and enable the console plugin — see [Getting Started — Camel Dashboard](getting-started.md#camel-dashboard-east--west-spokes) and [Troubleshooting](troubleshooting.md).
 
-If **`east-spoke-components`** or **`west-spoke-components`** is missing on the hub, re-sync `field-content-acm-hub-spoke`. The ApplicationSet `fleet-spoke-push` is a **persistent** resource in [`charts/all/acm-hub-spoke/templates/applicationset.yaml`](../charts/all/acm-hub-spoke/templates/applicationset.yaml) (sync-wave `4`). Do not delete parent apps with `prune: true` unless you intend to recreate them.
+If **`east-spoke-components`** or **`west-spoke-components`** is missing on the hub, re-sync `acm-hub-spoke`. The ApplicationSet `fleet-spoke-push` is a **persistent** resource in [`charts/all/acm-hub-spoke/templates/applicationset.yaml`](../../charts/all/acm-hub-spoke/templates/applicationset.yaml) (sync-wave `4`). Do not delete parent apps with `prune: true` unless you intend to recreate them.
 
 For a full YAML walkthrough of each layer, see **[GitOps deployment chain](gitops-deployment-chain.md)**.
 

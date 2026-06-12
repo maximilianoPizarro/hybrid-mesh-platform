@@ -5,7 +5,7 @@ weight: 4
 
 # GitOps deployment chain (hub → spokes)
 
-This page explains **why** you see names like `field-content-acm-hub-spoke`, `east-spoke-components`, and `industrial-edge-tst-east` in ACM / Argo CD, and **which YAML** creates each link.
+This page explains **why** you see names like `acm-hub-spoke`, `east-spoke-components`, and `industrial-edge-tst` in ACM / Argo CD, and **which YAML** creates each link.
 
 {: .note }
 > **ACM Fleet → Applications** lists **Argo CD `Application`** resources. The **ApplicationSet** `fleet-spoke-push` is a separate object. Search for it under **Infrastructure → Clusters → GitOps** (Argo CD UI) or with `oc get applicationset fleet-spoke-push -n openshift-gitops`.
@@ -15,24 +15,26 @@ This page explains **why** you see names like `field-content-acm-hub-spoke`, `ea
 ```mermaid
 flowchart TB
   subgraph git [Git repo hybrid-mesh-platform]
-    root[Chart root values.yaml]
+    hubRegion[charts/region/hub/values.yaml]
+    eastRegion[charts/region/east/values.yaml]
+    westRegion[charts/region/west/values.yaml]
     acmChart[charts/all/acm-hub-spoke]
-    eastChart[east/values.yaml + templates]
-    westChart[west/values.yaml + templates]
-    components[components/* child charts]
+    spokePush[charts/all/spoke-meta-push]
+    components[charts/all/* components]
   end
 
   subgraph hubCluster [Hub cluster Argo CD openshift-gitops]
-    rootApp[field-content parent or helm install]
-    acmApp[field-content-acm-hub-spoke Application]
+    rootApp[field-content RHDP bootstrap]
+    cgApp[hybrid-mesh-platform-hub Application]
+    acmApp[acm-hub-spoke Application]
     appSet[fleet-spoke-push ApplicationSet]
     eastParent[east-spoke-components Application]
     westParent[west-spoke-components Application]
-    hubApps[field-content-kafka-console etc]
+    hubApps[kafka-console developer-hub etc]
   end
 
   subgraph eastCluster [East spoke Argo CD]
-    eastChild[industrial-edge-tst-east camel-dashboard-east ...]
+    eastChild[industrial-edge-tst operators-edge ...]
     eastWorkloads[Pods Routes Integrations]
   end
 
@@ -187,53 +189,28 @@ spec:
 
 ---
 
-## Layer 3 — Spoke parent Applications (`values-east.yaml` (ACM PULL) / `values-west.yaml` (ACM PULL))
+## Layer 3 — Spoke GitOps (PULL + PUSH)
 
-`east-spoke-components` (on the **hub** Argo CD, destination **east**) syncs the Helm chart in [`values-east.yaml` (ACM PULL)](../east/).
+**PUSH (hub → spoke):** `east-spoke-components` / `west-spoke-components` (on **hub** Argo CD, destination **east** / **west**) sync [`charts/all/spoke-meta-push`](../../charts/all/spoke-meta-push/). That chart loops `components[]` and creates child Applications on the spoke (e.g. `operators-ci-east`).
 
-[`east/templates/component-applications.yaml`](../east/templates/component-applications.yaml) loops `apps[]` from [`east/values.yaml`](../east/values.yaml):
-
-```yaml
-{{- range .Values.apps }}
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: {{ .id }}-{{ $.Values.clusterName }}   # industrial-edge-tst-east
-spec:
-  source:
-    repoURL: {{ $.Values.gitops.repoUrl }}
-    path: {{ .path }}                           # charts/all/industrial-edge-tst
-  destination:
-    server: https://kubernetes.default.svc      # spoke local API
-    namespace: {{ .destinationNamespace }}
-{{- end }}
-```
-
-Example app entries ([`east/values.yaml`](../east/values.yaml)):
+**PULL (spoke local):** Each spoke runs RHDP field-content at `charts/region/east` or `charts/region/west`, which deploys **clustergroup** from [`charts/region/east/values.yaml`](../../charts/region/east/values.yaml) (or west). Child apps point at `charts/all/*`:
 
 ```yaml
-apps:
-  - id: operators
-    path: charts/all/operators
-    destinationNamespace: openshift-operators
-    syncWave: "2"
-  - id: camel-dashboard-openshift-all
-    path: charts/all/camel-dashboard-openshift
-    destinationNamespace: camel-dashboard
-    syncWave: "3"
-  - id: industrial-edge-tst
-    path: charts/all/industrial-edge-tst
-    destinationNamespace: industrial-edge-tst-all
-    syncWave: "5"
+# excerpt from charts/region/east/values.yaml → clusterGroup.applications
+industrial-edge-tst:
+  name: industrial-edge-tst
+  path: charts/all/industrial-edge-tst
+  namespace: industrial-edge-tst-all
+  argoProject: industrial-edge
 ```
 
-**ACM UI:** Searching `industrial-edge` shows these **child** Applications (`industrial-edge-tst-east`, …). They are **not** created by the ApplicationSet directly; they are created by the **east** chart on the **spoke's** Argo CD.
+Example on **east** spoke Argo CD: `industrial-edge-tst`, `operators-edge`, `spoke-gateway`, … — names from `clusterGroup.applications`, not `-east` suffix (unless the app `name` field includes it).
 
 ---
 
-## Layer 4 — Workloads (`components/*`)
+## Layer 4 — Workloads (`charts/all/*`)
 
-Each child `Application` points at a Helm chart under `components/<name>/` (Kafka, Camel K, gateways, etc.). Those charts render Deployments, Routes, `Integration`, and so on.
+Each child `Application` points at a Helm chart under `charts/all/<name>/` (Kafka, Camel K, gateways, etc.).
 
 ---
 
@@ -241,11 +218,11 @@ Each child `Application` points at a Helm chart under `components/<name>/` (Kafk
 
 | Name you see | Kind | Where it runs | Created by |
 | ------------ | ---- | ------------- | ---------- |
-| `field-content-acm-hub-spoke` | Application | Hub | Root `values.yaml` → hub template |
+| `acm-hub-spoke` | Application | Hub | `charts/region/hub/values.yaml` |
 | `fleet-spoke-push` | **ApplicationSet** | Hub | `charts/all/acm-hub-spoke` |
-| `east-spoke-components` | Application | Hub → deploys to east | ApplicationSet template |
-| `industrial-edge-tst-east` | Application | East | `values-east.yaml` (ACM PULL) chart |
-| `field-content-kafka-console` | Application | Hub | Root `values.yaml` (hub-only) |
+| `east-spoke-components` | Application | Hub → deploys to east | ApplicationSet template (PUSH) |
+| `industrial-edge-tst` | Application | East spoke | `charts/region/east/values.yaml` (PULL) |
+| `kafka-console` | Application | Hub | `charts/region/hub/values.yaml` |
 
 ---
 
@@ -259,7 +236,7 @@ Each child `Application` points at a Helm chart under `components/<name>/` (Kafk
 | 3 | GitOpsCluster |
 | 4 | **ApplicationSet `fleet-spoke-push`** |
 
-Spoke chart waves (inside `values-east.yaml` (ACM PULL) / `values-west.yaml` (ACM PULL)) are documented in [Architecture — Spoke sync-wave reference](architecture.md#spoke-sync-wave-reference).
+Spoke sync waves are defined in `charts/region/east|west/values.yaml` (`syncWave` per app). See [Architecture — Spoke sync-wave reference](architecture.md#spoke-sync-wave-reference).
 
 ---
 

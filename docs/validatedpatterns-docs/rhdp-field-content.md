@@ -29,7 +29,7 @@ Hub templates use `deployer.domain` with fallback `apps.cluster.example.com`; RH
 | `ocp4_workload_field_content_gitops_repo_path` | **`charts/region/hub`** | **`charts/region/east`** | **`charts/region/west`** |
 | `existing_gitops` | `true` | `true` | `true` |
 
-Each path is a bootstrap Helm chart that renders `hybrid-mesh-platform-{hub,east,west}` and deploys VP **clustergroup** with `charts/region/<region>/values.yaml`. Shared components stay under `charts/all/`. See [Region strategy](branch-strategy.md) and [REGIONS.md](../../REGIONS.md).
+Each path is a bootstrap Helm chart that renders `hybrid-mesh-platform-{hub,east,west}` and deploys VP **clustergroup** with `charts/region/<region>/values.yaml`. Shared components stay under `charts/all/`. See [Region strategy](region-strategy.md) and [REGIONS.md](../../REGIONS.md).
 
 ## Automatic cross-cluster domains (`fleet-values-sync`)
 

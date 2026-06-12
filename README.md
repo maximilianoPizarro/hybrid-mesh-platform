@@ -50,7 +50,7 @@ python scripts/apply-vp-argo-layout.py
 | `charts/region/east` | East spoke |
 | `charts/region/west` | West spoke |
 
-See [REGIONS.md](REGIONS.md) and [region strategy](docs/validatedpatterns-docs/branch-strategy.md).
+See [REGIONS.md](REGIONS.md) and [region strategy](docs/validatedpatterns-docs/region-strategy.md).
 
 ## Verification (offline)
 

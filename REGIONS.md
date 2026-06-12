@@ -1,5 +1,7 @@
 # Region layout (single branch: `main`)
 
+> **Note:** Git branches `east` and `west` were removed. All clusters use revision **`main`** and a region path below.
+
 All clusters use git revision **`main`**. Per-cluster GitOps profile is selected by **RHDP path**, not by git branch.
 
 | Cluster | RHDP `gitops_repo_path` | Values file |

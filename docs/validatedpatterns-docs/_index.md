@@ -30,7 +30,7 @@ Hub-spoke multi-cluster GitOps on OpenShift — **Validated Patterns** implement
 ./pattern.sh install
 ```
 
-See [Getting started](getting-started.md) and [RHDP field content](rhdp-field-content.md).
+See [Getting started](getting-started.md), [Region strategy](region-strategy.md), and [RHDP field content](rhdp-field-content.md).
 
 ## Related patterns
 

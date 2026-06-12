@@ -18,9 +18,9 @@ Single git branch (`main`) for hub, east, and west. RHDP demo system selects clu
 | East | `main` | `charts/region/east` |
 | West | `main` | `charts/region/west` |
 
-## Removed
+## Removed (2026-06)
 
-- Git branches `east` / `west`
+- Git branches `east` / `west` — use `main` + region paths only
 - Root `values-hub.yaml`, `values-east.yaml`, `values-west.yaml`
 - `scripts/sync-cluster-branches.sh`, `BRANCHES.md`
 

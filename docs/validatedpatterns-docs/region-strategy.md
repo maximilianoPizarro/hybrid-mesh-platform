@@ -27,7 +27,7 @@ Install on each cluster: RHDP field-content with `existing_gitops: true`, or `./
 
 ## PUSH + PULL on spokes
 
-- **PUSH** (`operators-ci`, `operators-platform`): hub ApplicationSet `fleet-spoke-push`
-- **PULL**: clustergroup on spoke from `charts/region/east|west/values.yaml`
+- **PUSH** (`operators-ci`, `operators-platform`): hub ApplicationSet `fleet-spoke-push` → `charts/all/spoke-meta-push`
+- **PULL**: clustergroup on each spoke from `charts/region/east|west/values.yaml` (local Argo CD)
 
 See [GitOps PUSH vs PULL](gitops-push-vs-pull.md) and [REGIONS.md](../../REGIONS.md).

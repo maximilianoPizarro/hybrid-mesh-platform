@@ -18,13 +18,13 @@ Spokes remain the execution venues for application namespaces, data-plane compon
 | **Centralized management** | One control plane for membership, RBAC patterns, and bulk upgrades. |
 | **Policy enforcement** | Kubernetes policies, compliance checks, and security baselines propagate from the hub. |
 | **Observability** | Aggregated metrics, logging, and tracing strategies start at the hub and uniform dashboards span spokes. |
-| **GitOps consistency** | A single Git revision strategy (with branch or overlay variants) drives spoke drift correction. |
+| **GitOps consistency** | A single Git revision (`main`) with region paths drives spoke drift correction. |
 
 ## Platform architecture overview
 
 ![Hub-spoke platform — Git paths, ApplicationSet, Skupper VAN, and per-cluster components]({{ site.baseurl }}/assets/images/arch-hub-spoke-flow.png)
 {: .mb-4 }
-*Single `main` branch: hub chart at `.`, spoke charts at `values-east.yaml` (ACM PULL) and `values-west.yaml` (ACM PULL), shared `components/` referenced by all clusters.*
+*Single `main` branch: hub at `charts/region/hub`, spokes at `charts/region/east` and `charts/region/west`, shared charts under `charts/all/`.*
 {: .fs-2 .text-grey-dk-000 }
 
 ## Follow the request — one temperature reading end to end
@@ -35,27 +35,27 @@ When a machine sensor on the **east** spoke publishes a temperature sample, the 
 
 | Area | Hub | Spokes | Config path |
 | -----|-----|--------|-------------|
-| ACM hub operator & APIs | yes | | `values.yaml` |
-| ArgoCD / App-of-Apps root | yes | yes | `.` / `values-east.yaml` (ACM PULL) / `values-west.yaml` (ACM PULL) |
-| ApplicationSet (spoke apps) | yes | | `values.yaml` |
-| ACS Central | yes | | `values.yaml` |
-| ACS Secured Cluster | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
-| Developer Hub | yes | | `values.yaml` |
-| Hub Gateway (Gateway API) | yes | | `values.yaml` |
-| Spoke Gateway (Gateway API) | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
-| Industrial Edge workloads | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
-| Kafka brokers (regional) | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
+| ACM hub operator & APIs | yes | | `charts/region/hub/values.yaml` |
+| ArgoCD / clustergroup root | yes | yes | `charts/region/hub` / `charts/region/east` / `charts/region/west` |
+| ApplicationSet (spoke apps) | yes | | `charts/region/hub/values.yaml` |
+| ACS Central | yes | | `charts/region/hub/values.yaml` |
+| ACS Secured Cluster | | yes | `charts/region/east|west/values.yaml` |
+| Developer Hub | yes | | `charts/region/hub/values.yaml` |
+| Hub Gateway (Gateway API) | yes | | `charts/region/hub/values.yaml` |
+| Spoke Gateway (Gateway API) | | yes | `charts/region/east|west/values.yaml` |
+| Industrial Edge workloads | | yes | `charts/region/east|west/values.yaml` |
+| Kafka brokers (regional) | | yes | `charts/region/east|west/values.yaml` |
 | Service Mesh ambient / ztunnel | yes | yes | both |
 | Istio CNI (`profile: ambient`) | yes | yes | both |
-| Skupper Site (hub listeners) | yes | | `values.yaml` |
-| Skupper Site (spoke connectors) | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
-| Grafana (multi-cluster dashboards) | yes | | `values.yaml` |
-| Grafana (local metrics) | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
+| Skupper Site (hub listeners) | yes | | `charts/region/hub/values.yaml` |
+| Skupper Site (spoke connectors) | | yes | `charts/region/east|west/values.yaml` |
+| Grafana (multi-cluster dashboards) | yes | | `charts/region/hub/values.yaml` |
+| Grafana (local metrics) | | yes | `charts/region/east|west/values.yaml` |
 | Kiali + OSSM Console plugin | yes | yes | both |
 | Connectivity Link (RHCL) | yes | yes | both |
-| Kubecost (primary aggregator) | yes | | `values.yaml` |
-| Kubecost (agent) | | yes | `values-east.yaml` (ACM PULL) `values-west.yaml` (ACM PULL) |
-| Kafka Console (all clusters) | yes | | `values.yaml` |
+| Kubecost (primary aggregator) | yes | | `charts/region/hub/values.yaml` |
+| Kubecost (agent) | | yes | `charts/region/east|west/values.yaml` |
+| Kafka Console (all clusters) | yes | | `charts/region/hub/values.yaml` |
 
 ## GitOps application delivery flow
 
@@ -77,7 +77,7 @@ Components deploy in strict order via ArgoCD sync waves:
 
 ### Spoke sync-wave reference
 
-Matches ebook Ch.4 ordering (`east/values.yaml` / `west/values.yaml`):
+Matches ebook Ch.4 ordering (`charts/region/east/values.yaml`, `charts/region/west/values.yaml`):
 
 | Wave | What deploys | Why this order |
 | ---- | ------------ | -------------- |

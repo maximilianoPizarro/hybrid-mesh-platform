@@ -24,44 +24,51 @@ This guide bootstraps the **hub** with one Helm install, registers **east** and 
 
 - OpenShift **4.14+** on hub + two spokes
 - **Helm 3** and **`oc`** (cluster-admin on hub for ACM import)
-- Fork of this repository; update `gitops.repoUrl` in `values.yaml`, `east/values.yaml`, `west/values.yaml`
+- Fork of this repository; RHDP injects `deployer.domain` / `deployer.apiUrl` per cluster — see [RHDP field content](rhdp-field-content.md)
 
 ## Repository layout
 
 ```
-.              → hub (helm install here only)
-east/          → east spoke chart (ApplicationSet path: east)
-west/          → west spoke chart (ApplicationSet path: west)
-components/    → shared component charts
+charts/all/              → cross-cluster Helm components (shared)
+charts/region/hub/       → hub clusterGroup + RHDP bootstrap
+charts/region/east/      → east spoke clusterGroup + bootstrap
+charts/region/west/      → west spoke clusterGroup + bootstrap
+values-global.yaml       → pattern-wide globals
 ```
+
+See [Region strategy](region-strategy.md) and [REGIONS.md](../../REGIONS.md).
 
 ---
 
 ## Phase 1: Prepare
 
 1. Fork [`hybrid-mesh-platform`](https://github.com/maximilianoPizarro/hybrid-mesh-platform).
-2. Set cluster domains in **`values.yaml`** (hub) and spoke **`deployer.domain`** / **`clusters.hub.domain`** in `east/values.yaml`, `west/values.yaml` — or use RHDP overlays in [`rhdp-field-content.md`](rhdp-field-content.md) (`values-rhdp.yaml` per path).
+2. Set cluster domains via RHDP (`deployer.domain`, `clusters.hub.domain` on spokes) — see [`rhdp-field-content.md`](rhdp-field-content.md). **`fleet-values-sync`** patches most cross-cluster domains after ACM enrollment.
 3. Validate rendering:
 
 ```bash
-helm template test-hub . -f values.yaml --set deployer.domain=apps.hub.example.com
-helm template test-east east/
-helm template test-west west/
+helm template test-hub charts/region/hub -f values-global.yaml \
+  --set deployer.domain=apps.hub.example.com
+helm template test-east charts/region/east -f values-global.yaml \
+  --set deployer.domain=apps.east.example.com
+helm template test-west charts/region/west -f values-global.yaml \
+  --set deployer.domain=apps.west.example.com
 ```
 
 ---
 
-## Phase 2: Bootstrap hub (one Helm install)
+## Phase 2: Bootstrap hub (RHDP or pattern.sh)
+
+**RHDP (recommended):** catalog order with `gitops_repo_revision=main`, `gitops_repo_path=charts/region/hub`, `existing_gitops=true`.
+
+**Local / manual:**
 
 ```bash
-./pattern.sh install \
-  -f values.yaml \
-  --set deployer.domain=apps.hub.example.com
+./pattern.sh install
+# or TARGET_CLUSTERGROUP=hub ./pattern.sh install
 ```
 
-This creates the root Argo CD Application, which syncs all hub `components/*` (ACM, GitOps, mesh, Kafka Console, Developer Hub, etc.).
-
-Alternatively, create an Argo CD `Application` pointing at `.` on your fork with the same values.
+This creates Application `hybrid-mesh-platform-hub`, which syncs hub workloads from `charts/region/hub/values.yaml` and `charts/all/*`.
 
 ---
 
@@ -77,16 +84,9 @@ metadata:
     region: east   # or west
 ```
 
-3. Inject spoke API tokens on the hub (never commit):
+3. Inject spoke API tokens on the hub (never commit) — RHDP/ACM auto-import usually suffices; **`fleet-values-sync`** can patch `field-content` when needed.
 
-```bash
-helm upgrade platform-hub-spoke . \
-  --set clusters.east.token=sha256~... \
-  --set clusters.west.token=sha256~... \
-  --reuse-values
-```
-
-4. **ApplicationSet** `fleet-spoke-push` generates **`east-spoke-components`** and **`west-spoke-components`** on the **hub** only. Each parent app deploys to its spoke via cluster-proxy; the spoke's own Argo CD then syncs child Applications (`operators-east`, `spoke-gateway-west`, etc.) from `values-east.yaml` (ACM PULL) or `values-west.yaml` (ACM PULL) — **no Helm install on spokes**. See **[GitOps deployment chain](gitops-deployment-chain.md)** for YAML at each layer (why ACM search shows `industrial-edge-*-east` but not the ApplicationSet name unless you filter for it).
+4. **ApplicationSet** `fleet-spoke-push` generates **`east-spoke-components`** and **`west-spoke-components`** on the **hub** only. PUSH apps deploy via `charts/all/spoke-meta-push`; each spoke's local Argo CD syncs PULL apps from **`charts/region/east|west/values.yaml`** — **no Helm install on spokes**. See **[GitOps deployment chain](gitops-deployment-chain.md)**.
 
 ```bash
 # Hub — parent apps only
@@ -235,7 +235,7 @@ Detail: [Workshop docs](workshop/index.md) · Cursor skill **hybrid-mesh-ai-work
 - [Troubleshooting](troubleshooting.md) — ApplicationSet SSA, HBONE, Kiali tokens, Kafka Console API route
 - [Architecture](architecture.md) — sync-wave reference
 - [Deploy with ACM and GitOps](deploy-acm-gitops.md) — placement and GitOpsCluster detail
-- **New spoke:** add `ManagedCluster`, label, copy `values-east.yaml` (ACM PULL) pattern, extend ApplicationSet placement, `helm upgrade` token
+- **New spoke:** add `ManagedCluster`, label, copy `charts/region/east/values.yaml` pattern to a new region folder, extend ApplicationSet placement
 
 ---
 
