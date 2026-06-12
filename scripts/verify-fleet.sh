@@ -19,4 +19,7 @@ oc get pods -n industrial-edge-tst-all 2>/dev/null | head -5 || echo "IE pods no
 echo "--- Skupper ---"
 oc get skupperlinks -A 2>/dev/null | head -5 || true
 
+echo "--- fleet-values-sync ---"
+oc get cronjob fleet-values-sync -n openshift-gitops 2>/dev/null || echo "fleet-values-sync not deployed yet"
+
 echo "Done. See MIGRATION.md for full checklist."

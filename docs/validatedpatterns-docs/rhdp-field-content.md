@@ -31,11 +31,39 @@ Hub templates use `deployer.domain` with fallback `apps.cluster.example.com`; RH
 
 Each branch sets `values-global.yaml` → `clusterGroupName` (`hub` / `east` / `west`) and spoke branches carry only their matching `values-*.yaml`. See [Branch strategy](branch-strategy.md).
 
+## Automatic cross-cluster domains (`fleet-values-sync`)
+
+After RHDP provisions clusters and ACM shows **east** / **west** as **Available**, the **`fleet-values-sync`** CronJob (hub + spokes) removes most manual domain patching:
+
+| Cluster | What it does |
+|---------|----------------|
+| **Hub** | Reads `ManagedCluster` API URLs + local ingress domain → patches `field-content` with `clusters.*`, `global.hubClusterDomain`, `managedClusters.*` → pushes `fleet-cross-cluster-config` ConfigMap to spokes via **ManifestWork** |
+| **East / West** | Reads hub domain from ConfigMap → patches local `field-content` with `clusters.hub.domain` |
+
+Schedule: every 30 minutes (`charts/all/fleet-values-sync`). Manual run from a logged-in cluster:
+
+```bash
+# Hub
+oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops
+
+# Or offline script (requires PyYAML + oc token in pod / local kubeconfig)
+python scripts/sync-fleet-values.py
+```
+
+**Still manual (if needed):** spoke API tokens for legacy `managedClusters.*.token` import — RHDP/ACM auto-import usually covers enrollment. MaaS keys remain RHDP-injected or secret-based.
+
 ## Recommended order
 
 1. **Hub** — revision `main`, path `.`
 2. **East** / **West** — revision `east` / `west`, path `.`
-3. **Hub** — after ACM import, upgrade with spoke domains + tokens:
+3. **Hub** — after ACM import, optional manual upgrade if `fleet-values-sync` has not run yet (domains + tokens):
+
+```bash
+# Prefer waiting for fleet-values-sync CronJob, or trigger once:
+oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops
+```
+
+Legacy manual patch (tokens still required if not auto-imported):
 
 ```bash
 helm upgrade field-content . -f values.yaml \
@@ -52,9 +80,9 @@ helm upgrade field-content . -f values.yaml \
 
 Or patch the Argo CD `Application` `field-content` `helm.values` with the same keys.
 
-## Spoke orders — `clusters.hub.domain` (required)
+## Spoke orders — `clusters.hub.domain` (automated)
 
-East and west RHDP orders inject `deployer.domain` for the **local** spoke. Cross-cluster features also need the **hub** apps domain:
+East and west RHDP orders inject `deployer.domain` for the **local** spoke. **`fleet-values-sync`** on each spoke patches `clusters.hub.domain` once the hub ManifestWork delivers `fleet-cross-cluster-config`.
 
 | Feature | Uses `clusters.hub.domain` |
 |---------|---------------------------|
@@ -63,7 +91,7 @@ East and west RHDP orders inject `deployer.domain` for the **local** spoke. Cros
 | Kairos hub reporting | `kairos-console-kairos-system.<hub-domain>` |
 | Console links to hub services | Quay, Developer Hub, Mailpit |
 
-Patch **each spoke** `field-content` Application (or set in the second hub upgrade that also lists spoke tokens):
+Manual patch (fallback only):
 
 ```bash
 # East spoke — after RHDP provision

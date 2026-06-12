@@ -1,0 +1,5 @@
+apiVersion: v2
+name: fleet-values-sync
+description: Sync RHDP/ACM cluster domains into field-content Application helm values
+type: application
+version: 0.1.0

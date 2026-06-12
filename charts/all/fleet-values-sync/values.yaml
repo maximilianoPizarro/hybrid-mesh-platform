@@ -1,0 +1,13 @@
+clusterDomain: ""
+clusterRole: hub
+clusterName: ""
+enabled: true
+schedule: "*/30 * * * *"
+fieldContentApp: field-content
+argocdNamespace: openshift-gitops
+spokeClusters:
+  - east
+  - west
+configMapName: fleet-cross-cluster-config
+image: registry.redhat.io/ubi9/python-311:latest
+pipInstall: true

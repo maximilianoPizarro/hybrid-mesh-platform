@@ -1,0 +1,112 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fleet-values-sync
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fleet-values-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: ["cluster.open-cluster-management.io"]
+    resources: ["managedclusters"]
+    verbs: ["get", "list"]
+  - apiGroups: ["operator.openshift.io"]
+    resources: ["ingresscontrollers"]
+    verbs: ["get", "list"]
+  - apiGroups: ["config.openshift.io"]
+    resources: ["infrastructures"]
+    resourceNames: ["cluster"]
+    verbs: ["get"]
+  - apiGroups: ["work.open-cluster-management.io"]
+    resources: ["manifestworks"]
+    verbs: ["get", "list", "create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fleet-values-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fleet-values-sync
+subjects:
+  - kind: ServiceAccount
+    name: fleet-values-sync
+    namespace: {{ .Values.argocdNamespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fleet-values-sync-script
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  sync.py: |
+{{ .Files.Get "files/sync.py" | nindent 4 }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fleet-values-sync
+  namespace: {{ .Values.argocdNamespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: fleet-values-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: {{ .Values.image | quote }}
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  {{- if .Values.pipInstall }}
+                  pip install -q pyyaml
+                  {{- end }}
+                  python /scripts/sync.py
+              env:
+                - name: SYNC_MODE
+                  value: {{ ternary "spoke" "hub" (eq .Values.clusterRole "spoke") | quote }}
+                - name: FIELD_CONTENT_APP
+                  value: {{ .Values.fieldContentApp | quote }}
+                - name: ARGOCD_NAMESPACE
+                  value: {{ .Values.argocdNamespace | quote }}
+                - name: SPOKE_CLUSTERS
+                  value: {{ join "," .Values.spokeClusters | quote }}
+                - name: CONFIGMAP_NAME
+                  value: {{ .Values.configMapName | quote }}
+                - name: CLUSTER_NAME
+                  value: {{ .Values.clusterName | default .Values.clusterRole | quote }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: fleet-values-sync-script
+                defaultMode: 0555
+{{- end }}

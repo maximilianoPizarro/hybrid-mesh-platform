@@ -187,6 +187,12 @@ clusterGroup:
       argoProject: fleet
       path: charts/all/acm-hub-spoke
       syncWave: '0'
+    fleet-values-sync:
+      name: fleet-values-sync
+      namespace: openshift-gitops
+      argoProject: fleet
+      path: charts/all/fleet-values-sync
+      syncWave: '5'
     observability:
       name: observability
       namespace: openshift-cluster-observability-operator

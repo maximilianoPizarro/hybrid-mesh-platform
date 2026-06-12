@@ -102,6 +102,12 @@ clusterGroup:
       argoProject: platform
       syncWave: '0'
       path: charts/all/platform-users
+    fleet-values-sync:
+      name: fleet-values-sync
+      namespace: openshift-gitops
+      argoProject: fleet-pull
+      syncWave: '5'
+      path: charts/all/fleet-values-sync
     namespaces:
       name: namespaces
       namespace: openshift-gitops

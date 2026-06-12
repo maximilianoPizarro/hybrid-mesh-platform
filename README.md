@@ -31,6 +31,8 @@ cp values-secret.yaml.template values-secret.yaml
 
 PUSH operators (`operators-ci`, `operators-platform`) deploy via ApplicationSet to both spokes.
 
+Cross-cluster domains (`clusters.*`, `clusters.hub.domain` on spokes) sync automatically via **`fleet-values-sync`** once ACM clusters are Available — see [RHDP field content](docs/validatedpatterns-docs/rhdp-field-content.md).
+
 ## Regenerate values
 
 ```bash
