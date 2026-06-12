@@ -1,0 +1,20 @@
+enabled: true
+
+image:
+  repository: registry.redhat.io/openshift4/ose-cli
+  tag: latest
+  pullPolicy: IfNotPresent
+
+validation:
+  schedule: "0 */6 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+fleet:
+  enabled: true
+
+preflight:
+  enabled: false
+
+serviceAccount:
+  name: platform-validation-sa

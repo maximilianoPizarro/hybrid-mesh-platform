@@ -390,6 +390,12 @@ clusterGroup:
       argoProject: fleet-pull
       path: charts/all/fleet-pull-overview
       syncWave: '1'
+    platform-validation:
+      name: platform-validation
+      namespace: openshift-gitops
+      argoProject: platform
+      path: charts/all/platform-validation
+      syncWave: '99'
   managedClusterGroups:
     east:
       name: east

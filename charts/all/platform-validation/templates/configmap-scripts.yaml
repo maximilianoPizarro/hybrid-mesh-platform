@@ -1,0 +1,64 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-validation-scripts
+  namespace: {{ .Release.Namespace }}
+data:
+  verify-fleet.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    echo "=== Hybrid Mesh Platform verification ==="
+    
+    echo "--- ManagedClusters ---"
+    oc get managedclusters 2>/dev/null || echo "WARN: not logged in or no ACM"
+    
+    echo "--- Hub Argo CD applications (sample) ---"
+    oc get applications.argoproj.io -n openshift-gitops 2>/dev/null | head -20 || true
+    
+    echo "--- RHCL operator ---"
+    oc get sub -n redhat-connectivity-link-operator 2>/dev/null || true
+    
+    echo "--- IE namespace ---"
+    oc get pods -n industrial-edge-tst-all 2>/dev/null | head -5 || echo "IE pods not on this cluster"
+    
+    echo "--- Skupper ---"
+    oc get skupperlinks -A 2>/dev/null | head -5 || true
+    
+    echo "--- fleet-values-sync ---"
+    oc get cronjob fleet-values-sync -n openshift-gitops 2>/dev/null || echo "fleet-values-sync not deployed yet"
+    
+    echo "Done."
+
+  verify-gitops-strategies.py: |
+    #!/usr/bin/env python3
+    """Verify GitOps strategies are correctly configured."""
+    import sys
+    from pathlib import Path
+    try:
+        import yaml
+    except ImportError:
+        print("SKIP: PyYAML not available")
+        sys.exit(0)
+    
+    errors = []
+    for region in ["hub", "east", "west"]:
+        values_file = Path(f"charts/region/{region}/values.yaml")
+        if not values_file.exists():
+            continue
+        data = yaml.safe_load(values_file.read_text())
+        cg = data.get("clusterGroup", {})
+        
+        # Check argoProjects
+        projects = set(cg.get("argoProjects", []))
+        for app_id, app in cg.get("applications", {}).items():
+            proj = app.get("argoProject")
+            if proj and proj not in projects:
+                errors.append(f"{region}: {app_id} references undefined project {proj}")
+    
+    if errors:
+        for e in errors:
+            print(f"ERROR: {e}")
+        sys.exit(1)
+    print("GitOps strategies validation passed")
+{{- end }}

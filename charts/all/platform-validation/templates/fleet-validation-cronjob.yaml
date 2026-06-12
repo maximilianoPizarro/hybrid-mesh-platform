@@ -1,0 +1,75 @@
+{{- if and .Values.enabled .Values.fleet.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fleet-validation
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  schedule: {{ .Values.validation.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.validation.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.validation.failedJobsHistoryLimit }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          serviceAccountName: {{ .Values.serviceAccount.name }}
+          restartPolicy: OnFailure
+          containers:
+            - name: fleet-validation
+              image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -euo pipefail
+                  echo "=== Hybrid Mesh Platform Fleet Validation ==="
+                  echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                  echo ""
+                  
+                  echo "--- ManagedClusters ---"
+                  if oc get managedclusters 2>/dev/null; then
+                    TOTAL=$(oc get managedclusters --no-headers 2>/dev/null | wc -l)
+                    AVAILABLE=$(oc get managedclusters --no-headers 2>/dev/null | grep -c "True.*True" || echo 0)
+                    echo "Total: $TOTAL, Available: $AVAILABLE"
+                    if [ "$TOTAL" -ne "$AVAILABLE" ]; then
+                      echo "WARNING: Some clusters not available"
+                    fi
+                  else
+                    echo "INFO: ACM not installed or no access"
+                  fi
+                  echo ""
+                  
+                  echo "--- ArgoCD Applications ---"
+                  APPS_TOTAL=$(oc get applications.argoproj.io -n openshift-gitops --no-headers 2>/dev/null | wc -l || echo 0)
+                  APPS_SYNCED=$(oc get applications.argoproj.io -n openshift-gitops --no-headers 2>/dev/null | grep -c "Synced" || echo 0)
+                  APPS_HEALTHY=$(oc get applications.argoproj.io -n openshift-gitops --no-headers 2>/dev/null | grep -c "Healthy" || echo 0)
+                  echo "Total: $APPS_TOTAL, Synced: $APPS_SYNCED, Healthy: $APPS_HEALTHY"
+                  echo ""
+                  
+                  echo "--- GitOpsCluster ---"
+                  oc get gitopscluster -n openshift-gitops 2>/dev/null || echo "INFO: GitOpsCluster not configured"
+                  echo ""
+                  
+                  echo "--- Skupper Network ---"
+                  oc get pods -n service-interconnect --no-headers 2>/dev/null | head -5 || echo "INFO: Skupper not installed"
+                  echo ""
+                  
+                  echo "--- RHCL Gateway ---"
+                  oc get gateway -A --no-headers 2>/dev/null | head -5 || echo "INFO: RHCL Gateway not configured"
+                  echo ""
+                  
+                  echo "=== Validation Complete ==="
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+{{- end }}

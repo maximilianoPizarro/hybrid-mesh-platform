@@ -1,0 +1,61 @@
+{{- if .Values.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: initial-platform-validation
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "99"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      restartPolicy: OnFailure
+      containers:
+        - name: validate
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              echo "=== Initial Platform Validation (PostSync) ==="
+              echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              echo ""
+              
+              # Wait for resources to settle
+              sleep 30
+              
+              echo "--- Checking core namespaces ---"
+              REQUIRED_NS="openshift-gitops stackrox developer-hub service-interconnect"
+              for ns in $REQUIRED_NS; do
+                if oc get namespace $ns &>/dev/null; then
+                  echo "OK: $ns exists"
+                else
+                  echo "WARN: $ns not found"
+                fi
+              done
+              echo ""
+              
+              echo "--- Checking ArgoCD health ---"
+              oc get argocd openshift-gitops -n openshift-gitops -o jsonpath='{.status.phase}' 2>/dev/null && echo "" || echo "WARN: ArgoCD status unknown"
+              echo ""
+              
+              echo "--- Application summary ---"
+              oc get applications.argoproj.io -n openshift-gitops --no-headers 2>/dev/null | awk '{print $2, $3}' | sort | uniq -c
+              echo ""
+              
+              echo "=== Initial Validation Complete ==="
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+{{- end }}
