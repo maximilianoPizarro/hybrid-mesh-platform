@@ -6,12 +6,8 @@
 | `east` | East spoke | `values-east.yaml` only |
 | `west` | West spoke | `values-west.yaml` only |
 
-RHDP / catalog: use the **same repo URL** with different **revision** (branch) on each cluster order. Path is always `.` (repo root); VP selects the clustergroup via `values-global.yaml` on that branch.
+Create/update spoke branches:
 
 ```bash
-# After editing values on main:
-python scripts/generate-vp-values.py      # optional, from legacy
-python scripts/apply-vp-argo-layout.py
-git add values-*.yaml && git commit -m "update cluster values"
-bash scripts/sync-cluster-branches.sh     # propagates to east/west branches
+scripts/sync-cluster-branches.sh
 ```
