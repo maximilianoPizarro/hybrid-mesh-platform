@@ -1,6 +1,15 @@
 {{- range $name, $cluster := .Values.managedClusters }}
 {{- if $cluster.apiUrl }}
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $name }}
+  labels:
+    cluster.open-cluster-management.io/managedCluster: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
 apiVersion: cluster.open-cluster-management.io/v1
 kind: ManagedCluster
 metadata:
@@ -11,11 +20,27 @@ metadata:
     cloud: auto-detect
     vendor: OpenShift
     cluster.open-cluster-management.io/clusterset: global
+    hybrid-mesh.io/region: {{ $name }}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   hubAcceptsClient: true
   leaseDurationSeconds: 60
+{{- if $cluster.token }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auto-import-secret
+  namespace: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+stringData:
+  autoImportRetry: "5"
+  server: {{ $cluster.apiUrl }}
+  token: {{ $cluster.token }}
+type: Opaque
+{{- end }}
 ---
 apiVersion: agent.open-cluster-management.io/v1
 kind: KlusterletAddonConfig
@@ -23,7 +48,7 @@ metadata:
   name: {{ $name }}
   namespace: {{ $name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   clusterName: {{ $name }}
   clusterNamespace: {{ $name }}

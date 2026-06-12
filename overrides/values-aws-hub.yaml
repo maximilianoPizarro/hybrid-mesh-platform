@@ -15,3 +15,15 @@ clusters:
 deployer:
   domain: ""
   apiUrl: ""
+
+# ACM Managed Clusters - Set these to auto-import spoke clusters
+# Token should be admin token from each spoke cluster
+# managedClusters:
+#   east:
+#     apiUrl: "https://api.east-cluster.example.com:6443"
+#     domain: "apps.east-cluster.example.com"
+#     token: "sha256~xxxxx"
+#   west:
+#     apiUrl: "https://api.west-cluster.example.com:6443"
+#     domain: "apps.west-cluster.example.com"
+#     token: "sha256~xxxxx"

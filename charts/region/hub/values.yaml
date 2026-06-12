@@ -191,7 +191,7 @@ clusterGroup:
       namespace: openshift-gitops
       argoProject: fleet
       path: charts/all/acm-hub-spoke
-      syncWave: '0'
+      syncWave: '6'
     fleet-values-sync:
       name: fleet-values-sync
       namespace: openshift-gitops

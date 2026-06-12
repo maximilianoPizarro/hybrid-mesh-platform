@@ -18,6 +18,15 @@ clusters:
     domain: ""
   west:
     domain: ""
+
+# Managed Clusters for ACM auto-import
+# Set apiUrl and token to enable auto-registration of spoke clusters
+# The token should be a service account token with cluster-admin privileges
+# Example:
+#   east:
+#     apiUrl: "https://api.east-cluster.example.com:6443"
+#     domain: "apps.east-cluster.example.com"
+#     token: "sha256~xxxxx"
 managedClusters:
   east:
     apiUrl: ""
