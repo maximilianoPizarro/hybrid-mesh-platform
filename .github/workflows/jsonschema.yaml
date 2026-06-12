@@ -60,6 +60,7 @@ jobs:
               continue
             fi
             echo "$i"
+            # shellcheck disable=SC2016
             yq eval-all '. as $item ireduce ({}; . * $item )' values-global.yaml "$i" > tmp.yaml
             check-jsonschema --fill-defaults --schemafile https://raw.githubusercontent.com/validatedpatterns/clustergroup-chart/refs/heads/main/values.schema.json tmp.yaml
             rm -f tmp.yaml
