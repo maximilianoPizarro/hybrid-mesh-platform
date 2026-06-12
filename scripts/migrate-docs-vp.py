@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Migrate legacy docs to docs/validatedpatterns-docs/ with VP conversion rules."""
+
 from __future__ import annotations
 
 import re

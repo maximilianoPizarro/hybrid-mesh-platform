@@ -111,21 +111,21 @@ clusterGroup:
       namespace: external-secrets-operator
       channel: stable-v1
   argoProjects:
-  - platform
-  - operators-platform
-  - fleet
-  - fleet-push
-  - fleet-pull
-  - security
-  - mesh
-  - observability
-  - workshop
-  - ai
-  - external-secrets
+    - platform
+    - operators-platform
+    - fleet
+    - fleet-push
+    - fleet-pull
+    - security
+    - mesh
+    - observability
+    - workshop
+    - ai
+    - external-secrets
   sharedValueFiles:
-  - /overrides/values-{{ $.Values.global.clusterPlatform }}.yaml
-  - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
-    }}.yaml
+    - /overrides/values-{{ $.Values.global.clusterPlatform }}.yaml
+    - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
+      }}.yaml
   applications:
     platform-users:
       name: platform-users
@@ -381,10 +381,10 @@ clusterGroup:
     east:
       name: east
       acmlabels:
-      - name: clusterGroup
-        value: east
+        - name: clusterGroup
+          value: east
     west:
       name: west
       acmlabels:
-      - name: clusterGroup
-        value: west
+        - name: clusterGroup
+          value: west

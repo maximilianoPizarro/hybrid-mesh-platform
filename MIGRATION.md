@@ -4,7 +4,7 @@ Validated Patterns implementation: `github.com/maximilianoPizarro/hybrid-mesh-pl
 
 | Item | Location |
 |------|----------|
-| VP pattern (this repo) | `hybrid-mesh-platform` |
+| VP pattern (this repository) | `hybrid-mesh-platform` |
 | Legacy App-of-Apps (frozen) | `platform-hub-spoke-config` |
 | Workshop Showroom | `showroom-hybrid-mesh-ai` |
 

@@ -1,4 +1,13 @@
-import base64, json, os, ssl, sys, time, urllib.error, urllib.parse, urllib.request, subprocess
+import base64
+import json
+import os
+import ssl
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 quay_host = os.environ["QUAY_HOST"]
 base = "https://" + quay_host

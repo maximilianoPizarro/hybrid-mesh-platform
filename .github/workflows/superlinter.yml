@@ -44,7 +44,13 @@ jobs:
           VALIDATE_PYTHON_RUFF_FORMAT: false
           VALIDATE_SPELL_CODESPELL: false
           VALIDATE_YAML_PRETTIER: false
+          VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          VALIDATE_CSS: false
+          VALIDATE_CSS_PRETTIER: false
+          # VP docs assets (Hugo/Backstage skeletons) are not linted like app code
+          FILTER_REGEX_EXCLUDE: (docs/validatedpatterns-docs/assets/.*)
           # VALIDATE_DOCKERFILE_HADOLINT: false
           # VALIDATE_MARKDOWN: false
-          # VALIDATE_NATURAL_LANGUAGE: false
           # VALIDATE_TEKTON: false
