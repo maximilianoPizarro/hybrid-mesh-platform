@@ -87,12 +87,12 @@ def main() -> None:
             print(f"  migrated products/{md.name}")
 
     assets_src = SOURCE / "assets"
-    assets_dest = DEST / "assets"
+    assets_dest = ROOT / "docs" / "assets"
     if assets_src.is_dir():
         if assets_dest.exists():
             shutil.rmtree(assets_dest)
         shutil.copytree(assets_src, assets_dest)
-        print("  copied docs/assets/")
+        print("  copied docs/assets/ (GitHub Pages + VP images)")
 
     workshop_dest = DEST / "workshop"
     workshop_dest.mkdir(exist_ok=True)

@@ -343,7 +343,7 @@ data:
     <body>
     <div class="header">
       <div class="header-brand">
-        <img src="https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/validatedpatterns-docs/assets/images/rh-logo.svg" alt="Red Hat">
+        <img src="https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/assets/images/rh-logo.svg" alt="Red Hat">
         <div class="header-text">
           <h1>Hybrid Mesh AI Workshop</h1>
           <p>Hub-spoke lab environment</p>
@@ -353,7 +353,7 @@ data:
     </div>
     <div class="main">
       <div class="card" id="register-card">
-        <div style="text-align:center;margin-bottom:24px"><img src="https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/validatedpatterns-docs/assets/images/rh-logo.svg" alt="Red Hat" style="height:48px"></div>
+        <div style="text-align:center;margin-bottom:24px"><img src="https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/assets/images/rh-logo.svg" alt="Red Hat" style="height:48px"></div>
         <h2>Workshop Registration</h2>
         <p>Enter your email to get started. You will be automatically assigned a workshop user and redirected to the lab environment.</p>
         <div class="form-group">
@@ -494,7 +494,7 @@ data:
     <body>
     <div class="header">
       <div class="header-brand">
-        <img src="https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/validatedpatterns-docs/assets/images/rh-logo.svg" alt="Red Hat">
+        <img src="https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/assets/images/rh-logo.svg" alt="Red Hat">
         <div class="header-text"><h1>Workshop Admin</h1></div>
       </div>
     </div>

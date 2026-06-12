@@ -109,7 +109,7 @@ data:
           rules:
             - allow: [System, Domain, Component, API, Resource]
         - type: url
-          target: https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/docs/validatedpatterns-docs/assets/backstage/software-templates/templates-catalog.yaml
+          target: https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/docs/assets/backstage/software-templates/templates-catalog.yaml
           rules:
             - allow: [Template, Location]
         - type: file
@@ -137,7 +137,7 @@ data:
           rules:
             - allow: [System, Component]
         - type: url
-          target: https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/validatedpatterns-docs/assets/backstage/software-templates/templates-catalog.yaml
+          target: https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/assets/backstage/software-templates/templates-catalog.yaml
           rules:
             - allow: [Template, Location]
       providers:

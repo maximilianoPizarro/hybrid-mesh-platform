@@ -1,6 +1,7 @@
 ---
 title: Hybrid Mesh Platform
-weight: 1
+nav_order: 2
+layout: default
 ---
 
 # Hybrid Mesh Platform

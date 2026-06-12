@@ -1,0 +1,55 @@
+remote_theme: just-the-docs/just-the-docs
+
+plugins:
+  - jekyll-remote-theme
+
+title: "Hybrid Mesh Platform"
+description: "Multi-cluster GitOps platform with ACM, Connectivity Link, and Industrial Edge on Red Hat OpenShift"
+url: "https://maximilianopizarro.github.io"
+baseurl: "/hybrid-mesh-platform"
+
+color_scheme: dark
+
+logo: "/assets/images/rh-logo.svg"
+
+aux_links:
+  "GitHub":
+    - "https://github.com/maximilianoPizarro/hybrid-mesh-platform"
+  "Validated Patterns":
+    - "https://validatedpatterns.io/patterns/multicloud-gitops/"
+
+aux_links_new_tab: true
+
+nav_enabled: true
+search_enabled: true
+heading_anchors: true
+back_to_top: true
+back_to_top_text: "Back to top"
+
+footer_content: ""
+
+mermaid:
+  version: "10.9.0"
+
+defaults:
+  - scope:
+      path: "validatedpatterns-docs"
+      type: "pages"
+    values:
+      layout: default
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - superpowers/
+  - DEMO_VALIDATION.md
+  - validatedpatterns-docs/README.md
+  # Backstage skeletons use ${{ }} / {{ }} — exclude from Liquid; template.yaml + catalog stay published
+  - assets/backstage/onboarding/
+  - assets/backstage/software-templates/camel-kaoto-cdc/skeleton/
+  - assets/backstage/software-templates/cnv-vm-workshop/skeleton/
+  - assets/backstage/software-templates/industrial-edge/skeleton/
+  - assets/backstage/software-templates/industrial-edge-api-product/skeleton/
+  - assets/backstage/software-templates/industrial-edge-camel-kaoto/skeleton/
+  - assets/backstage/software-templates/industrial-edge-delete/skeleton/
+  - assets/backstage/software-templates/openshift-ai-workspace/skeleton/
