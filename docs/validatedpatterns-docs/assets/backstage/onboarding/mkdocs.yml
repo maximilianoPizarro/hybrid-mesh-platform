@@ -1,0 +1,10 @@
+site_name: Hybrid Mesh Workshop
+site_description: Onboarding for platform-hub-spoke-config workshop users
+nav:
+  - Home: index.md
+  - Login: login.md
+  - Create a component: create-component.md
+  - Pipelines and Quay: pipelines.md
+  - Observability: observability.md
+plugins:
+  - techdocs-core

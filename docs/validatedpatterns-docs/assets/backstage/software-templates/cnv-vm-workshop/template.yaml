@@ -1,0 +1,67 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cnv-vm-workshop
+  title: "OpenShift Virtualization: Workshop VM"
+  description: >
+    Provision a sample KubeVirt VM (cirros) in a dedicated namespace — similar flow
+    to Industrial Edge templates (Gitea publish + catalog register).
+  tags:
+    - virtualization
+    - kubevirt
+    - cnv
+spec:
+  owner: platform-engineering
+  type: service
+  parameters:
+    - title: VM Configuration
+      required:
+        - name
+        - owner
+        - clusterDomain
+      properties:
+        name:
+          title: VM / namespace name
+          type: string
+          pattern: "^[a-z0-9-]+$"
+          default: my-vm-lab
+        owner:
+          title: Owner
+          type: string
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - User
+        clusterDomain:
+          title: Hub apps domain
+          type: string
+          default: apps.cluster.example.com
+  steps:
+    - id: fetch
+      name: Fetch skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
+          clusterDomain: ${{ parameters.clusterDomain }}
+    - id: publish
+      name: Publish to Gitea
+      action: publish:github
+      input:
+        repoUrl: gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-cnv
+        description: KubeVirt VM ${{ parameters.name }}
+        defaultBranch: main
+    - id: register
+      name: Register in catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+  output:
+    links:
+      - title: OpenShift Console Virtualization
+        url: https://console-openshift-console.${{ parameters.clusterDomain }}/k8s/ns/${{ parameters.name }}/kubevirt.io~v1~VirtualMachine
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}

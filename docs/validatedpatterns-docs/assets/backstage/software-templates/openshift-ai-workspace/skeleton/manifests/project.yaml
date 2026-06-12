@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${{ values.name }}
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    openshift.io/description: "DS project for ${{ values.owner }} — model ${{ values.model }}"

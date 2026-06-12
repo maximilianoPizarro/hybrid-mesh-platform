@@ -1,0 +1,30 @@
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+  name: {{ .Values.tempo.name }}
+  namespace: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  storage:
+    secret:
+      name: tempo-minio
+      type: s3
+  storageSize: 5Gi
+  resources:
+    total:
+      limits:
+        memory: 2Gi
+        cpu: 2000m
+  tenants:
+    mode: openshift
+    authentication:
+      - tenantName: {{ .Values.tempo.tenantName }}
+        tenantId: {{ .Values.tempo.tenantId | quote }}
+  template:
+    gateway:
+      enabled: true
+    queryFrontend:
+      jaegerQuery:
+        enabled: true

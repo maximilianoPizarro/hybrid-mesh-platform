@@ -1,10 +1,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: industrial-edge-spoke
+  name: fleet-spoke-push
   namespace: openshift-gitops
   labels:
     app.kubernetes.io/part-of: platform-hub-spoke
+    platform.io/gitops-strategy: push
     cluster.open-cluster-management.io/placement: hub-spoke-placement
   annotations:
     argocd.argoproj.io/sync-wave: "4"
@@ -22,18 +23,30 @@ spec:
       name: '{{`{{name}}-spoke-components`}}'
       labels:
         app.kubernetes.io/part-of: platform-hub-spoke
+        platform.io/gitops-strategy: push
         apps.open-cluster-management.io/cluster-set: global
         apps.open-cluster-management.io/ocm-managed-cluster: '{{`{{name}}`}}'
         cluster.open-cluster-management.io/placement: hub-spoke-placement
       annotations:
         apps.open-cluster-management.io/ocm-managed-cluster: '{{`{{name}}`}}'
         apps.open-cluster-management.io/ocm-managed-cluster-app-namespace: openshift-gitops
+        platform.io/gitops-strategy: push
     spec:
-      project: default
+      project: fleet-push
       source:
         repoURL: {{ .Values.gitops.repoUrl }}
         targetRevision: {{ .Values.gitops.revision | default "main" | quote }}
-        path: '{{`{{name}}`}}'
+        path: charts/all/spoke-meta-push
+        helm:
+          valuesObject:
+            clusterName: '{{`{{name}}`}}'
+            clusterRole: spoke
+            gitops:
+              repoUrl: {{ .Values.gitops.repoUrl | quote }}
+              revision: {{ .Values.gitops.revision | default "main" | quote }}
+            hubClusterDomain: {{ .Values.clusters.hub.domain | default "" | quote }}
+            eastDomain: {{ .Values.clusters.east.domain | default "" | quote }}
+            westDomain: {{ .Values.clusters.west.domain | default "" | quote }}
       destination:
         name: '{{`{{name}}`}}'
         namespace: openshift-gitops

@@ -1,0 +1,19 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gitea
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  host: gitea-gitea.{{ .Values.clusterDomain }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: field-content-gitea-chart-http
+    weight: 100
+  wildcardPolicy: None

@@ -1,0 +1,8 @@
+# MQTT sensor topics -> Kafka (edit in Kaoto)
+- route:
+    id: mqtt-to-kafka-temperature
+    from:
+      uri: "paho:iot-sensor/sw/temperature?brokerUrl={{env:MQTT_BROKER_URI}}"
+    steps:
+      - to:
+          uri: "kafka:temperature?brokers={{env:KAFKA_BROKER_URI}}"

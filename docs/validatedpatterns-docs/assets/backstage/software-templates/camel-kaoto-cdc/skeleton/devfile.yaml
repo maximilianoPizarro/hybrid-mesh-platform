@@ -1,0 +1,98 @@
+schemaVersion: 2.2.2
+metadata:
+  name: ${{ values.name }}
+  version: 1.0.0
+  displayName: Camel CDC Route
+  description: Apache Camel CDC route with Kaoto visual designer + Continue AI (Granite via OpenShift AI)
+  language: yaml
+  projectType: camel
+  tags:
+    - Camel
+    - Kaoto
+    - CDC
+    - Kafka
+    - AI
+    - Continue
+attributes:
+  .vscode/extensions.json: |
+    {
+      "recommendations": [
+        "redhat.vscode-kaoto",
+        "redhat.vscode-apache-camel",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "redhat.java",
+        "redhat.vscode-quarkus",
+        "jbangdev.jbang-vscode",
+        "redhat.vscode-openshift-connector",
+        "Continue.continue"
+      ]
+    }
+projects:
+  - name: ${{ values.name }}
+    git:
+      remotes:
+        origin: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}.git
+components:
+  - name: tools
+    container:
+      image: registry.redhat.io/devspaces/udi-rhel9:latest
+      memoryLimit: 2Gi
+      cpuLimit: "1"
+      mountSources: true
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+  - name: m2
+    volume:
+      size: 1Gi
+commands:
+  - id: install-extensions
+    exec:
+      component: tools
+      commandLine: |
+        export LD_LIBRARY_PATH=/checode/checode-linux-libc/ubi9/ld_libs:/checode/checode-linux-libc/ubi9/ld_libs/openssl:/checode/checode-linux-libc/ubi9/ld_libs/core:/usr/lib64
+        CHE_CODE=/checode/checode-linux-libc/ubi9/bin/che-code
+        EXT_DIR=/checode/checode-linux-libc/ubi9/extensions
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-kaoto --force
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-apache-camel --force
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension Continue.continue --force
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-yaml --force
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.java --force
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-quarkus --force
+  - id: setup-continue
+    exec:
+      component: tools
+      commandLine: |
+        mkdir -p /home/user/.continue
+        cp /projects/${{ values.name }}/continue-config.json /home/user/.continue/config.json
+        if [ -n "$CONTINUE_API_KEY" ]; then
+          sed -i "s|CONTINUE_API_KEY_PLACEHOLDER|$CONTINUE_API_KEY|g" /home/user/.continue/config.json
+        fi
+        if [ -n "$CONTINUE_API_BASE" ]; then
+          sed -i "s|https://litellm-prod.apps.maas.redhatworkshops.io/v1|$CONTINUE_API_BASE|g" /home/user/.continue/config.json
+        fi
+        if [ -n "$CONTINUE_MODEL" ]; then
+          sed -i "s|deepseek-r1-distill-qwen-14b|$CONTINUE_MODEL|g" /home/user/.continue/config.json
+        fi
+  - id: setup-project
+    exec:
+      component: tools
+      commandLine: |
+        chmod +x /projects/${{ values.name }}/mvnw
+        which jbang >/dev/null 2>&1 || curl -Ls https://sh.jbang.dev | bash -s - app setup
+  - id: build
+    exec:
+      component: tools
+      commandLine: "./mvnw package -DskipTests"
+      workingDir: ${PROJECT_SOURCE}
+  - id: run
+    exec:
+      component: tools
+      commandLine: "./mvnw quarkus:dev"
+      workingDir: ${PROJECT_SOURCE}
+events:
+  postStart:
+    - install-extensions
+    - setup-continue
+    - setup-project

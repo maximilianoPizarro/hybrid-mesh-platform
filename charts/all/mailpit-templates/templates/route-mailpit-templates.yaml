@@ -1,0 +1,20 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mailpit-templates
+  namespace: mailpit-templates
+  labels:
+    app: mailpit-templates
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  host: mailpit-templates.{{ .Values.clusterDomain }}
+  to:
+    kind: Service
+    name: mailpit-templates
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

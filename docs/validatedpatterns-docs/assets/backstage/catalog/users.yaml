@@ -1,0 +1,24 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-engineering
+  description: Platform engineering team
+spec:
+  type: team
+  profile:
+    displayName: Platform Engineering
+  children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: maximilianoPizarro
+  annotations:
+    github.com/user-login: maximilianoPizarro
+spec:
+  profile:
+    displayName: Maximiliano Pizarro
+    email: maximiliano@redhat.com
+  memberOf:
+    - platform-engineering

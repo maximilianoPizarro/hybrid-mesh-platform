@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tempo-bucket-bootstrap
+  namespace: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: quay.io/minio/mc:latest
+          env:
+            - name: HOME
+              value: /tmp
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mc --config-dir /tmp/.mc alias set hub {{ .Values.minio.endpoint }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
+              mc --config-dir /tmp/.mc mb --ignore-existing hub/{{ .Values.minio.bucket }}

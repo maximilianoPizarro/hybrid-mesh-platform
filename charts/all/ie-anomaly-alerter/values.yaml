@@ -2,6 +2,10 @@ clusterDomain: ""
 clusterName: ""
 hubClusterDomain: ""
 
+global:
+  hubClusterDomain: apps.cluster.example.com
+  localClusterDomain: apps.cluster.example.com
+
 mqtt:
   host: messaging
   port: 1883

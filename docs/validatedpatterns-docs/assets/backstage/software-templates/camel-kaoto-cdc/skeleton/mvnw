@@ -1,0 +1,28 @@
+#!/bin/sh
+set -e
+WRAPPER_PROPS=".mvn/wrapper/maven-wrapper.properties"
+MAVEN_HOME="${HOME}/.m2/wrapper"
+if [ ! -f "$WRAPPER_PROPS" ]; then
+  echo "Error: $WRAPPER_PROPS not found" >&2
+  exit 1
+fi
+DIST_URL=$(grep distributionUrl "$WRAPPER_PROPS" | cut -d= -f2- | tr -d "\r")
+MAVEN_ZIP=$(basename "$DIST_URL")
+MAVEN_VERSION=${MAVEN_ZIP#apache-maven-}
+MAVEN_VERSION=${MAVEN_VERSION%-bin.zip}
+MAVEN_DIR="$MAVEN_HOME/apache-maven-$MAVEN_VERSION"
+if [ ! -d "$MAVEN_DIR" ]; then
+  echo "Downloading Maven $MAVEN_VERSION..."
+  mkdir -p "$MAVEN_HOME"
+  TMPFILE=$(mktemp /tmp/maven-XXXXXX.zip)
+  if command -v curl >/dev/null 2>&1; then
+    curl -sL "$DIST_URL" -o "$TMPFILE"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "$DIST_URL" -O "$TMPFILE"
+  else
+    echo "Error: curl or wget required" >&2; exit 1
+  fi
+  unzip -qo "$TMPFILE" -d "$MAVEN_HOME"
+  rm -f "$TMPFILE"
+fi
+exec "$MAVEN_DIR/bin/mvn" "$@"

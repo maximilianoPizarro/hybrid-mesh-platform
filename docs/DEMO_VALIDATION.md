@@ -24,9 +24,13 @@ Full `./pattern.sh install` requires Podman (utility container). On Windows with
 After installing from `hybrid-mesh-platform`:
 
 1. Hub clustergroup Application **Synced**
-2. East/west clustergroup Applications on spokes **Synced** (ACM pull)
-3. IE `line-dashboard` reachable on each spoke
-4. Hub gateway + RHCL APIProduct cross-cluster
-5. ACS Central shows hub + east + west
+2. ApplicationSet `fleet-spoke-push` present; `east-spoke-components` / `west-spoke-components` **Synced**
+3. East/west clustergroup (PULL) **Synced** on spokes
+4. `operators-ci-*` (PUSH) and `industrial-edge-*` (PULL) visible in spoke Argo CD by AppProject
+5. IE `line-dashboard` reachable on each spoke
 
-See [MIGRATION.md](../MIGRATION.md) for architecture differences.
+```bash
+python scripts/verify-gitops-strategies.py
+bash scripts/argocd-preflight.sh
+./scripts/verify-fleet.sh
+```

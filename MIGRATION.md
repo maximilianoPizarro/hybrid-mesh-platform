@@ -1,44 +1,70 @@
 # Migration from platform-hub-spoke-config
 
-This repository is the **Validated Patterns** implementation of the Hybrid Mesh Platform.
+Validated Patterns implementation: `github.com/maximilianoPizarro/hybrid-mesh-platform`
 
 | Item | Location |
 |------|----------|
-| VP pattern (this repo) | `github.com/maximilianoPizarro/hybrid-mesh-platform` |
-| Legacy App-of-Apps (frozen) | `github.com/maximilianoPizarro/platform-hub-spoke-config` |
-| Workshop Showroom content | `github.com/maximilianoPizarro/showroom-hybrid-mesh-ai` |
+| VP pattern (this repo) | `hybrid-mesh-platform` |
+| Legacy App-of-Apps (frozen) | `platform-hub-spoke-config` |
+| Workshop Showroom | `showroom-hybrid-mesh-ai` |
 
 ## Architecture change
 
-- **Before:** Custom Helm App-of-Apps (`templates/component-applications.yaml`) with hub-push ApplicationSet to spoke Argo CD.
-- **After:** Validated Patterns `clustergroup` chart with ACM `managedClusterGroups` for **east** and **west** (pull model).
+| Before (legacy) | After (VP) |
+|-----------------|------------|
+| Root Helm chart `.` + `east/` / `west/` | `values-{hub,east,west}.yaml` + `charts/all/*` |
+| ApplicationSet `industrial-edge-spoke` only | **Dual:** `fleet-spoke-push` (PUSH) + `managedClusterGroups` (PULL) |
+| Single Argo project `default` / `hub` | Domain AppProjects (`operators-ci`, `industrial-edge`, …) |
+| Monolithic `operators` chart | `operators-ci`, `operators-platform`, `operators-edge` |
+
+## Dual GitOps partition
+
+| Strategy | Spoke apps | Mechanism |
+|----------|------------|-----------|
+| **PUSH** | `operators-ci`, `operators-platform` | Hub ApplicationSet → `spoke-meta-push` |
+| **PULL** | IE, mesh, observability, `operators-edge`, … | ACM clustergroup on spoke |
 
 ## Chart mapping
 
-All legacy charts were copied from `platform-hub-spoke-config/components/*` to `charts/all/<name>/` without modifying the source repository.
-
-Regenerate VP values after source changes:
-
-```bash
-python scripts/generate-vp-values.py
+```
+platform-hub-spoke-config/components/<name>/  →  charts/all/<name>/
 ```
 
-Source path (read-only): `../platform-hub-spoke-config`
+19 charts use split templates; 11 templated charts retain `all.yaml` (Helm `range` blocks).
 
-## Cluster groups
+## Doc mapping
 
-| File | clusterGroup | Purpose |
-|------|--------------|---------|
-| `values-hub.yaml` | `hub` | ACM, GitOps, mesh, RHCL, AI, observability, demos |
-| `values-east.yaml` | `east` | Industrial Edge workloads on east spoke |
-| `values-west.yaml` | `west` | Same IE stack on west spoke |
+| Legacy | VP |
+|--------|-----|
+| `docs/getting-started.md` | `docs/validatedpatterns-docs/getting-started.md` |
+| `docs/gitops-deployment-chain.md` | same path under validatedpatterns-docs |
+| GitHub Pages | validatedpatterns.io |
 
-## Secrets
+Regenerate: `python scripts/migrate-docs-vp.py`
 
-Use `values-secret.yaml` (from `values-secret.yaml.template`) with Vault + External Secrets Operator per [VP secrets guide](https://validatedpatterns.io/learn/secrets-management-in-the-validated-patterns-framework/).
+## Scripts
 
-Legacy RHDP-injected secrets (`kairos-ai-credentials`, MaaS keys, spoke tokens) are documented in `values-secret.yaml.template`.
+| Script | Purpose |
+|--------|---------|
+| `generate-vp-values.py` | Legacy → values-hub/east/west |
+| `apply-vp-argo-layout.py` | AppProject taxonomy |
+| `verify-gitops-strategies.py` | PUSH/PULL partition check |
+| `argocd-preflight.sh` | CI preflight |
+| `split-chart-templates.py` | Split all.yaml (safe for static docs) |
+| `sync-cluster-branches.sh` | Propagate `east`/`west` branches from main |
+
+## Cluster branches
+
+| Branch | Cluster | Values on branch |
+|--------|---------|------------------|
+| `main` | hub | `values-hub.yaml` (+ east/west for dev) |
+| `east` | east | `values-east.yaml` only |
+| `west` | west | `values-west.yaml` only |
+
+```bash
+bash scripts/sync-cluster-branches.sh
+```
 
 ## Showroom cutover
 
-Do **not** repoint the Showroom git-cloner until this pattern is validated on demo.redhat.com. The legacy repo continues to serve live workshops until cutover is announced.
+Do not repoint Showroom git-cloner until `./pattern.sh install` is validated on RHDP.

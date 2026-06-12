@@ -1,0 +1,69 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: ${{ values.uniqueName }}-build
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  params:
+    - name: git-url
+      type: string
+    - name: image
+      type: string
+      default: quay-registry.${{ values.clusterDomain }}/workshop/${{ values.uniqueName }}:latest
+  workspaces:
+    - name: source
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: subdirectory
+          value: ""
+        - name: deleteExisting
+          value: "true"
+    - name: build-and-push
+      runAfter:
+        - fetch-repository
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: IMAGE
+          value: $(params.image)
+        - name: TLSVERIFY
+          value: "false"
+---
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: ${{ values.uniqueName }}-build-run
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: ${{ values.uniqueName }}-build
+  params:
+    - name: git-url
+      value: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}.git
+    - name: image
+      value: quay-registry.${{ values.clusterDomain }}/workshop/${{ values.uniqueName }}:latest
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi

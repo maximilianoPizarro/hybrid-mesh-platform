@@ -1,0 +1,57 @@
+clusterName: ""
+clusterDomain: ""
+hubClusterDomain: ""
+eastDomain: ""
+westDomain: ""
+clusterRole: spoke
+
+gitops:
+  repoUrl: ""
+  revision: main
+
+# PUSH-only components (mutually exclusive with PULL clustergroup apps)
+components:
+  - id: operators-platform
+    path: charts/all/operators-platform
+    namespace: openshift-operators
+    argoProject: operators-platform
+    syncWave: "2"
+  - id: operators-ci
+    path: charts/all/operators-ci
+    namespace: openshift-operators
+    argoProject: operators-ci
+    syncWave: "2"
+
+subscriptions:
+  - name: skupper-operator
+    namespace: openshift-operators
+    channel: stable-2
+    source: redhat-operators
+  - name: grafana-operator
+    namespace: openshift-operators
+    channel: v5
+    source: community-operators
+  - name: kiali-ossm
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: rhacs-operator
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: opentelemetry-product
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: camel-k
+    namespace: openshift-operators
+    channel: stable-v2
+    source: community-operators
+  - name: devspaces
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: kubernetes-imagepuller-operator
+    namespace: openshift-operators
+    channel: stable
+    source: community-operators

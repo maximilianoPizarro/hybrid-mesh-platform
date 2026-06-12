@@ -1,0 +1,33 @@
+name: Helm Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.15.0
+      - name: Lint all component charts
+        run: |
+          set -e
+          for chart in charts/all/*/Chart.yaml; do
+            helm lint "$(dirname "$chart")"
+          done
+      - name: Template key charts
+        run: |
+          helm template test charts/all/operators-ci --set clusterRole=spoke
+          helm template test charts/all/spoke-meta-push \
+            --set clusterName=east --set gitops.repoUrl=https://github.com/example/hybrid-mesh-platform.git
+          helm template test charts/all/acm-hub-spoke \
+            --set gitops.repoUrl=https://github.com/example/hybrid-mesh-platform.git
+      - name: Argo preflight
+        run: bash scripts/argocd-preflight.sh
+      - name: GitOps strategy partition
+        run: python scripts/verify-gitops-strategies.py

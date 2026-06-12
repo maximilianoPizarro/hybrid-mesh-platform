@@ -1,0 +1,41 @@
+apiVersion: console.streamshub.github.com/v1alpha1
+kind: Console
+metadata:
+  name: kafka-console
+  namespace: kafka-console
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostname: kafka-console.{{ .Values.clusterDomain }}
+  kafkaClusters:
+    - name: prod-cluster-east
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: kafka-east-datalake.service-interconnect.svc.cluster.local:9092
+    - name: prod-cluster-west
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: kafka-west-datalake.service-interconnect.svc.cluster.local:9092
+    - name: dev-cluster-east
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: kafka-east-tst.service-interconnect.svc.cluster.local:9092
+    - name: factory-cluster-east
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: kafka-east-stormshift.service-interconnect.svc.cluster.local:9092
+    - name: dev-cluster-west
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: kafka-west-tst.service-interconnect.svc.cluster.local:9092
+    - name: factory-cluster-west
+      properties:
+        values:
+          - name: bootstrap.servers
+            value: kafka-west-stormshift.service-interconnect.svc.cluster.local:9092

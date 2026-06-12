@@ -1,0 +1,11 @@
+apiVersion: skupper.io/v2alpha1
+kind: Connector
+metadata:
+  name: minio-hub
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  routingKey: minio-hub
+  host: minio.industrial-edge-ml-workspace.svc.cluster.local
+  port: 9000

@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}-osai
+  title: OpenShift AI — ${{ values.name }}
+  description: Data Science workspace using MaaS model ${{ values.model }}
+  annotations:
+    openshift.ai/project: ${{ values.name }}
+    maas.redhat.com/default-model: ${{ values.model }}
+  links:
+    - url: https://rhods-dashboard-redhat-ods-applications.${{ values.clusterDomain }}
+      title: OpenShift AI Dashboard
+      icon: dashboard
+spec:
+  type: ml-workspace
+  lifecycle: experimental
+  owner: ${{ values.owner }}
+  system: public-api-demos

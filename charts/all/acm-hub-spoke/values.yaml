@@ -2,7 +2,18 @@ clusterDomain: ""
 gitops:
   repoUrl: ""
   revision: "main"
+  strategies:
+    push:
+      enabled: true
+      applicationSetName: fleet-spoke-push
+      componentIds:
+        - operators-ci
+        - operators-platform
+    pull:
+      enabled: true
 clusters:
+  hub:
+    domain: ""
   east:
     domain: ""
   west:

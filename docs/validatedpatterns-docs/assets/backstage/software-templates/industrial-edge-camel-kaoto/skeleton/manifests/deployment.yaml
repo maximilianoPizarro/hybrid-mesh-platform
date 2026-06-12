@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${{ values.uniqueName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${{ values.uniqueName }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.uniqueName }}
+        backstage.io/kubernetes-id: ${{ values.uniqueName }}
+    spec:
+      containers:
+        - name: camel
+          image: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.uniqueName }}:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: MQTT_BROKER_URI
+              value: ${{ values.mqttBrokerUri }}
+            - name: KAFKA_BROKER_URI
+              value: ${{ values.kafkaBrokerUri }}
+            - name: S3_ENDPOINT
+              value: ${{ values.s3Endpoint }}
+            - name: S3_BUCKET
+              value: ${{ values.s3Bucket }}
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${{ values.uniqueName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  selector:
+    app: ${{ values.uniqueName }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

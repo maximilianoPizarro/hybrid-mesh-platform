@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${{ values.namespace }}
+  labels:
+    app.kubernetes.io/part-of: industrial-edge
+    kairos.io/managed: "true"
+    kairos.io/environment: ${{ values.environment }}
+    istio-injection: enabled
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

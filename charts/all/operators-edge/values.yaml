@@ -1,0 +1,14 @@
+clusterRole: spoke
+subscriptions:
+  - name: amq-broker-rhel8
+    namespace: openshift-operators
+    channel: 7.12.x
+    source: redhat-operators
+  - name: amq-streams
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: rhods-operator
+    namespace: redhat-ods-operator
+    channel: stable-2.25
+    source: redhat-operators

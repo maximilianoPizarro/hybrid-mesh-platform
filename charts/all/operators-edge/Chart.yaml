@@ -1,0 +1,5 @@
+apiVersion: v2
+name: operators-edge
+description: Industrial Edge OLM operators — AMQ, RHODS (PULL strategy on spokes)
+type: application
+version: 0.1.0

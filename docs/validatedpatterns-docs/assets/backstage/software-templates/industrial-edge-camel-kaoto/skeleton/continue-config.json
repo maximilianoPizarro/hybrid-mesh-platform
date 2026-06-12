@@ -1,0 +1,22 @@
+{
+  "models": [
+    {
+      "title": "DeepSeek R1 (MaaS)",
+      "model": "deepseek-r1-distill-qwen-14b",
+      "apiBase": "https://litellm-prod.apps.maas.redhatworkshops.io/v1",
+      "provider": "openai",
+      "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+      "contextLength": 32768,
+      "completionOptions": { "maxTokens": 4096 },
+      "systemMessage": "You are an Industrial Edge Camel/Kaoto specialist. Generate valid Camel YAML DSL routes for MQTT, Kafka, S3, and HTTP."
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "DeepSeek autocomplete",
+    "model": "deepseek-r1-distill-qwen-14b",
+    "apiBase": "https://litellm-prod.apps.maas.redhatworkshops.io/v1",
+    "provider": "openai",
+    "apiKey": "CONTINUE_API_KEY_PLACEHOLDER"
+  },
+  "allowAnonymousTelemetry": false
+}

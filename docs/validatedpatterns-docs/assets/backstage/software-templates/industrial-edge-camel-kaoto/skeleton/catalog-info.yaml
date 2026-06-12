@@ -1,0 +1,35 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.uniqueName }}
+  title: IE Camel Kaoto (${{ values.targetCluster }})
+  description: Camel routes with Kaoto and Continue AI on spoke ${{ values.targetCluster }}
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.uniqueName }}
+    backstage.io/kubernetes-namespace: ${{ values.namespace }}
+    backstage.io/kubernetes-cluster: ${{ values.targetCluster }}
+    backstage.io/techdocs-ref: dir:.
+    janus-idp.io/tekton: ${{ values.namespace }}
+    backstage.io/source-location: url:https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
+    kairos.io/environment: ${{ values.environment }}
+    quay.io/repository-slug: workshop/${{ values.uniqueName }}
+  links:
+    - url: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
+      title: Source Code (Gitea)
+      icon: code
+    - url: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}/raw/branch/main/README.md
+      title: Documentation
+      icon: docs
+    - url: https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
+      title: Open in DevSpaces (Kaoto)
+      icon: chat
+  tags:
+    - camel
+    - kaoto
+    - industrial-edge
+    - ${{ values.targetCluster }}
+spec:
+  type: service
+  lifecycle: experimental
+  owner: ${{ values.owner }}
+  system: industrial-edge

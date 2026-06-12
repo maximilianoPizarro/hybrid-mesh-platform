@@ -1,0 +1,11 @@
+apiVersion: skupper.io/v2alpha1
+kind: Connector
+metadata:
+  name: prometheus-{{ .Values.clusterName }}
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  routingKey: prometheus-{{ .Values.clusterName }}
+  host: prometheus-auth-proxy.service-interconnect.svc.cluster.local
+  port: 9091

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fleet-pull-overview
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+    platform.io/gitops-strategy: pull
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  README: |
+    PULL strategy: east/west clustergroup Applications are deployed by ACM managedClusterGroups.
+    Open each spoke Argo CD UI and filter by AppProjects: industrial-edge, mesh, observability, operators-edge.
+  east-domain: {{ .Values.clusters.east.domain | default "apps.east.example.com" | quote }}
+  west-domain: {{ .Values.clusters.west.domain | default "apps.west.example.com" | quote }}

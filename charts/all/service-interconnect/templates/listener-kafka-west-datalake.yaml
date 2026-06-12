@@ -1,0 +1,11 @@
+apiVersion: skupper.io/v2alpha1
+kind: Listener
+metadata:
+  name: kafka-west-datalake
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  routingKey: kafka-west-datalake
+  host: kafka-west-datalake
+  port: 9092

@@ -1,0 +1,616 @@
+/* Red Hat Design System overrides for Just the Docs */
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --rh-color-brand-red-on-light: #EE0000;
+  --rh-color-brand-red-on-dark: #FF4136;
+  --rh-color-black-900: #151515;
+  --rh-color-black-800: #1F1F1F;
+  --rh-color-black-700: #292929;
+  --rh-color-black-600: #3C3F42;
+  --rh-color-black-500: #6A6E73;
+  --rh-color-black-400: #8A8D90;
+  --rh-color-black-300: #B8BBBE;
+  --rh-color-black-200: #D2D2D2;
+  --rh-color-black-150: #E0E0E0;
+  --rh-color-black-100: #F0F0F0;
+  --rh-color-white: #FFFFFF;
+  --rh-color-surface-darkest: #0C0C0C;
+  --rh-color-surface-dark: #1F1F1F;
+  --rh-color-interactive-blue: #0066CC;
+  --rh-color-interactive-blue-lighter: #73BCF7;
+  --rh-sidebar-width: 264px;
+  --rh-main-padding-x: 2rem;
+  --rh-toc-width: 11rem;
+}
+
+/* ── Typography ── */
+.site-title {
+  font-family: 'Red Hat Display', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+body {
+  font-family: 'Red Hat Text', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.nav-list .nav-list-item a,
+.site-title {
+  font-family: 'Red Hat Display', sans-serif !important;
+}
+
+code, pre, .highlight {
+  font-family: 'Red Hat Mono', monospace !important;
+}
+
+/* ── Mobile: compact header, let Just the Docs handle sidebar collapse ── */
+header.side-bar {
+  border-top: 3px solid var(--rh-color-brand-red-on-dark) !important;
+}
+
+/* ── Desktop sidebar layout: pin footer visible at bottom, scroll nav only ── */
+@media (min-width: 50rem) {
+  header.side-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+  }
+
+  header.side-bar .site-nav {
+    flex: 1 1 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+  }
+
+  header.side-bar > .site-footer {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    width: 100% !important;
+    position: static !important;
+    left: auto !important;
+    bottom: auto !important;
+  }
+
+  .side-bar .site-header,
+  .side-bar .site-nav,
+  header.side-bar > .site-footer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .side-bar .site-header {
+    justify-content: flex-start !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .side-bar .site-header .site-title {
+    justify-content: flex-start !important;
+  }
+
+  .side-bar .site-header .site-button {
+    position: absolute !important;
+    top: 50% !important;
+    right: 0.5rem !important;
+    transform: translateY(-50%) !important;
+  }
+}
+
+/* Desktop / tablet: attribution lives in sidebar only (theme also injects nav_footer in main — hide dup) */
+@media (min-width: 31.25rem) {
+  .main .site-footer-custom {
+    display: none !important;
+  }
+}
+
+/* Mobile (< 50rem): let sidebar collapse naturally, compact header */
+@media (max-width: 49.99rem) {
+  header.side-bar {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .site-header {
+    padding: 0.5rem 0.75rem !important;
+    min-height: 0 !important;
+  }
+
+  .site-logo-img {
+    height: 24px !important;
+    max-width: 110px !important;
+  }
+
+  .site-header .site-button {
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+  }
+
+  header.side-bar > .site-footer {
+    display: none !important;
+  }
+}
+
+/* Small mobile: footer attribution under content */
+@media (max-width: 31.24rem) {
+  .main .site-footer {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 0.75rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .main .site-footer-custom {
+    width: 100% !important;
+    max-width: 22rem !important;
+    margin-inline: auto !important;
+    padding: 1rem 0.75rem !important;
+    border-top: 1px solid var(--rh-color-black-700) !important;
+    box-sizing: border-box !important;
+  }
+
+  .main .site-footer-custom p {
+    margin: 0.35rem 0 !important;
+  }
+
+  .main {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(1rem, env(safe-area-inset-right, 0px)) !important;
+  }
+}
+
+/* ── Sidebar header: left-aligned Red Hat logo ── */
+.site-header {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+@media (min-width: 50rem) {
+  .site-header {
+    padding: 0.85rem 1rem 0.75rem !important;
+  }
+}
+
+.site-header .site-title {
+  display: flex !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  padding-right: 0 !important;
+}
+
+.site-header .site-logo,
+.site-header .site-logo::before {
+  display: none !important;
+}
+
+.site-logo-img {
+  display: block !important;
+  height: 32px !important;
+  width: auto !important;
+  max-width: 140px !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+.site-header .site-button {
+  position: absolute !important;
+  top: 1rem !important;
+  right: 0.75rem !important;
+}
+
+/* ── Sidebar footer: author attribution (visible on dark) ── */
+.side-bar .site-footer > p {
+  display: none !important;
+}
+
+.site-footer-custom {
+  padding: 1rem 1rem 1.25rem !important;
+  border-top: 1px solid var(--rh-color-black-700) !important;
+  line-height: 1.5 !important;
+  color: var(--rh-color-black-300) !important;
+}
+
+.site-footer-custom p {
+  margin: 0.25rem 0 0 !important;
+  color: var(--rh-color-black-300) !important;
+  font-size: 0.85rem !important;
+}
+
+.site-footer-custom a {
+  color: var(--rh-color-interactive-blue-lighter) !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+.site-footer-custom a:hover {
+  color: var(--rh-color-white) !important;
+}
+
+.site-footer-author {
+  font-size: 0.9rem !important;
+}
+
+.site-footer-role {
+  color: var(--rh-color-black-400) !important;
+}
+
+/* ── Main area: fill space beside sidebar (no centered narrow column) ── */
+body {
+  background-color: var(--rh-color-surface-dark) !important;
+}
+
+.side-bar {
+  background-color: var(--rh-color-surface-darkest) !important;
+}
+
+.main {
+  background-color: var(--rh-color-surface-dark) !important;
+  box-sizing: border-box !important;
+}
+
+.main-content {
+  max-width: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.main-header {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Override Just the Docs centered / max-width content column */
+.main-header,
+.main-content-wrap {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+@media (min-width: 66.5rem) {
+  .side-bar {
+    width: var(--rh-sidebar-width) !important;
+    min-width: var(--rh-sidebar-width) !important;
+  }
+
+  .main {
+    width: calc(100% - var(--rh-sidebar-width)) !important;
+    max-width: none !important;
+    margin-left: var(--rh-sidebar-width) !important;
+    margin-right: 0 !important;
+    padding: 0 1.5rem 2.5rem 1.25rem !important;
+  }
+
+  .main-header,
+  .main-content-wrap {
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .main-content-wrap.has-page-toc {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) var(--rh-toc-width);
+    column-gap: 2rem;
+    align-items: start;
+  }
+
+  .main-content-wrap.has-page-toc .main-content {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .main-content-wrap.has-page-toc .site-nav-toc {
+    grid-column: 2;
+    display: block !important;
+    width: var(--rh-toc-width);
+  }
+}
+
+/* ── Right-side Table of Contents ── */
+.site-nav-toc {
+  position: sticky;
+  top: 4rem;
+  width: var(--rh-toc-width);
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  font-size: 0.8rem;
+  border-left: 2px solid var(--rh-color-brand-red-on-dark);
+  padding-left: 1rem;
+}
+
+.site-nav-toc a {
+  color: var(--rh-color-black-300) !important;
+  text-decoration: none;
+  display: block;
+  padding: 0.2rem 0;
+  line-height: 1.4;
+}
+
+.site-nav-toc a:hover {
+  color: var(--rh-color-white) !important;
+}
+
+.site-nav-toc ul {
+  list-style: none;
+  padding-left: 0.75rem;
+  margin: 0;
+}
+
+.site-nav-toc > ul {
+  padding-left: 0;
+}
+
+@media (max-width: 66.49rem) {
+  .site-nav-toc {
+    display: none !important;
+  }
+
+  .main-content-wrap.has-page-toc {
+    display: block !important;
+  }
+}
+
+/* Product screenshots */
+.main-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid var(--rh-color-black-700);
+}
+
+/* Small brand mark under page title (e.g. Kairos community logo SVG) */
+.main-content img.page-brand-logo {
+  width: 48px;
+  height: 48px;
+  max-width: 48px;
+  margin: 0 0 0.75rem 0;
+  border: none;
+  display: block;
+}
+
+.main-content img.doc-img-zoomable {
+  cursor: zoom-in;
+}
+
+.doc-img-lightbox {
+  max-width: min(96vw, 1400px);
+  width: auto;
+  padding: 0;
+  margin: auto;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.doc-img-lightbox::backdrop {
+  background: rgba(12, 12, 12, 0.88);
+}
+
+.doc-img-lightbox img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  margin: 2.25rem auto 0.5rem;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid var(--rh-color-black-600);
+}
+
+.doc-img-lightbox-close {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  font-size: 1.75rem;
+  line-height: 1;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--rh-color-black-600);
+  background: var(--rh-color-black-800);
+  color: var(--rh-color-white);
+  cursor: pointer;
+}
+
+.doc-img-lightbox-close:hover {
+  background: var(--rh-color-black-700);
+  color: var(--rh-color-white);
+}
+
+/* Links */
+a,
+.nav-list .nav-list-item a.active,
+.breadcrumb-nav a {
+  color: var(--rh-color-interactive-blue-lighter) !important;
+}
+
+a:hover {
+  color: var(--rh-color-white) !important;
+}
+
+/* Navigation active state */
+.nav-list .nav-list-item a.active {
+  border-left: 3px solid var(--rh-color-brand-red-on-dark) !important;
+  font-weight: 700;
+}
+
+/* Headings */
+h1 {
+  color: var(--rh-color-white) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  color: var(--rh-color-black-200) !important;
+  border-bottom-color: var(--rh-color-black-700) !important;
+  font-weight: 500 !important;
+}
+
+/* Tables */
+th {
+  background-color: var(--rh-color-black-800) !important;
+  color: var(--rh-color-white) !important;
+  font-family: 'Red Hat Display', sans-serif !important;
+  font-weight: 500 !important;
+}
+
+td {
+  border-color: var(--rh-color-black-700) !important;
+}
+
+table {
+  width: 100% !important;
+  display: table !important;
+}
+
+/* Code blocks */
+pre.highlight,
+.highlight pre {
+  background-color: var(--rh-color-black-900) !important;
+  border: 1px solid var(--rh-color-black-700) !important;
+  border-radius: 4px;
+}
+
+code {
+  background-color: var(--rh-color-black-800) !important;
+  color: var(--rh-color-interactive-blue-lighter) !important;
+  border-radius: 3px;
+  padding: 0.15em 0.35em;
+}
+
+pre code {
+  background-color: transparent !important;
+  color: var(--rh-color-black-200) !important;
+  padding: 0;
+}
+
+/* Search input */
+.search-input {
+  background-color: var(--rh-color-black-800) !important;
+  border-color: var(--rh-color-black-600) !important;
+  color: var(--rh-color-white) !important;
+  font-family: 'Red Hat Text', sans-serif !important;
+}
+
+/* Footer */
+.site-footer {
+  border-top-color: var(--rh-color-brand-red-on-dark) !important;
+  color: var(--rh-color-black-400) !important;
+  font-size: 0.85rem;
+}
+
+/* Buttons and back-to-top */
+.btn,
+.back-to-top {
+  font-family: 'Red Hat Text', sans-serif !important;
+}
+
+/* Mermaid diagrams */
+.mermaid {
+  background-color: var(--rh-color-black-900) !important;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.mermaid text,
+.mermaid .messageText,
+.mermaid .loopText,
+.mermaid .noteText,
+.mermaid .labelText,
+.mermaid .actor-man text,
+.mermaid tspan {
+  fill: var(--rh-color-white) !important;
+  color: var(--rh-color-white) !important;
+}
+
+.mermaid .actor {
+  fill: var(--rh-color-black-600) !important;
+  stroke: var(--rh-color-black-400) !important;
+}
+
+.mermaid .messageLine0,
+.mermaid .messageLine1 {
+  stroke: var(--rh-color-black-300) !important;
+}
+
+.mermaid .note {
+  fill: var(--rh-color-black-700) !important;
+  stroke: var(--rh-color-black-500) !important;
+}
+
+.mermaid .loopLine {
+  stroke: var(--rh-color-black-500) !important;
+}
+
+.mermaid .activation0,
+.mermaid .activation1,
+.mermaid .activation2 {
+  fill: var(--rh-color-black-600) !important;
+  stroke: var(--rh-color-black-400) !important;
+}
+
+.mermaid .sequenceNumber {
+  fill: var(--rh-color-white) !important;
+}
+
+.mermaid line[class^="messageLine"] {
+  stroke: var(--rh-color-black-300) !important;
+}
+
+.mermaid .edgeLabel,
+.mermaid .edgeLabel p,
+.mermaid .label,
+.mermaid .label text,
+.mermaid .nodeLabel {
+  color: var(--rh-color-white) !important;
+  fill: var(--rh-color-white) !important;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon {
+  fill: var(--rh-color-black-600) !important;
+  stroke: var(--rh-color-black-400) !important;
+}
+
+.mermaid .cluster rect {
+  fill: var(--rh-color-black-800) !important;
+  stroke: var(--rh-color-black-500) !important;
+}
+
+.mermaid .cluster text,
+.mermaid .cluster span {
+  fill: var(--rh-color-white) !important;
+  color: var(--rh-color-white) !important;
+}
+
+.mermaid .edgeLabel rect {
+  fill: var(--rh-color-black-900) !important;
+  opacity: 0.85;
+}
+
+.mermaid marker path {
+  fill: var(--rh-color-black-300) !important;
+}
+
+.mermaid .flowchart-link {
+  stroke: var(--rh-color-black-400) !important;
+}

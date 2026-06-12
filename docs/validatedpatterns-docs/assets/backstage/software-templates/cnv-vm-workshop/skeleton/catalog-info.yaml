@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}-cnv
+  title: KubeVirt VM — ${{ values.name }}
+  description: Workshop cirros VM in namespace ${{ values.name }}
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.name }}
+    backstage.io/kubernetes-namespace: ${{ values.name }}
+    backstage.io/kubernetes-cluster: hub
+  links:
+    - url: https://console-openshift-console.${{ values.clusterDomain }}/k8s/ns/${{ values.name }}/kubevirt.io~v1~VirtualMachine
+      title: Virtual Machines (console)
+      icon: web
+spec:
+  type: virtual-machine
+  lifecycle: experimental
+  owner: ${{ values.owner }}
+  system: industrial-edge

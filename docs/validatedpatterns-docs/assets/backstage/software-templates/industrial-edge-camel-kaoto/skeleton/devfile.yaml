@@ -1,0 +1,31 @@
+schemaVersion: 2.2.0
+metadata:
+  name: ${{ values.name }}
+  displayName: IE Camel Kaoto
+  projectType: camel
+components:
+  - name: tools
+    container:
+      image: registry.redhat.io/devspaces/udi-rhel9:latest
+      memoryLimit: 3Gi
+      mountSources: true
+      env:
+        - name: MQTT_BROKER_URI
+          value: "${{ values.mqttBrokerUri }}"
+        - name: KAFKA_BROKER_URI
+          value: "${{ values.kafkaBrokerUri }}"
+        - name: S3_ENDPOINT
+          value: "${{ values.s3Endpoint }}"
+        - name: S3_BUCKET
+          value: "${{ values.s3Bucket }}"
+commands:
+  - id: setup-continue
+    exec:
+      component: tools
+      commandLine: |
+        mkdir -p ~/.continue
+        cp /projects/${{ values.name }}/continue-config.json ~/.continue/config.json
+        [ -n "$CONTINUE_API_KEY" ] && sed -i "s|CONTINUE_API_KEY_PLACEHOLDER|$CONTINUE_API_KEY|g" ~/.continue/config.json
+events:
+  postStart:
+    - setup-continue

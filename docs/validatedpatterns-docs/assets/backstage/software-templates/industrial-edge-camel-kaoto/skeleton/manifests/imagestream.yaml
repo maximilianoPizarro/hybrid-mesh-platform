@@ -1,0 +1,11 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: ${{ values.uniqueName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    quay.io/repository: maximilianopizarro/${{ values.uniqueName }}
+spec:
+  lookupPolicy:
+    local: true

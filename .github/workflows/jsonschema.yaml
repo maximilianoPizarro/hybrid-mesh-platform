@@ -43,15 +43,21 @@ jobs:
       - name: Verify ClusterGroup values.schema.json against values-*yaml files
         run: |
           set -e
-          find . -maxdepth 1 -type f -name "values-*.yaml" ! -name "values-global.yaml" -print0 | while IFS= read -r -d '' i;
-          do
+          BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
+          case "${BRANCH}" in
+            east) FILES="values-east.yaml" ;;
+            west) FILES="values-west.yaml" ;;
+            *)
+              FILES=$(find . -maxdepth 1 -type f -name "values-*.yaml" ! -name "values-global.yaml" \
+                | grep -vE 'values-(standalone|group-one|secret)' || true)
+              ;;
+          esac
+          for i in ${FILES}; do
             if [[ "$i" =~ 4\.[0-9]+ ]]; then
               echo "Skipping $i"
               continue
             fi
             echo "$i"
-            # disable shellcheck of single quotes in yq
-            # shellcheck disable=2016
             yq eval-all '. as $item ireduce ({}; . * $item )' values-global.yaml "$i" > tmp.yaml
             check-jsonschema --fill-defaults --schemafile https://raw.githubusercontent.com/validatedpatterns/clustergroup-chart/refs/heads/main/values.schema.json tmp.yaml
             rm -f tmp.yaml

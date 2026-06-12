@@ -1,0 +1,38 @@
+{
+  "models": [
+    {
+      "title": "DeepSeek R1 (LiteLLM)",
+      "model": "deepseek-r1-distill-qwen-14b",
+      "apiBase": "https://litellm-prod.apps.maas.redhatworkshops.io/v1",
+      "provider": "openai",
+      "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+      "contextLength": 32768,
+      "completionOptions": {
+        "maxTokens": 4096
+      },
+      "systemMessage": "You generate Apache Camel routes in YAML DSL format compatible with Kaoto visual designer.\n\nALWAYS use this exact structure:\n```yaml\n- route:\n    id: route-name\n    from:\n      uri: kafka:topic-name\n      parameters:\n        brokers: cdc-cluster-kafka-bootstrap.kafka-cdc.svc:9092\n        groupId: my-group\n        autoOffsetReset: latest\n        valueDeserializer: org.apache.kafka.common.serialization.StringDeserializer\n      steps:\n        - log:\n            message: \"received: ${body}\"\n        - unmarshal:\n            json:\n              library: jackson\n        - choice:\n            when:\n              - simple: \"${body[payload][op]} == 'c'\"\n                steps:\n                  - log:\n                      message: \"INSERT\"\n            otherwise:\n              steps:\n                - log:\n                    message: \"OTHER\"\n```\n\nRULES:\n- Root element is always `- route:` with `id` and `from`\n- `from` has `uri`, `parameters`, and `steps`\n- Use `choice` with `when` list and `otherwise` for conditional routing\n- Use `simple` language for expressions: `${body[field]}`, `${header.name}`\n- Use `to` with `uri` for HTTP endpoints: `to: {uri: 'http://host:port/path'}`\n- Use `log` with `message` for logging\n- Use `unmarshal`/`marshal` with `json: {library: jackson}` for JSON\n- NEVER invent syntax. Only use valid Camel YAML DSL elements."
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "DeepSeek R1 Autocomplete",
+    "model": "deepseek-r1-distill-qwen-14b",
+    "apiBase": "https://litellm-prod.apps.maas.redhatworkshops.io/v1",
+    "provider": "openai",
+    "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+    "contextLength": 32768,
+    "completionOptions": {
+      "maxTokens": 256
+    }
+  },
+  "contextProviders": [
+    { "name": "codebase", "params": {} },
+    { "name": "folder", "params": {} },
+    { "name": "file", "params": {} },
+    { "name": "code", "params": {} },
+    { "name": "currentFile", "params": {} },
+    { "name": "tree", "params": {} },
+    { "name": "problems", "params": {} },
+    { "name": "terminal", "params": {} }
+  ],
+  "allowAnonymousTelemetry": false
+}

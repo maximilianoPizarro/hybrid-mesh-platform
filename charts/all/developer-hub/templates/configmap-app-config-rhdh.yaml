@@ -1,0 +1,262 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config-rhdh
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  app-config.yaml: |
+    app:
+      title: Developer Hub
+      baseUrl: https://developer-hub.{{ .Values.clusterDomain }}
+    backend:
+      baseUrl: https://developer-hub.{{ .Values.clusterDomain }}
+      cors:
+        origin: https://developer-hub.{{ .Values.clusterDomain }}
+      reading:
+        allow:
+          - host: "*.redhatworkshops.io"
+          - host: "*.github.io"
+          - host: raw.githubusercontent.com
+          - host: github.com
+          - host: petstore3.swagger.io
+          - host: httpbin.org
+          - host: catfact.ninja
+          - host: restcountries.com
+          - host: jsonplaceholder.typicode.com
+{{- if .Values.plugins.mcp.enabled | default true }}
+      actions:
+        pluginSources:
+          - software-catalog-mcp-tool
+          - techdocs-mcp-tool
+{{- end }}
+    enabled:
+      kubernetes: true
+      argocd: true
+      ocm: true
+    kubernetes:
+      serviceLocatorMethod:
+        type: multiTenant
+      clusterLocatorMethods:
+        - type: config
+          clusters:
+            - name: hub
+              url: https://kubernetes.default.svc.cluster.local:443
+              authProvider: serviceAccount
+              serviceAccountToken: ${K8S_SA_TOKEN}
+              skipTLSVerify: true
+              caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+{{- if and .Values.kubernetesSpokes.enabled (.Values.kubernetesSpokes.east.apiUrl | default "") }}
+            - name: east
+              url: {{ .Values.kubernetesSpokes.east.apiUrl | quote }}
+              authProvider: serviceAccount
+              serviceAccountToken: ${EAST_SA_TOKEN}
+              skipTLSVerify: true
+{{- end }}
+{{- if and .Values.kubernetesSpokes.enabled (.Values.kubernetesSpokes.west.apiUrl | default "") }}
+            - name: west
+              url: {{ .Values.kubernetesSpokes.west.apiUrl | quote }}
+              authProvider: serviceAccount
+              serviceAccountToken: ${WEST_SA_TOKEN}
+              skipTLSVerify: true
+{{- end }}
+      customResources:
+        - group: route.openshift.io
+          apiVersion: v1
+          plural: routes
+        - group: gateway.networking.k8s.io
+          apiVersion: v1
+          plural: gateways
+        - group: gateway.networking.k8s.io
+          apiVersion: v1
+          plural: httproutes
+        - group: gateway.networking.k8s.io
+          apiVersion: v1
+          plural: grpcroutes
+        - group: kafka.strimzi.io
+          apiVersion: v1beta2
+          plural: kafkas
+        - group: kafka.strimzi.io
+          apiVersion: v1beta2
+          plural: kafkatopics
+        - group: kafka.strimzi.io
+          apiVersion: v1beta2
+          plural: kafkausers
+        - group: kafka.strimzi.io
+          apiVersion: v1beta2
+          plural: kafkaconnects
+        - group: operators.coreos.com
+          apiVersion: v1alpha1
+          plural: subscriptions
+        - group: argoproj.io
+          apiVersion: v1alpha1
+          plural: applications
+    catalog:
+      import:
+        entityFilename: catalog-info.yaml
+      rules:
+        - allow: [Component, System, API, Resource, Location, Template, User, Group, Domain]
+      locations:
+        - type: file
+          target: /opt/app-root/src/catalog-data/users.yaml
+          rules:
+            - allow: [User, Group]
+        - type: file
+          target: /opt/app-root/src/catalog-data/ie/industrial-edge-system.yaml
+          rules:
+            - allow: [System, Domain, Component, API, Resource]
+        - type: url
+          target: https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/docs/validatedpatterns-docs/assets/backstage/software-templates/templates-catalog.yaml
+          rules:
+            - allow: [Template, Location]
+        - type: file
+          target: /opt/app-root/src/catalog-data/onboarding/catalog-info.yaml
+          rules:
+            - allow: [Component]
+        - type: file
+          target: /opt/app-root/src/catalog-data/public-apis/public-apis.yaml
+          rules:
+            - allow: [API, System]
+        - type: file
+          target: /opt/app-root/src/catalog-data/demos/hybrid-mesh-shared-demos.yaml
+          rules:
+            - allow: [System, Component]
+        - type: file
+          target: /opt/app-root/src/catalog-data/workshop-kuadrant/workshop-kuadrant-apis.yaml
+          rules:
+            - allow: [System, Component]
+        - type: file
+          target: /opt/app-root/src/catalog-data/openshift-ai/openshift-ai-workshop.yaml
+          rules:
+            - allow: [System, Component]
+        - type: file
+          target: /opt/app-root/src/catalog-data/ai-platform/ai-platform.yaml
+          rules:
+            - allow: [System, Component]
+        - type: url
+          target: https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/validatedpatterns-docs/assets/backstage/software-templates/templates-catalog.yaml
+          rules:
+            - allow: [Template, Location]
+      providers:
+        ocm:
+          default:
+            name: hub
+            kubernetesPluginRef: hub
+            url: https://kubernetes.default.svc.cluster.local:443
+            skipTLSVerify: true
+            owner: group:platform-engineering
+            schedule:
+              frequency: { minutes: 15 }
+              timeout: { minutes: 10 }
+        keycloakOrg:
+          default:
+            baseUrl: https://sso.{{ .Values.clusterDomain }}
+            loginRealm: backstage
+            clientId: developer-hub-catalog
+            clientSecret: ${OIDC_CLIENT_SECRET}
+            schedule:
+              frequency: { minutes: 30 }
+              timeout: { minutes: 3 }
+    argocd:
+      appLocatorMethods:
+        - type: config
+          instances:
+            - name: default
+              url: https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}
+              token: ${K8S_SA_TOKEN}
+    quay:
+      baseUrl: https://quay-registry.{{ .Values.clusterDomain }}
+      dangerouslyAllowInsecureConnections: true
+      skipTLSVerify: true
+      uiUrl: https://quay-registry.{{ .Values.clusterDomain }}
+      apiUrl: https://quay-registry.{{ .Values.clusterDomain }}
+      readOnly: false
+      defaultVisibility: public
+      allowedRegistries: ['quay-registry.{{ .Values.clusterDomain }}']
+      allowedRepositories: ['workshop/*']
+      allowedTags: ['latest', 'stable']
+    techdocs:
+      builder: local
+      publisher:
+        type: local
+{{- if .Values.plugins.techRadar.enabled | default true }}
+    techRadar:
+      url: https://raw.githubusercontent.com/backstage/community/master/plugins/tech-radar-common/src/sampleTechRadarResponse.json
+{{- end }}
+{{- if .Values.plugins.mcp.enabled | default true }}
+    mcpActions:
+      servers:
+        catalog:
+          pluginSources:
+            - software-catalog-mcp-tool
+        techdocs:
+          pluginSources:
+            - techdocs-mcp-tool
+{{- end }}
+    permission:
+      enabled: {{ .Values.plugins.rbac.enabled | default false }}
+      rbac:
+        admin:
+          users:
+            - name: user:default/{{ .Values.plugins.rbac.policyAdminUser | default "platformadmin" }}
+        pluginsWithPermission:
+          - catalog
+          - scaffolder
+          - permission
+          - kubernetes
+          - ocm
+          - techdocs
+          - notifications
+          - argocd
+          - kuadrant
+          - adoption-insights
+{{- if include "developer-hub.lightspeedEnabled" . }}
+          - lightspeed
+{{- end }}
+{{- if .Values.plugins.rbac.enabled | default false }}
+        policies-csv-file: /opt/app-root/src/rbac-policy.csv
+        policyFileReload: true
+{{- end }}
+    signInPage: oidc
+    proxy:
+      endpoints:
+        '/rhacs':
+          target: https://central.stackrox.svc:443
+          allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
+          headers:
+            Authorization: Bearer ${RHACS_API_TOKEN}
+        '/gitea':
+          target: https://gitea-gitea.{{ .Values.clusterDomain }}/api/v1
+          allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
+          headers:
+            Authorization: token ${GITEA_TOKEN}
+        '/quay':
+          target: https://quay-registry.{{ .Values.clusterDomain }}/api/v1
+          allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
+          changeOrigin: true
+        '/k8s-api':
+          target: https://kubernetes.default.svc
+          allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
+          headers:
+            Authorization: Bearer ${K8S_SA_TOKEN}
+          changeOrigin: true
+    integrations:
+      github:
+        - host: github.com
+          apiBaseUrl: https://api.github.com
+          rawBaseUrl: https://raw.githubusercontent.com
+        - host: gitea-gitea.{{ .Values.clusterDomain }}
+          apiBaseUrl: https://gitea-gitea.{{ .Values.clusterDomain }}/api/v1
+          token: ${GITEA_TOKEN}
+    # -- Azure DevOps integration (uncomment when AZURE_TOKEN and AZURE_ORG are set) --
+    # integrations:
+    #   azure:
+    #     - host: dev.azure.com
+    #       credentials:
+    #         - personalAccessToken: ${AZURE_TOKEN}
+    # azureDevOps:
+    #   host: dev.azure.com
+    #   organization: ${AZURE_ORG}

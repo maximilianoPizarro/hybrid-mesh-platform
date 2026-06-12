@@ -1,0 +1,9 @@
+apiVersion: devportal.kuadrant.io/v1
+kind: APIProduct
+metadata:
+  name: ${{ values.uniqueName }}
+  namespace: kuadrant-system
+spec:
+  displayName: ${{ values.name }}
+  referenceGrant:
+    namespace: service-interconnect

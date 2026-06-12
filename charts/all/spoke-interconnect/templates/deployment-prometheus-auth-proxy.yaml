@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-auth-proxy
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-auth-proxy
+  template:
+    metadata:
+      labels:
+        app: prometheus-auth-proxy
+    spec:
+      serviceAccountName: prometheus-auth-proxy
+      initContainers:
+        - name: inject-token
+          image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              sed "s|PROXY_TOKEN|${TOKEN}|g" /config-template/nginx.conf > /config/nginx.conf
+          volumeMounts:
+            - name: config-template
+              mountPath: /config-template
+            - name: config
+              mountPath: /config
+      containers:
+        - name: nginx
+          image: nginxinc/nginx-unprivileged:alpine
+          ports:
+            - containerPort: 9091
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      volumes:
+        - name: config-template
+          configMap:
+            name: prometheus-proxy-config
+        - name: config
+          emptyDir: {}

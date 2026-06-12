@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${{ values.uniqueName }}
+  labels:
+    kairos.io/managed: "true"
+    kairos.io/environment: ${{ values.environment }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${{ values.uniqueName }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.uniqueName }}
+        backstage.io/kubernetes-id: ${{ values.uniqueName }}
+        kairos.io/managed: "true"
+        kairos.io/environment: ${{ values.environment }}
+    spec:
+      containers:
+        - name: app
+          image: image-registry.openshift-image-registry.svc:5000/${{ values.namespace }}/${{ values.uniqueName }}:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${{ values.uniqueName }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  selector:
+    app: ${{ values.uniqueName }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

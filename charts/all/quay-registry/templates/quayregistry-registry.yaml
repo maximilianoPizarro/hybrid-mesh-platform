@@ -1,0 +1,39 @@
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
+metadata:
+  name: registry
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  configBundleSecret: quay-config-bundle
+  components:
+    - kind: clair
+      managed: false
+    - kind: horizontalpodautoscaler
+      managed: false
+    - kind: objectstorage
+      managed: false
+    - kind: mirror
+      managed: false
+    - kind: monitoring
+      managed: false
+    - kind: quay
+      managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 300m
+            memory: 4Gi
+          limits:
+            cpu: "2"
+            memory: 8Gi
+    - kind: postgres
+      managed: true
+    - kind: redis
+      managed: true
+    - kind: route
+      managed: true
+    - kind: tls
+      managed: true

@@ -1,5 +1,5 @@
 site_name: Hybrid Mesh Workshop
-site_description: Onboarding for platform-hub-spoke-config workshop users
+site_description: Onboarding for hybrid-mesh-platform workshop users
 nav:
   - Home: index.md
   - Login: login.md

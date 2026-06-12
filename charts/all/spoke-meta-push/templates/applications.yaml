@@ -1,0 +1,65 @@
+{{- $clusterDomain := .Values.clusterDomain -}}
+{{- if not $clusterDomain -}}
+{{- if eq .Values.clusterName "east" -}}
+{{- $clusterDomain = .Values.eastDomain -}}
+{{- else if eq .Values.clusterName "west" -}}
+{{- $clusterDomain = .Values.westDomain -}}
+{{- end -}}
+{{- end -}}
+{{- range .Values.components }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .id }}-{{ $.Values.clusterName }}
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .syncWave | default "0" | quote }}
+    apps.open-cluster-management.io/ocm-managed-cluster: {{ $.Values.clusterName | quote }}
+    apps.open-cluster-management.io/ocm-managed-cluster-app-namespace: openshift-gitops
+    platform.io/gitops-strategy: push
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+    platform.io/gitops-strategy: push
+    apps.open-cluster-management.io/cluster-set: global
+spec:
+  project: {{ .argoProject | default "fleet-push" | quote }}
+  source:
+    repoURL: {{ $.Values.gitops.repoUrl | quote }}
+    targetRevision: {{ $.Values.gitops.revision | default "main" | quote }}
+    path: {{ .path | quote }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $clusterDomain | quote }}
+        clusterName: {{ $.Values.clusterName | quote }}
+        clusterRole: {{ $.Values.clusterRole | quote }}
+        hubClusterDomain: {{ $.Values.hubClusterDomain | quote }}
+        subscriptions:
+{{- $.Values.subscriptions | toYaml | nindent 10 }}
+        global:
+          localClusterDomain: {{ $clusterDomain | quote }}
+          hubClusterDomain: {{ $.Values.hubClusterDomain | quote }}
+  destination:
+    name: {{ $.Values.clusterName | quote }}
+    namespace: {{ .namespace | quote }}
+  ignoreDifferences:
+    - group: operators.coreos.com
+      kind: Subscription
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: operators.coreos.com
+      kind: OperatorGroup
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels
+        - /spec
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+{{- end }}

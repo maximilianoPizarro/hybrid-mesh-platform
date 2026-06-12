@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.uniqueName }}
+  description: ${{ values.description }}
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.uniqueName }}
+    backstage.io/kubernetes-namespace: ${{ values.namespace }}
+    backstage.io/kubernetes-cluster: ${{ values.targetCluster }}
+    backstage.io/techdocs-ref: dir:.
+    kafka.apache.org/consumer-groups: cdc-cluster/camel-k-enricher,cdc-cluster/connect-mailpit-http-sink
+    che.eclipse.org/che-server: https://devspaces.${{ values.spokeAppsDomain }}
+    devspaces.io/factory: "https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}/raw/branch/main/devfile.yaml"
+  links:
+    - url: "https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}/raw/branch/main/devfile.yaml"
+      title: Open in DevSpaces
+      icon: catalog
+      type: ide
+  tags:
+    - camel
+    - kaoto
+    - cdc
+    - kafka
+    - ${{ values.targetCluster }}
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:${{ values.owner }}
+  system: ${{ values.owner }}-apps

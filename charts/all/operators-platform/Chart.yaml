@@ -1,0 +1,5 @@
+apiVersion: v2
+name: operators-platform
+description: Platform OLM operators — observability, mesh prereqs, skupper (PUSH on spokes, hub install)
+type: application
+version: 0.1.0

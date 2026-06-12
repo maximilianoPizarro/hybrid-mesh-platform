@@ -10,25 +10,29 @@ Hub-spoke multi-cluster GitOps on OpenShift — **Validated Patterns** implement
 | Resource | URL |
 |----------|-----|
 | Pattern repo | https://github.com/maximilianoPizarro/hybrid-mesh-platform |
-| Legacy App-of-Apps (workshop) | https://github.com/maximilianoPizarro/platform-hub-spoke-config |
+| Legacy App-of-Apps | https://github.com/maximilianoPizarro/platform-hub-spoke-config |
 | Showroom workshop | https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai |
 
 ## Architecture
 
-- **Hub:** ACM, OpenShift GitOps (clustergroup), Developer Hub, OpenShift AI, ACS Central, RHCL/Kuadrant, hub gateway, observability
-- **Spokes (east/west):** Industrial Edge, ambient mesh, Skupper, ACS SecuredCluster, DevSpaces
+- **Hub:** ACM, clustergroup, Developer Hub, OpenShift AI, ACS, RHCL, observability
+- **Spokes:** Industrial Edge, ambient mesh, Skupper, dual GitOps (PUSH + PULL)
 
-This pattern uses the Validated Patterns framework (`clustergroup`, Vault + External Secrets, ACM managedClusterGroups).
+## Dual GitOps
+
+- [PUSH vs PULL](gitops-push-vs-pull.md)
+- [Argo AppProjects](argo-projects.md)
+- [Deployment chain](gitops-deployment-chain.md)
 
 ## Install
-
-See the [pattern repository README](https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/README.md).
 
 ```bash
 ./pattern.sh install
 ```
 
+See [Getting started](getting-started.md) and [RHDP field content](rhdp-field-content.md).
+
 ## Related patterns
 
-- [Multicloud GitOps](https://validatedpatterns.io/patterns/multicloud-gitops/) — base fork
-- [Industrial Edge](https://validatedpatterns.io/patterns/industrial-edge/) — IE workload reference
+- [Multicloud GitOps](https://validatedpatterns.io/patterns/multicloud-gitops/)
+- [Industrial Edge](https://validatedpatterns.io/patterns/industrial-edge/)

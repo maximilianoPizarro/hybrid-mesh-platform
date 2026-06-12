@@ -32,7 +32,7 @@ spec:
           workspace: shared-workspace
       params:
         - name: url
-          value: "https://github.com/maximilianoPizarro/platform-hub-spoke-config.git"
+          value: "https://github.com/maximilianoPizarro/hybrid-mesh-platform.git"
         - name: revision
           value: $(params.GIT_REVISION)
     - name: build

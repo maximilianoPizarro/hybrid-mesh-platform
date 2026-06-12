@@ -1,0 +1,5 @@
+apiVersion: v2
+name: fleet-pull-overview
+description: Hub-side overview ConfigMap for PULL clustergroup apps on spokes
+type: application
+version: 0.1.0
