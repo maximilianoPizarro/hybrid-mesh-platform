@@ -8,8 +8,16 @@ echo "=== ArgoCD Preflight (Validated Patterns) ==="
 
 python scripts/verify-gitops-strategies.py
 
-echo "1. Linting all charts/all/* ..."
 failed=0
+echo "1. Linting root bootstrap chart ..."
+if ! helm lint . >/dev/null 2>&1; then
+  echo "  FAIL: root Chart.yaml bootstrap"
+  failed=1
+else
+  echo "  PASS: root bootstrap chart"
+fi
+
+echo "2. Linting all charts/all/* ..."
 for chart in charts/all/*/Chart.yaml; do
   dir="$(dirname "$chart")"
   if ! helm lint "$dir" >/dev/null 2>&1; then
@@ -21,7 +29,7 @@ if [ "$failed" -eq 0 ]; then
   echo "  PASS: all charts lint"
 fi
 
-echo "2. Checking explicit paths in spoke values ..."
+echo "3. Checking explicit paths in spoke values ..."
 for f in values-east.yaml values-west.yaml; do
   missing=$(python - <<PY
 import yaml
@@ -37,7 +45,7 @@ PY
   fi
 done
 
-echo "3. Checking argoProject coverage ..."
+echo "4. Checking argoProject coverage ..."
 python - <<'PY'
 import yaml
 from pathlib import Path

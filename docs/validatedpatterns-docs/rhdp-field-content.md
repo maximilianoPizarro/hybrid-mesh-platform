@@ -114,12 +114,14 @@ Without `clusters.hub.domain`, Mailpit URLs become `https://mailpit./api/v1/send
 
 ## Verify hub after provision
 
+RHDP syncs `path: .` against the root **`Chart.yaml`** bootstrap chart, which creates Argo CD Application **`hybrid-mesh-platform-hub`** (or `-east` / `-west` on spoke branches). That app deploys the VP **clustergroup** chart with multisource valueFiles from this repo.
+
 ```bash
 oc get application field-content -n openshift-gitops
 oc get applications -n openshift-gitops -l app.kubernetes.io/part-of=platform-hub-spoke
 ```
 
-Expect many `field-content-*` child apps after `field-content` syncs. If sync is `Unknown`, check:
+Expect **`hybrid-mesh-platform-hub`** then many child apps (`platform-users`, `acm-hub-spoke`, …) after `field-content` syncs. If sync is `Unknown`, check:
 
 ```bash
 oc get application field-content -n openshift-gitops -o jsonpath='{.status.conditions[*].message}{"\n"}'

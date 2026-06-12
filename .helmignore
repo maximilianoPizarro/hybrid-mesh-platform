@@ -1,0 +1,11 @@
+docs/
+.git/
+.github/
+ansible/
+scripts/
+*.md
+MIGRATION.md
+BRANCHES.md
+pattern-metadata.yaml
+values-secret.yaml.template
+.gitleaks.toml

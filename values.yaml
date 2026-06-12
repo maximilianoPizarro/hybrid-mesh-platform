@@ -1,0 +1,27 @@
+# Defaults for RHDP field-content (path .). RHDP injects deployer.*, gitops.*,
+# litemaas.* via spec.source.helm.values on the Application.
+global:
+  pattern: hybrid-mesh-platform
+  singleArgoCD: true
+  vpArgoNamespace: openshift-gitops
+  options:
+    useCSV: false
+    syncPolicy: Automatic
+    installPlanApproval: Automatic
+
+main:
+  clusterGroupName: hub
+  multiSourceConfig:
+    enabled: true
+    clusterGroupChartVersion: "0.9.*"
+    helmRepoUrl: https://charts.validatedpatterns.io
+
+gitops:
+  repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
+  revision: main
+
+# Disable stub subcharts under charts/{all,region}/ (VP layout vs Helm charts/ convention)
+all:
+  enabled: false
+region:
+  enabled: false

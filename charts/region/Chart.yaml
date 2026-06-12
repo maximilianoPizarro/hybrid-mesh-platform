@@ -1,0 +1,5 @@
+apiVersion: v2
+name: region
+description: Reserved for region-specific charts; stub satisfies root Chart.yaml charts/ layout
+type: application
+version: 0.0.0

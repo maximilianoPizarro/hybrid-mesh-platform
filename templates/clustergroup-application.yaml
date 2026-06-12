@@ -1,0 +1,126 @@
+{{- if .Values.main.multiSourceConfig.enabled }}
+{{- $rev := .Values.gitops.revision | default .Values.global.targetRevision | default "main" }}
+{{- $cg := .Values.main.clusterGroupName | default "" }}
+{{- if not $cg }}
+{{- if eq $rev "east" -}}
+{{- $cg = "east" -}}
+{{- else if eq $rev "west" -}}
+{{- $cg = "west" -}}
+{{- else -}}
+{{- $cg = "hub" -}}
+{{- end }}
+{{- end }}
+{{- $repo := .Values.gitops.repoURL | default .Values.global.repoURL | default "https://github.com/maximilianoPizarro/hybrid-mesh-platform" }}
+{{- $ms := .Values.main.multiSourceConfig }}
+{{- $chartVer := $ms.clusterGroupChartVersion | default "0.9.*" }}
+{{- $helmRepo := $ms.helmRepoUrl | default "https://charts.validatedpatterns.io" }}
+{{- $argoNs := .Values.global.vpArgoNamespace | default "openshift-gitops" }}
+{{- $pattern := .Values.global.pattern | default "hybrid-mesh-platform" }}
+{{- $localDomain := .Values.global.localClusterDomain | default .Values.global.hubClusterDomain | default "" }}
+{{- if and (not $localDomain) .Values.deployer }}
+{{- $localDomain = .Values.deployer.domain | default "" }}
+{{- end }}
+{{- $hubDomain := .Values.global.hubClusterDomain | default "" }}
+{{- if and (not $hubDomain) .Values.deployer }}
+{{- $hubDomain = .Values.deployer.domain | default "" }}
+{{- end }}
+{{- if and (not $hubDomain) .Values.clusters }}
+{{- with index .Values.clusters "hub" }}
+{{- if .domain }}
+{{- $hubDomain = .domain }}
+{{- end }}
+{{- end }}
+{{- end }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $pattern }}-{{ $cg }}
+  namespace: {{ $argoNs }}
+  labels:
+    validatedpatterns.io/pattern: {{ $pattern }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  project: default
+  destination:
+    name: in-cluster
+    namespace: {{ $argoNs }}
+  sources:
+    - repoURL: {{ $repo | quote }}
+      targetRevision: {{ $rev | quote }}
+      ref: patternref
+    - repoURL: {{ $helmRepo | quote }}
+      chart: clustergroup
+      targetRevision: {{ $chartVer | quote }}
+      helm:
+        ignoreMissingValueFiles: true
+        valueFiles:
+          - $patternref/values-global.yaml
+          - $patternref/values-{{ $cg }}.yaml
+        valuesObject:
+          global:
+            repoURL: {{ $repo | quote }}
+            targetRevision: {{ $rev | quote }}
+            pattern: {{ $pattern | quote }}
+            multiSourceSupport: "true"
+            multiSourceRepoUrl: {{ $helmRepo | quote }}
+            hubClusterDomain: {{ $hubDomain | quote }}
+            localClusterDomain: {{ $localDomain | quote }}
+          {{- with .Values.deployer }}
+          deployer:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.clusters }}
+          clusters:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.litemaas }}
+          litemaas:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.managedClusters }}
+          managedClusters:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          extraParametersNested:
+            {{- if and .Values.deployer .Values.deployer.domain }}
+            deployer.domain: {{ .Values.deployer.domain | quote }}
+            {{- end }}
+            {{- if and .Values.deployer .Values.deployer.apiUrl }}
+            deployer.apiUrl: {{ .Values.deployer.apiUrl | quote }}
+            {{- end }}
+            {{- if $hubDomain }}
+            global.hubClusterDomain: {{ $hubDomain | quote }}
+            {{- end }}
+            {{- if $localDomain }}
+            global.localClusterDomain: {{ $localDomain | quote }}
+            {{- end }}
+            {{- range $name, $cfg := .Values.clusters | default dict }}
+            {{- if $cfg.domain }}
+            clusters.{{ $name }}.domain: {{ $cfg.domain | quote }}
+            {{- end }}
+            {{- if $cfg.apiUrl }}
+            clusters.{{ $name }}.apiUrl: {{ $cfg.apiUrl | quote }}
+            {{- end }}
+            {{- end }}
+        parameters:
+          - name: global.repoURL
+            value: {{ $repo | quote }}
+          - name: global.targetRevision
+            value: {{ $rev | quote }}
+          - name: global.pattern
+            value: {{ $pattern | quote }}
+          - name: global.multiSourceSupport
+            value: "true"
+          - name: global.multiSourceRepoUrl
+            value: {{ $helmRepo | quote }}
+          - name: global.hubClusterDomain
+            value: {{ $hubDomain | quote }}
+          - name: global.localClusterDomain
+            value: {{ $localDomain | quote }}
+  syncPolicy:
+    automated: {}
+    retry:
+      limit: 20
+{{- end }}

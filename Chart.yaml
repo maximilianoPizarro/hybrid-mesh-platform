@@ -1,0 +1,16 @@
+apiVersion: v2
+name: hybrid-mesh-platform
+description: RHDP field-content bootstrap — renders clustergroup Argo CD Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: all
+    version: "0.0.0"
+    condition: all.enabled
+  - name: region
+    version: "0.0.0"
+    condition: region.enabled
+maintainers:
+  - name: Maximiliano Pizarro
+    email: developer@redhat.com
