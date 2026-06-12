@@ -1,6 +1,13 @@
-{{- $domain := .Values.clusterDomain -}}
-{{- $hubDomain := .Values.hubClusterDomain | default $domain -}}
-{{- $role := .Values.clusterRole | default "hub" -}}
+{{- $domain := .Values.clusterDomain | default .Values.global.localClusterDomain | default .Values.global.hubClusterDomain | default "apps.cluster.example.com" -}}
+{{- $hubDomain := .Values.hubClusterDomain | default .Values.global.hubClusterDomain | default $domain -}}
+{{- $role := .Values.clusterRole -}}
+{{- if not $role -}}
+{{- if and .Values.global.localClusterDomain .Values.global.hubClusterDomain (ne .Values.global.localClusterDomain .Values.global.hubClusterDomain) -}}
+{{- $role = "spoke" -}}
+{{- else -}}
+{{- $role = "hub" -}}
+{{- end -}}
+{{- end -}}
 ---
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
