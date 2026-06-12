@@ -11,6 +11,7 @@ baseurl: "/hybrid-mesh-platform"
 color_scheme: dark
 
 logo: "/assets/images/rh-logo.svg"
+favicon_ico: "/assets/images/favicon.svg"
 
 aux_links:
   "GitHub":
