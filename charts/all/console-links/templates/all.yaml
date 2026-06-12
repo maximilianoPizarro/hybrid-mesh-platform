@@ -158,20 +158,6 @@ spec:
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
 metadata:
-  name: platform-mailpit-templates
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"
-spec:
-  applicationMenu:
-    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "mailpit.svg") | quote }}
-    section: "Platform Hub-Spoke"
-  href: "https://mailpit-templates.{{ $domain }}"
-  location: ApplicationMenu
-  text: "Mailpit (Software Templates)"
----
-apiVersion: console.openshift.io/v1
-kind: ConsoleLink
-metadata:
   name: platform-kafka-console
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -196,32 +182,6 @@ spec:
   href: "https://kubecost.{{ $hubDomain }}"
   location: ApplicationMenu
   text: "Kubecost (Cost Management)"
----
-apiVersion: console.openshift.io/v1
-kind: ConsoleLink
-metadata:
-  name: platform-kuadrant-keys
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"
-spec:
-  applicationMenu:
-    section: "Platform Hub-Spoke"
-  href: "https://developer-hub.{{ $hubDomain }}/kuadrant"
-  location: ApplicationMenu
-  text: "Kuadrant API Keys (Workshop)"
----
-apiVersion: console.openshift.io/v1
-kind: ConsoleLink
-metadata:
-  name: platform-workshop-apis
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"
-spec:
-  applicationMenu:
-    section: "Platform Hub-Spoke"
-  href: "https://workshop-apis.{{ $hubDomain }}"
-  location: ApplicationMenu
-  text: "Workshop Public APIs (httpbin)"
 ---
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
