@@ -23,6 +23,10 @@ clusterGroup:
     openshift-opentelemetry: {}
     istio-system: {}
     redhat-connectivity-link-operator: {}
+    redhat-ods-operator:
+      operatorGroup: true
+      targetNamespaces: []
+    redhat-ods-applications: {}
     external-secrets-operator:
       operatorGroup: true
       targetNamespaces: []
@@ -172,7 +176,7 @@ clusterGroup:
       name: rhcl-operator
       namespace: redhat-connectivity-link-operator
       argoProject: mesh
-      syncWave: '4'
+      syncWave: '3'
       path: charts/all/rhcl-operator
     kiali:
       name: kiali
@@ -202,7 +206,7 @@ clusterGroup:
       name: industrial-edge-data-science-cluster
       namespace: redhat-ods-applications
       argoProject: industrial-edge
-      syncWave: '5'
+      syncWave: '7'
       path: charts/all/industrial-edge-data-science-cluster
     industrial-edge-data-lake:
       name: industrial-edge-data-lake
@@ -232,7 +236,7 @@ clusterGroup:
       name: spoke-interconnect
       namespace: service-interconnect
       argoProject: mesh
-      syncWave: '6'
+      syncWave: '8'
       path: charts/all/spoke-interconnect
     devspaces:
       name: devspaces
@@ -252,6 +256,7 @@ clusterGroup:
       argoProject: external-secrets
       chart: openshift-external-secrets
       chartVersion: 0.0.*
+      syncWave: '3'
     operators-edge:
       name: operators-edge
       namespace: openshift-operators

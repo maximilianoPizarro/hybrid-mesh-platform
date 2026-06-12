@@ -1,15 +1,6 @@
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: redhat-ods-operator
-  namespace: redhat-ods-operator
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-spec: {}
----
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
   name: industrial-edge-tst-all
   namespace: industrial-edge-tst-all
   annotations:

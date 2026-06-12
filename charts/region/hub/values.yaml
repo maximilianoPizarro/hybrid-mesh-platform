@@ -31,6 +31,10 @@ clusterGroup:
     distributed-tracing: {}
     istio-system: {}
     kairos-system: {}
+    redhat-ods-operator:
+      operatorGroup: true
+      targetNamespaces: []
+    redhat-ods-applications: {}
     external-secrets-operator:
       operatorGroup: true
       targetNamespaces: []
@@ -223,7 +227,7 @@ clusterGroup:
       namespace: redhat-connectivity-link-operator
       argoProject: mesh
       path: charts/all/rhcl-operator
-      syncWave: '0'
+      syncWave: '1'
     hub-gateway:
       name: hub-gateway
       namespace: hub-gateway-system
@@ -279,7 +283,7 @@ clusterGroup:
       namespace: service-interconnect
       argoProject: mesh
       path: charts/all/service-interconnect
-      syncWave: '0'
+      syncWave: '3'
     mailpit:
       name: mailpit
       namespace: mailpit
@@ -311,7 +315,7 @@ clusterGroup:
       repoURL: oci://quay.io/skupper/helm/network-observer
       chart: network-observer
       targetRevision: 2.1.3
-      syncWave: '0'
+      syncWave: '4'
     quay-registry:
       name: quay-registry
       namespace: quay-registry
@@ -366,18 +370,20 @@ clusterGroup:
       argoProject: external-secrets
       chart: hashicorp-vault
       chartVersion: 0.1.*
+      syncWave: '2'
     openshift-external-secrets:
       name: openshift-external-secrets
       namespace: external-secrets
       argoProject: external-secrets
       chart: openshift-external-secrets
       chartVersion: 0.0.*
+      syncWave: '2'
     operators-platform:
       name: operators-platform
       namespace: openshift-operators
       argoProject: operators-platform
       path: charts/all/operators-platform
-      syncWave: '0'
+      syncWave: '1'
     fleet-pull-overview:
       name: fleet-pull-overview
       namespace: openshift-gitops
