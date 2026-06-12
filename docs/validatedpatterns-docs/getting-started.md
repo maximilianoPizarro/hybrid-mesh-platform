@@ -255,4 +255,10 @@ Detail: [Workshop docs](workshop/index.md) · Cursor skill **hybrid-mesh-ai-work
 
 ---
 
+## Additional resources
+
+- [Validation Guide](../validation-guide.md) — verify deployment is working
+- [Bill of Materials](../bill-of-materials.md) — operator versions
+- [Support Policy](../../SUPPORT.md) — community support
+
 **Next →** [Scaffolding](scaffolding.md) · [Architecture](architecture.md) · [Troubleshooting](troubleshooting.md)

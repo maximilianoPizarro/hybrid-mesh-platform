@@ -1,3 +1,9 @@
+---
+title: Validation Guide
+nav_order: 11
+layout: default
+---
+
 # Pattern Validation Guide
 
 This guide describes how to validate the Hybrid Mesh Platform pattern is working correctly, with or without the optional Showroom workshop components.

@@ -16,7 +16,9 @@ aux_links:
   "GitHub":
     - "https://github.com/maximilianoPizarro/hybrid-mesh-platform"
   "Validated Patterns":
-    - "https://validatedpatterns.io/patterns/multicloud-gitops/"
+    - "https://validatedpatterns.io"
+  "Support":
+    - "https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/SUPPORT.md"
 
 aux_links_new_tab: true
 
@@ -26,17 +28,23 @@ heading_anchors: true
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: ""
+footer_content: "Sandbox tier - Community supported"
 
 mermaid:
   version: "10.9.0"
 
 defaults:
   - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: default
+  - scope:
       path: "validatedpatterns-docs"
       type: "pages"
     values:
       layout: default
+      parent: "Hybrid Mesh Platform"
 
 exclude:
   - Gemfile

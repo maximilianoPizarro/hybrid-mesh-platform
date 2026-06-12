@@ -1,3 +1,9 @@
+---
+title: Bill of Materials
+nav_order: 10
+layout: default
+---
+
 # Bill of Materials
 
 This document lists all Red Hat and community products/operators consumed by the Hybrid Mesh Platform pattern, along with their minimum versions and sources.

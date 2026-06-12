@@ -288,6 +288,9 @@ Parent apps use `destination.server` = cluster-proxy URL. Child apps on spokes u
 
 ## Related docs
 
+- [Validation Guide](../validation-guide.md) — quick health checks and component validation
+- [Bill of Materials](../bill-of-materials.md) — operator versions and compatibility
 - [Service Mesh sync waves](products/service-mesh.md#sync-wave-ordering-ambient)
 - [Architecture sync-wave table](architecture.md#spoke-sync-wave-reference)
 - [Getting Started](getting-started.md)
+- [Support Policy](../../SUPPORT.md) — community support channels

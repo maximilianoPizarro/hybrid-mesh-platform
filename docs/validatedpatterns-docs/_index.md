@@ -6,32 +6,64 @@ layout: default
 
 # Hybrid Mesh Platform
 
-Hub-spoke multi-cluster GitOps on OpenShift — **Validated Patterns** implementation.
+Hub-spoke multi-cluster GitOps on OpenShift — **Validated Patterns** implementation (Sandbox tier).
 
 | Resource | URL |
 |----------|-----|
-| Pattern repo | https://github.com/maximilianoPizarro/hybrid-mesh-platform |
-| Legacy App-of-Apps | https://github.com/maximilianoPizarro/platform-hub-spoke-config |
-| Showroom workshop | https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai |
+| Pattern repo | [github.com/maximilianoPizarro/hybrid-mesh-platform](https://github.com/maximilianoPizarro/hybrid-mesh-platform) |
+| GitHub Pages | [maximilianopizarro.github.io/hybrid-mesh-platform](https://maximilianopizarro.github.io/hybrid-mesh-platform/) |
+| Workshop Showroom | [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai) |
 
 ## Architecture
 
-- **Hub:** ACM, clustergroup, Developer Hub, OpenShift AI, ACS, RHCL, observability
-- **Spokes:** Industrial Edge, ambient mesh, Skupper, dual GitOps (PUSH + PULL)
+- **Hub:** ACM, clustergroup, Developer Hub, OpenShift AI, ACS Central, RHCL, Skupper listeners, observability
+- **Spokes:** Industrial Edge, ACS Secured, ambient mesh, Skupper connectors, dual GitOps (PUSH + PULL)
 
-## Dual GitOps
+## Repository structure
 
+```
+charts/
+├── region/
+│   ├── hub/        # Hub bootstrap + values
+│   ├── east/       # East spoke bootstrap + values
+│   └── west/       # West spoke bootstrap + values
+└── all/            # 50+ shared Helm charts
+```
+
+## Documentation sections
+
+### Getting started
+- [Architecture](architecture.md)
+- [Getting started](getting-started.md)
+- [Region strategy](region-strategy.md)
+- [RHDP field content](rhdp-field-content.md)
+
+### GitOps strategy
 - [PUSH vs PULL](gitops-push-vs-pull.md)
 - [Argo AppProjects](argo-projects.md)
 - [Deployment chain](gitops-deployment-chain.md)
 
-## Install
+### Components
+- [Products index](products/index.md)
+- [Service Interconnect](service-interconnect.md)
+- [Industrial Edge](industrial-edge.md)
+- [Observability](observability.md)
+- [Hub Gateway](hub-gateway.md)
+
+### Reference
+- [Bill of Materials](../bill-of-materials.md)
+- [Validation Guide](../validation-guide.md)
+- [Annotations Reference](annotations-reference.md)
+- [Troubleshooting](troubleshooting.md)
+
+## Quick install
 
 ```bash
-./pattern.sh install
+git clone https://github.com/maximilianoPizarro/hybrid-mesh-platform.git
+cd hybrid-mesh-platform
+cp values-secret.yaml.template values-secret.yaml
+./pattern.sh make install
 ```
-
-See [Getting started](getting-started.md), [Region strategy](region-strategy.md), and [RHDP field content](rhdp-field-content.md).
 
 ## Related patterns
 

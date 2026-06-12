@@ -24,13 +24,35 @@ nav_order: 1
 | Scaffolding | [Scaffolding](validatedpatterns-docs/scaffolding.md) |
 | Troubleshooting | [Troubleshooting](validatedpatterns-docs/troubleshooting.md) |
 
+## Reference
+
+| Topic | Page |
+| ----- | ---- |
+| Bill of Materials | [Operator versions](bill-of-materials.md) |
+| Validation Guide | [Verify deployment](validation-guide.md) |
+| Support Policy | [Community support](../SUPPORT.md) |
+
 ## Repository layout
 
 | Path | Purpose |
 | ---- | ------- |
-| `charts/all/` | Cross-cluster Helm components |
-| `charts/region/hub\|east\|west/` | Per-cluster RHDP bootstrap + clusterGroup values |
+| `charts/region/hub/` | Hub cluster bootstrap + clusterGroup values |
+| `charts/region/east/` | East spoke bootstrap + clusterGroup values |
+| `charts/region/west/` | West spoke bootstrap + clusterGroup values |
+| `charts/all/` | Cross-cluster Helm components (50+ charts) |
 | `values-global.yaml` | Pattern-wide globals |
+| `overrides/` | Platform-specific value overrides |
+| `docs/` | GitHub Pages documentation |
+
+## Key charts
+
+| Chart | Purpose |
+| ----- | ------- |
+| `acm-operator` | ACM MultiClusterHub installation |
+| `acm-hub-spoke` | Spoke registration + GitOpsCluster |
+| `console-links` | OpenShift Console quick links |
+| `platform-validation` | Automated validation CronJobs |
+| `fleet-values-sync` | Cross-cluster domain sync |
 
 Pattern repo: [github.com/maximilianoPizarro/hybrid-mesh-platform](https://github.com/maximilianoPizarro/hybrid-mesh-platform)
 
