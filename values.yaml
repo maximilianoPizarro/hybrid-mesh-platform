@@ -1,5 +1,5 @@
-# Defaults for RHDP field-content (path .). RHDP injects deployer.*, gitops.*,
-# litemaas.* via spec.source.helm.values on the Application.
+# Defaults for RHDP field-content. RHDP injects deployer.*, gitops.*, litemaas.*
+# Per-cluster profile: set main.clusterGroupName (hub|east|west) or use path charts/region/<region>.
 global:
   pattern: hybrid-mesh-platform
   singleArgoCD: true
@@ -20,7 +20,6 @@ gitops:
   repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
   revision: main
 
-# Disable stub subcharts under charts/{all,region}/ (VP layout vs Helm charts/ convention)
 all:
   enabled: false
 region:

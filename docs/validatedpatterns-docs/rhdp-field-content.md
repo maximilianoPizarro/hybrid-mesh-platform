@@ -25,11 +25,11 @@ Hub templates use `deployer.domain` with fallback `apps.cluster.example.com`; RH
 | Parameter | Hub | East | West |
 |-----------|-----|------|------|
 | `ocp4_workload_field_content_gitops_repo_url` | `https://github.com/maximilianoPizarro/hybrid-mesh-platform` | same | same |
-| `ocp4_workload_field_content_gitops_repo_revision` | **`main`** | **`east`** | **`west`** |
-| `ocp4_workload_field_content_gitops_repo_path` | `.` | `.` | `.` |
+| `ocp4_workload_field_content_gitops_repo_revision` | **`main`** | **`main`** | **`main`** |
+| `ocp4_workload_field_content_gitops_repo_path` | **`charts/region/hub`** | **`charts/region/east`** | **`charts/region/west`** |
 | `existing_gitops` | `true` | `true` | `true` |
 
-Each branch sets `values-global.yaml` → `clusterGroupName` (`hub` / `east` / `west`) and spoke branches carry only their matching `values-*.yaml`. See [Branch strategy](branch-strategy.md).
+Each path is a bootstrap Helm chart that renders `hybrid-mesh-platform-{hub,east,west}` and deploys VP **clustergroup** with `charts/region/<region>/values.yaml`. Shared components stay under `charts/all/`. See [Region strategy](branch-strategy.md) and [REGIONS.md](../../REGIONS.md).
 
 ## Automatic cross-cluster domains (`fleet-values-sync`)
 
@@ -54,8 +54,8 @@ python scripts/sync-fleet-values.py
 
 ## Recommended order
 
-1. **Hub** — revision `main`, path `.`
-2. **East** / **West** — revision `east` / `west`, path `.`
+1. **Hub** — revision `main`, path `charts/region/hub`
+2. **East** / **West** — revision `main`, path `charts/region/east` / `charts/region/west`
 3. **Hub** — after ACM import, optional manual upgrade if `fleet-values-sync` has not run yet (domains + tokens):
 
 ```bash
@@ -114,7 +114,9 @@ Without `clusters.hub.domain`, Mailpit URLs become `https://mailpit./api/v1/send
 
 ## Verify hub after provision
 
-RHDP syncs `path: .` against the root **`Chart.yaml`** bootstrap chart, which creates Argo CD Application **`hybrid-mesh-platform-hub`** (or `-east` / `-west` on spoke branches). That app deploys the VP **clustergroup** chart with multisource valueFiles from this repo.
+RHDP syncs **`charts/region/hub`** (or east/west path) as a bootstrap Helm chart, which creates Argo CD Application **`hybrid-mesh-platform-hub`**. That app deploys VP **clustergroup** with multisource valueFiles from this repo.
+
+Legacy path `.` still works if you set `main.clusterGroupName` in RHDP helm values.
 
 ```bash
 oc get application field-content -n openshift-gitops
@@ -148,8 +150,7 @@ Use separate MaaS keys per model if your workshop provides them; `llama-scout-17
 ## Local validation
 
 ```bash
-helm template test-hub . -f values.yaml \
+helm template field-content charts/region/hub -f values-global.yaml \
   --set deployer.domain=apps.hub.example.com \
-  --set deployer.apiUrl=https://api.hub.example.com:6443 \
-  --set clusters.hub.domain=apps.hub.example.com
+  --set deployer.apiUrl=https://api.hub.example.com:6443
 ```

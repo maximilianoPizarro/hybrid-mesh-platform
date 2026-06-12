@@ -1,3 +1,9 @@
+main:
+  clusterGroupName: east
+  multiSourceConfig:
+    enabled: true
+    clusterGroupChartVersion: 0.9.*
+    helmRepoUrl: https://charts.validatedpatterns.io
 clusterGroup:
   name: east
   namespaces:
@@ -82,19 +88,19 @@ clusterGroup:
       namespace: external-secrets-operator
       channel: stable-v1
   argoProjects:
-    - platform
-    - operators-edge
-    - security
-    - mesh
-    - observability
-    - industrial-edge
-    - workshop
-    - external-secrets
-    - fleet-pull
+  - platform
+  - operators-edge
+  - security
+  - mesh
+  - observability
+  - industrial-edge
+  - workshop
+  - external-secrets
+  - fleet-pull
   sharedValueFiles:
-    - /overrides/values-{{ $.Values.global.clusterPlatform }}.yaml
-    - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
-      }}.yaml
+  - /overrides/values-{{ $.Values.global.clusterPlatform }}.yaml
+  - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
+    }}.yaml
   applications:
     platform-users:
       name: platform-users
@@ -252,3 +258,9 @@ clusterGroup:
       argoProject: operators-edge
       path: charts/all/operators-edge
       syncWave: '2'
+gitops:
+  repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
+  revision: main
+global:
+  pattern: hybrid-mesh-platform
+  vpArgoNamespace: openshift-gitops

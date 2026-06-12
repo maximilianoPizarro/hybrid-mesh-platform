@@ -17,7 +17,17 @@ else
   echo "  PASS: root bootstrap chart"
 fi
 
-echo "2. Linting all charts/all/* ..."
+echo "2. Linting region bootstrap charts ..."
+for region in hub east west; do
+  if ! helm lint "charts/region/${region}" >/dev/null 2>&1; then
+    echo "  FAIL: charts/region/${region}"
+    failed=1
+  else
+    echo "  PASS: charts/region/${region}"
+  fi
+done
+
+echo "3. Linting all charts/all/* ..."
 for chart in charts/all/*/Chart.yaml; do
   dir="$(dirname "$chart")"
   if ! helm lint "$dir" >/dev/null 2>&1; then
@@ -29,8 +39,8 @@ if [ "$failed" -eq 0 ]; then
   echo "  PASS: all charts lint"
 fi
 
-echo "3. Checking explicit paths in spoke values ..."
-for f in values-east.yaml values-west.yaml; do
+echo "4. Checking explicit paths in spoke region values ..."
+for f in charts/region/east/values.yaml charts/region/west/values.yaml; do
   missing=$(python - <<PY
 import yaml
 from pathlib import Path
@@ -45,11 +55,15 @@ PY
   fi
 done
 
-echo "4. Checking argoProject coverage ..."
+echo "5. Checking argoProject coverage ..."
 python - <<'PY'
 import yaml
 from pathlib import Path
-for fname in ("values-hub.yaml", "values-east.yaml", "values-west.yaml"):
+for fname in (
+    "charts/region/hub/values.yaml",
+    "charts/region/east/values.yaml",
+    "charts/region/west/values.yaml",
+):
     cg = yaml.safe_load(Path(fname).read_text())["clusterGroup"]
     projects = set(cg.get("argoProjects", []))
     for app_id, app in cg.get("applications", {}).items():

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Argo Project taxonomy and PUSH/PULL split to values-hub/east/west.yaml."""
+"""Apply Argo Project taxonomy and PUSH/PULL split to charts/region/*/values.yaml."""
 
 from __future__ import annotations
 
@@ -192,18 +192,18 @@ def transform_spoke(cg: dict) -> None:
 
 
 def main() -> None:
-    hub = load(ROOT / "values-hub.yaml")
-    east = load(ROOT / "values-east.yaml")
-    west = load(ROOT / "values-west.yaml")
+    hub = load(ROOT / "charts/region/hub/values.yaml")
+    east = load(ROOT / "charts/region/east/values.yaml")
+    west = load(ROOT / "charts/region/west/values.yaml")
 
     transform_hub(hub["clusterGroup"])
     transform_spoke(east["clusterGroup"])
     transform_spoke(west["clusterGroup"])
 
-    save(ROOT / "values-hub.yaml", hub)
-    save(ROOT / "values-east.yaml", east)
-    save(ROOT / "values-west.yaml", west)
-    print("Updated values-hub.yaml, values-east.yaml, values-west.yaml")
+    save(ROOT / "charts/region/hub/values.yaml", hub)
+    save(ROOT / "charts/region/east/values.yaml", east)
+    save(ROOT / "charts/region/west/values.yaml", west)
+    print("Updated charts/region/{hub,east,west}/values.yaml")
 
 
 if __name__ == "__main__":

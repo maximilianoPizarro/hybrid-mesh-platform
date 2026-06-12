@@ -12,7 +12,7 @@ Validated Patterns implementation: `github.com/maximilianoPizarro/hybrid-mesh-pl
 
 | Before (legacy) | After (VP) |
 |-----------------|------------|
-| Root Helm chart `.` + `east/` / `west/` | `values-{hub,east,west}.yaml` + `charts/all/*` |
+| Root Helm chart `.` + `east/` / `west/` | `charts/region/{hub,east,west}/` + `charts/all/*` |
 | ApplicationSet `industrial-edge-spoke` only | **Dual:** `fleet-spoke-push` (PUSH) + `managedClusterGroups` (PULL) |
 | Single Argo project `default` / `hub` | Domain AppProjects (`operators-ci`, `industrial-edge`, …) |
 | Monolithic `operators` chart | `operators-ci`, `operators-platform`, `operators-edge` |
@@ -46,24 +46,21 @@ Regenerate: `python scripts/migrate-docs-vp.py`
 
 | Script | Purpose |
 |--------|---------|
-| `generate-vp-values.py` | Legacy → values-hub/east/west |
+| `generate-vp-values.py` | Legacy → `charts/region/{hub,east,west}/values.yaml` |
 | `apply-vp-argo-layout.py` | AppProject taxonomy |
 | `verify-gitops-strategies.py` | PUSH/PULL partition check |
 | `argocd-preflight.sh` | CI preflight |
 | `split-chart-templates.py` | Split all.yaml (safe for static docs) |
-| `sync-cluster-branches.sh` | Propagate `east`/`west` branches from main |
 
-## Cluster branches
+## Regions (single branch: `main`)
 
-| Branch | Cluster | Values on branch |
-|--------|---------|------------------|
-| `main` | hub | `values-hub.yaml` (+ east/west for dev) |
-| `east` | east | `values-east.yaml` only |
-| `west` | west | `values-west.yaml` only |
+| RHDP path | Cluster | Values |
+|-----------|---------|--------|
+| `charts/region/hub` | hub | `charts/region/hub/values.yaml` |
+| `charts/region/east` | east | `charts/region/east/values.yaml` |
+| `charts/region/west` | west | `charts/region/west/values.yaml` |
 
-```bash
-bash scripts/sync-cluster-branches.sh
-```
+See [REGIONS.md](REGIONS.md).
 
 ## Showroom cutover
 

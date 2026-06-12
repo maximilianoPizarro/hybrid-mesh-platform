@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate VP values-hub/east/west from platform-hub-spoke-config (read-only source)."""
+"""Generate charts/region/{hub,east,west}/values.yaml from platform-hub-spoke-config."""
 
 from __future__ import annotations
 
@@ -296,16 +296,33 @@ def main() -> None:
             "chartVersion": "0.0.*",
         }
 
-    for fname, cg in [
-        ("values-hub.yaml", hub_cg),
-        ("values-east.yaml", east_cg),
-        ("values-west.yaml", west_cg),
+    for region, cg in [
+        ("hub", hub_cg),
+        ("east", east_cg),
+        ("west", west_cg),
     ]:
-        (ROOT / fname).write_text(
-            yaml.dump({"clusterGroup": cg}, sort_keys=False, default_flow_style=False),
+        out = ROOT / "charts" / "region" / region / "values.yaml"
+        existing = yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else {}
+        wrapped = {
+            "main": existing.get(
+                "main",
+                {
+                    "clusterGroupName": region,
+                    "multiSourceConfig": {
+                        "enabled": True,
+                        "clusterGroupChartVersion": "0.9.*",
+                        "helmRepoUrl": "https://charts.validatedpatterns.io",
+                    },
+                },
+            ),
+            "clusterGroup": cg,
+        }
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            yaml.dump(wrapped, sort_keys=False, default_flow_style=False),
             encoding="utf-8",
         )
-    print("Wrote values-hub/east/west.yaml from legacy source")
+    print("Wrote charts/region/{hub,east,west}/values.yaml from legacy source")
     subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "apply-vp-argo-layout.py")], check=True
     )

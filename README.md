@@ -23,33 +23,34 @@ cp values-secret.yaml.template values-secret.yaml
 ./pattern.sh install
 ```
 
-| Values file | Cluster group |
-|-------------|---------------|
-| `values-hub.yaml` | Hub |
-| `values-east.yaml` | East spoke (PULL) |
-| `values-west.yaml` | West spoke (PULL) |
+| Region path | Cluster |
+|-------------|---------|
+| `charts/region/hub` | Hub |
+| `charts/region/east` | East spoke (PULL) |
+| `charts/region/west` | West spoke (PULL) |
+
+Cross-cluster Helm charts live under `charts/all/`. Per-cluster GitOps profiles live under `charts/region/{hub,east,west}/values.yaml`.
 
 PUSH operators (`operators-ci`, `operators-platform`) deploy via ApplicationSet to both spokes.
 
 Cross-cluster domains (`clusters.*`, `clusters.hub.domain` on spokes) sync automatically via **`fleet-values-sync`** once ACM clusters are Available — see [RHDP field content](docs/validatedpatterns-docs/rhdp-field-content.md).
 
-## Regenerate values
+## Regenerate region values
 
 ```bash
 python scripts/generate-vp-values.py
 python scripts/apply-vp-argo-layout.py
-bash scripts/sync-cluster-branches.sh   # east/west branches from main
 ```
 
-## Branch strategy
+## Region strategy (single branch: `main`)
 
-| Branch | Cluster | Values |
-|--------|---------|--------|
-| `main` | Hub | `values-hub.yaml` |
-| `east` | East spoke | `values-east.yaml` only |
-| `west` | West spoke | `values-west.yaml` only |
+| RHDP path | Cluster |
+|-----------|---------|
+| `charts/region/hub` | Hub |
+| `charts/region/east` | East spoke |
+| `charts/region/west` | West spoke |
 
-See [BRANCHES.md](BRANCHES.md) and [branch strategy](docs/validatedpatterns-docs/branch-strategy.md).
+See [REGIONS.md](REGIONS.md) and [region strategy](docs/validatedpatterns-docs/branch-strategy.md).
 
 ## Verification (offline)
 

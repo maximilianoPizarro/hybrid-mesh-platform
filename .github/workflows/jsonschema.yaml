@@ -40,20 +40,10 @@ jobs:
           check-jsonschema --fill-defaults --schemafile https://raw.githubusercontent.com/validatedpatterns/rhvp.cluster_utils/refs/heads/main/roles/vault_utils/values-secrets.v2.schema.json values-secret.yaml
           rm -f ./values-secret.yaml
 
-      - name: Verify ClusterGroup values.schema.json against values-*yaml files
-        env:
-          GITHUB_REF_NAME: ${{ github.ref_name }}
+      - name: Verify ClusterGroup values.schema.json against region values
         run: |
           set -e
-          BRANCH="${GITHUB_REF_NAME:-$(git rev-parse --abbrev-ref HEAD)}"
-          case "${BRANCH}" in
-            east) FILES="values-east.yaml" ;;
-            west) FILES="values-west.yaml" ;;
-            *)
-              FILES=$(find . -maxdepth 1 -type f -name "values-*.yaml" ! -name "values-global.yaml" \
-                | grep -vE "values-(standalone|group-one|secret)" || true)
-              ;;
-          esac
+          FILES="charts/region/hub/values.yaml charts/region/east/values.yaml charts/region/west/values.yaml"
           for i in ${FILES}; do
             if [[ "$i" =~ 4\.[0-9]+ ]]; then
               echo "Skipping $i"

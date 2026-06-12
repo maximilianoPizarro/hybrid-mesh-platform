@@ -1,42 +1,33 @@
 ---
-title: Branch Strategy
+title: Region Strategy
 weight: 9
 ---
 
-# Branch Strategy (VP)
+# Region Strategy (single branch)
 
-Three git branches map to three clusters. Each branch carries **one** clustergroup values file; shared charts stay under `charts/all/`.
+One git branch (`main`) serves hub, east, and west. Each cluster uses a **region path** in RHDP, not a separate git branch.
 
-| Branch | Cluster | `values-global.yaml` | Values file on branch |
-|--------|---------|----------------------|------------------------|
-| `main` | Hub | `clusterGroupName: hub` | `values-hub.yaml` (+ east/west for dev/generator) |
-| `east` | East spoke | `clusterGroupName: east` | **`values-east.yaml` only** |
-| `west` | West spoke | `clusterGroupName: west` | **`values-west.yaml` only** |
+| Cluster | RHDP path | Values |
+|---------|-----------|--------|
+| Hub | `charts/region/hub` | `charts/region/hub/values.yaml` |
+| East spoke | `charts/region/east` | `charts/region/east/values.yaml` |
+| West spoke | `charts/region/west` | `charts/region/west/values.yaml` |
+
+Shared component charts live under `charts/all/` and are referenced from each region's `clusterGroup.applications`.
 
 ## RHDP catalog
 
 | Cluster | `gitops_repo_revision` | `gitops_repo_path` |
 |---------|------------------------|--------------------|
-| Hub | `main` | `.` |
-| East | `east` | `.` |
-| West | `west` | `.` |
+| Hub | `main` | `charts/region/hub` |
+| East | `main` | `charts/region/east` |
+| West | `main` | `charts/region/west` |
 
-Install on each cluster: `./pattern.sh install` (utility container). Do not use legacy `east/` / `west/` Helm chart folders.
-
-## Maintain spoke branches
-
-On `main`, update `values-east.yaml` / `values-west.yaml`, commit, then:
-
-```bash
-bash scripts/sync-cluster-branches.sh
-git push origin main east west
-```
-
-The script sets `clusterGroupName` on each branch, removes other `values-*.yaml` files from spoke branches, and commits.
+Install on each cluster: RHDP field-content with `existing_gitops: true`, or `./pattern.sh install` with `TARGET_CLUSTERGROUP=hub|east|west`.
 
 ## PUSH + PULL on spokes
 
-- **PUSH** (`operators-ci`, `operators-platform`): hub ApplicationSet `fleet-spoke-push` (same on all branches; hub-only resource in git, deployed from hub)
-- **PULL**: clustergroup on spoke from `values-east.yaml` or `values-west.yaml` on the matching branch
+- **PUSH** (`operators-ci`, `operators-platform`): hub ApplicationSet `fleet-spoke-push`
+- **PULL**: clustergroup on spoke from `charts/region/east|west/values.yaml`
 
-See [GitOps PUSH vs PULL](gitops-push-vs-pull.md).
+See [GitOps PUSH vs PULL](gitops-push-vs-pull.md) and [REGIONS.md](../../REGIONS.md).
