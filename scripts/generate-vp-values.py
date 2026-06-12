@@ -302,7 +302,9 @@ def main() -> None:
         ("west", west_cg),
     ]:
         out = ROOT / "charts" / "region" / region / "values.yaml"
-        existing = yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else {}
+        existing = (
+            yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else {}
+        )
         wrapped = {
             "main": existing.get(
                 "main",

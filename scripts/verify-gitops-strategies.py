@@ -38,12 +38,16 @@ def main() -> int:
                 f"charts/region/{region}/values.yaml: legacy 'operators' app must be operators-edge"
             )
         if "operators-edge" not in apps:
-            errors.append(f"charts/region/{region}/values.yaml: missing operators-edge (PULL)")
+            errors.append(
+                f"charts/region/{region}/values.yaml: missing operators-edge (PULL)"
+            )
     hub = yaml.safe_load(REGION_VALUES["hub"].open(encoding="utf-8"))
     projects = hub["clusterGroup"].get("argoProjects", [])
     for required in ("fleet-push", "fleet-pull", "operators-platform"):
         if required not in projects:
-            errors.append(f"charts/region/hub/values.yaml: missing argoProject {required}")
+            errors.append(
+                f"charts/region/hub/values.yaml: missing argoProject {required}"
+            )
     if errors:
         for e in errors:
             print(f"ERROR: {e}", file=sys.stderr)
