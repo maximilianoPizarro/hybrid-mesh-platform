@@ -1,0 +1,13 @@
+clusterDomain: ""
+
+# Supplemental Route: operator sends all traffic to UI; /api must reach console-api (port 8080).
+apiRoute:
+  enabled: true
+
+brokerDns:
+  eastTst: ""
+  westTst: ""
+  eastStormshift: ""
+  westStormshift: ""
+  eastDatalake: ""
+  westDatalake: ""

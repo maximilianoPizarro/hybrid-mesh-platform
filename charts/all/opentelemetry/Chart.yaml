@@ -1,0 +1,5 @@
+apiVersion: v2
+name: opentelemetry
+description: OpenTelemetry collector configuration
+type: application
+version: 0.1.0

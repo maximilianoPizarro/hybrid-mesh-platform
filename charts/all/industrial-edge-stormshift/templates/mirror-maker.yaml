@@ -1,0 +1,25 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaMirrorMaker2
+metadata:
+  name: factory-to-central
+  namespace: industrial-edge-stormshift-messaging
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  version: 4.2.0
+  replicas: 1
+  connectCluster: central
+  clusters:
+    - alias: factory
+      bootstrapServers: factory-cluster-kafka-bootstrap.industrial-edge-stormshift-messaging.svc:9092
+    - alias: central
+      bootstrapServers: prod-cluster-kafka-bootstrap.industrial-edge-data-lake.svc:9092
+  mirrors:
+    - sourceCluster: factory
+      targetCluster: central
+      sourceConnector:
+        config:
+          replication.factor: 1
+          offset-syncs.topic.replication.factor: 1
+          sync.topic.acls.enabled: "false"
+      topicsPattern: "temperature|vibration"

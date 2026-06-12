@@ -1,0 +1,37 @@
+{{- if .Values.readinessCheck.enabled | default true }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quay-readiness
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 8
+  activeDeadlineSeconds: 1200
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: check
+          image: {{ .Values.readinessCheck.image | default "registry.redhat.io/ubi9/ubi-minimal:latest" | quote }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              URL="https://quay-registry.{{ .Values.clusterDomain }}/api/v1/discovery"
+              echo "Polling $URL"
+              for i in $(seq 1 60); do
+                if curl -sk -o /dev/null -w "%{http_code}" "$URL" | grep -q 200; then
+                  echo "Quay discovery OK"
+                  exit 0
+                fi
+                echo "Attempt $i/60: not ready, retry in 15s"
+                sleep 15
+              done
+              echo "Quay did not become ready in time"
+              exit 1
+{{- end }}

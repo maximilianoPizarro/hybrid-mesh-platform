@@ -1,0 +1,17 @@
+{{- if .Values.demos.catalog.enabled }}
+{{- $hub := .Values.hubClusterDomain | default .Values.clusterDomain -}}
+{{- $east := .Values.eastClusterDomain | default .Values.clusterDomain -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-demos
+  namespace: developer-hub
+  labels:
+    backstage.io/catalog: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  hybrid-mesh-shared-demos.yaml: |
+{{ (.Files.Get "files/catalog/hybrid-mesh-shared-demos.yaml") | replace "YOUR_HUB_DOMAIN" $hub | replace "YOUR_EAST_DOMAIN" $east | nindent 4 }}
+{{- end }}

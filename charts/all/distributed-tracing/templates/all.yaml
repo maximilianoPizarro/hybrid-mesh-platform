@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tempo-minio
+  namespace: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+stringData:
+  bucket: {{ .Values.minio.bucket | quote }}
+  endpoint: {{ .Values.minio.endpoint | quote }}
+  access_key_id: {{ .Values.minio.accessKey | quote }}
+  access_key_secret: {{ .Values.minio.secretKey | quote }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tempo-bucket-bootstrap
+  namespace: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: quay.io/minio/mc:latest
+          env:
+            - name: HOME
+              value: /tmp
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mc --config-dir /tmp/.mc alias set hub {{ .Values.minio.endpoint }} {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}
+              mc --config-dir /tmp/.mc mb --ignore-existing hub/{{ .Values.minio.bucket }}
+---
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+  name: {{ .Values.tempo.name }}
+  namespace: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  storage:
+    secret:
+      name: tempo-minio
+      type: s3
+  storageSize: 5Gi
+  resources:
+    total:
+      limits:
+        memory: 2Gi
+        cpu: 2000m
+  tenants:
+    mode: openshift
+    authentication:
+      - tenantName: {{ .Values.tempo.tenantName }}
+        tenantId: {{ .Values.tempo.tenantId | quote }}
+  template:
+    gateway:
+      enabled: true
+    queryFrontend:
+      jaegerQuery:
+        enabled: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tempostack-traces-reader
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+rules:
+  - apiGroups:
+      - tempo.grafana.com
+    resources:
+      - {{ .Values.tempo.tenantName }}
+    resourceNames:
+      - traces
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tempostack-traces-reader
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tempostack-traces-reader
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: system:authenticated
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tempostack-traces-write
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+rules:
+  - apiGroups:
+      - tempo.grafana.com
+    resources:
+      - {{ .Values.tempo.tenantName }}
+    resourceNames:
+      - traces
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tempostack-traces-write
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tempostack-traces-write
+subjects:
+  - kind: ServiceAccount
+    name: cluster-collector-collector
+    namespace: openshift-opentelemetry
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tempo-otel-collector-ingress
+  namespace: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: distributor
+      app.kubernetes.io/instance: simplest
+      app.kubernetes.io/managed-by: tempo-operator
+      app.kubernetes.io/name: tempo
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-opentelemetry
+      ports:
+        - port: 4317
+          protocol: TCP
+        - port: 4318
+          protocol: TCP
+---
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: distributed-tracing
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  type: DistributedTracing

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: industrial-edge-tst
+description: Industrial Edge test environment - sensors, messaging, ML inference, line dashboard
+type: application
+version: 0.1.0

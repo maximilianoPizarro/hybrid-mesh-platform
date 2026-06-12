@@ -1,0 +1,11 @@
+clusterRole: spoke
+clusterName: west
+userCount: 50
+
+clusters:
+  hub:
+    domain: ""
+
+deployer:
+  domain: ""
+  apiUrl: ""

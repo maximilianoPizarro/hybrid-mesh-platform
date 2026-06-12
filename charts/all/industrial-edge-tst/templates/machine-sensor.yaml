@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: machine-sensor-1
+  namespace: industrial-edge-tst-all
+  labels:
+    app: machine-sensor
+    sensor-id: "1"
+    app.kubernetes.io/part-of: industrial-edge
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: machine-sensor
+      sensor-id: "1"
+  template:
+    metadata:
+      labels:
+        app: machine-sensor
+        sensor-id: "1"
+    spec:
+      containers:
+        - name: machine-sensor
+          image: quay.io/hybridcloudpatterns/iot-software-sensor:latest
+          env:
+            - name: MQTT_HOSTNAME
+              value: messaging
+            - name: MQTT_PORT
+              value: "1883"
+            - name: SENSOR_DEVICE_ID
+              value: "sensor-1"
+            - name: SENSOR_GPS
+              value: "40.4,-3.7"
+            - name: JAVA_MAX_MEM_RATIO
+              value: "50"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: machine-sensor-2
+  namespace: industrial-edge-tst-all
+  labels:
+    app: machine-sensor
+    sensor-id: "2"
+    app.kubernetes.io/part-of: industrial-edge
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: machine-sensor
+      sensor-id: "2"
+  template:
+    metadata:
+      labels:
+        app: machine-sensor
+        sensor-id: "2"
+    spec:
+      containers:
+        - name: machine-sensor
+          image: quay.io/hybridcloudpatterns/iot-software-sensor:latest
+          env:
+            - name: MQTT_HOSTNAME
+              value: messaging
+            - name: MQTT_PORT
+              value: "1883"
+            - name: SENSOR_DEVICE_ID
+              value: "sensor-2"
+            - name: SENSOR_GPS
+              value: "41.4,-2.2"
+            - name: JAVA_MAX_MEM_RATIO
+              value: "50"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

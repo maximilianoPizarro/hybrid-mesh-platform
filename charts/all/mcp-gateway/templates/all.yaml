@@ -1,0 +1,1006 @@
+##
+## 1. Namespace
+##
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+##
+## 2. CRDs — MCPServerRegistration, MCPGatewayExtension, MCPVirtualServer
+##
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+    argocd.argoproj.io/sync-wave: "-1"
+  name: mcpserverregistrations.mcp.kuadrant.io
+spec:
+  group: mcp.kuadrant.io
+  names:
+    kind: MCPServerRegistration
+    listKind: MCPServerRegistrationList
+    plural: mcpserverregistrations
+    shortNames:
+      - mcpsr
+    singular: mcpserverregistration
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Tool prefix for federation
+          jsonPath: .spec.toolPrefix
+          name: Prefix
+          type: string
+        - description: Target HTTPRoute
+          jsonPath: .spec.targetRef.name
+          name: Target
+          type: string
+        - description: MCP endpoint path
+          jsonPath: .spec.path
+          name: Path
+          type: string
+        - description: Ready status
+          jsonPath: .status.conditions[?(@.type=='Ready')].status
+          name: Ready
+          type: string
+        - description: Number of discovered tools
+          jsonPath: .status.discoveredTools
+          name: Tools
+          type: integer
+        - jsonPath: .spec.credentialRef.name
+          name: Credentials
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: MCPServerRegistration defines a collection of MCP servers to be aggregated by the gateway.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              properties:
+                credentialRef:
+                  properties:
+                    key:
+                      default: token
+                      type: string
+                    name:
+                      minLength: 1
+                      type: string
+                  required:
+                    - name
+                  type: object
+                path:
+                  default: /mcp
+                  type: string
+                targetRef:
+                  properties:
+                    group:
+                      default: gateway.networking.k8s.io
+                      enum:
+                        - gateway.networking.k8s.io
+                      type: string
+                    kind:
+                      default: HTTPRoute
+                      enum:
+                        - HTTPRoute
+                      type: string
+                    name:
+                      minLength: 1
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                toolPrefix:
+                  type: string
+                  x-kubernetes-validations:
+                    - message: toolPrefix is immutable once set
+                      rule: self == oldSelf
+              required:
+                - targetRef
+              type: object
+            status:
+              properties:
+                conditions:
+                  items:
+                    properties:
+                      lastTransitionTime:
+                        format: date-time
+                        type: string
+                      message:
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+                discoveredTools:
+                  format: int32
+                  type: integer
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+    argocd.argoproj.io/sync-wave: "-1"
+  name: mcpgatewayextensions.mcp.kuadrant.io
+spec:
+  group: mcp.kuadrant.io
+  names:
+    kind: MCPGatewayExtension
+    listKind: MCPGatewayExtensionList
+    plural: mcpgatewayextensions
+    singular: mcpgatewayextension
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Ready status
+          jsonPath: .status.conditions[?(@.type=='Ready')].status
+          name: Ready
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: MCPGatewayExtension extends a Gateway API Gateway to handle MCP.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              properties:
+                backendPingIntervalSeconds:
+                  default: 60
+                  format: int32
+                  maximum: 7200
+                  minimum: 10
+                  type: integer
+                httpRouteManagement:
+                  default: Enabled
+                  enum:
+                    - Enabled
+                    - Disabled
+                  type: string
+                privateHost:
+                  type: string
+                publicHost:
+                  type: string
+                sessionStore:
+                  properties:
+                    secretName:
+                      minLength: 1
+                      type: string
+                  required:
+                    - secretName
+                  type: object
+                targetRef:
+                  properties:
+                    group:
+                      default: gateway.networking.k8s.io
+                      enum:
+                        - gateway.networking.k8s.io
+                      type: string
+                    kind:
+                      default: Gateway
+                      enum:
+                        - Gateway
+                      type: string
+                    name:
+                      minLength: 1
+                      type: string
+                    namespace:
+                      type: string
+                    sectionName:
+                      maxLength: 253
+                      minLength: 1
+                      type: string
+                  required:
+                    - name
+                    - sectionName
+                  type: object
+                trustedHeadersKey:
+                  properties:
+                    generate:
+                      default: Disabled
+                      enum:
+                        - Enabled
+                        - Disabled
+                      type: string
+                    secretName:
+                      minLength: 1
+                      type: string
+                  required:
+                    - secretName
+                  type: object
+              required:
+                - targetRef
+              type: object
+            status:
+              properties:
+                conditions:
+                  items:
+                    properties:
+                      lastTransitionTime:
+                        format: date-time
+                        type: string
+                      message:
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+              type: object
+          required:
+            - spec
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+    argocd.argoproj.io/sync-wave: "-1"
+  name: mcpvirtualservers.mcp.kuadrant.io
+spec:
+  group: mcp.kuadrant.io
+  names:
+    kind: MCPVirtualServer
+    listKind: MCPVirtualServerList
+    plural: mcpvirtualservers
+    singular: mcpvirtualserver
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: MCPVirtualServer represents a virtual MCP server that acts as
+            a proxy to a backend MCP server.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              properties:
+                backendRef:
+                  properties:
+                    httpRouteRef:
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      required:
+                        - name
+                      type: object
+                    path:
+                      default: /mcp
+                      type: string
+                  required:
+                    - httpRouteRef
+                  type: object
+                publicTools:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      name:
+                        type: string
+                    required:
+                      - description
+                      - name
+                    type: object
+                  type: array
+                toolPrefix:
+                  type: string
+              required:
+                - backendRef
+              type: object
+            status:
+              properties:
+                conditions:
+                  items:
+                    properties:
+                      lastTransitionTime:
+                        format: date-time
+                        type: string
+                      message:
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+                  x-kubernetes-list-map-keys:
+                    - type
+                  x-kubernetes-list-type: map
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+##
+## 3. RBAC
+##
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-broker-router
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-controller
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-controller
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups: ['mcp.kuadrant.io']
+    resources: ['mcpserverregistrations', 'mcpserverregistrations/status', 'mcpvirtualservers', 'mcpgatewayextensions', 'mcpgatewayextensions/status', 'mcpgatewayextensions/finalizers']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['gateway.networking.k8s.io']
+    resources: ['httproutes', 'httproutes/status', 'gateways', 'gateways/status', 'referencegrants']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['']
+    resources: ['services', 'serviceaccounts', 'secrets', 'endpoints', 'events', 'namespaces', 'configmaps']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['discovery.k8s.io']
+    resources: ['endpointslices']
+    verbs: ['get', 'list', 'watch']
+  - apiGroups: ['networking.istio.io']
+    resources: ['envoyfilters']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+  - apiGroups: ['apps']
+    resources: ['deployments']
+    verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-controller
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-controller
+subjects:
+  - kind: ServiceAccount
+    name: mcp-controller
+    namespace: mcp-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mcp-broker-router
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups: ['']
+    resources: ['configmaps']
+    resourceNames: ['mcp-gateway-config']
+    verbs: ['get', 'watch']
+  - apiGroups: ['']
+    resources: ['secrets']
+    resourceNames: ['mcp-gateway-config']
+    verbs: ['get', 'watch']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mcp-broker-router
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mcp-broker-router
+subjects:
+  - kind: ServiceAccount
+    name: mcp-broker-router
+    namespace: mcp-system
+---
+##
+## 4. Trusted Header Public Key
+##
+apiVersion: v1
+kind: Secret
+metadata:
+  name: trusted-headers-public-key
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+stringData:
+  key: |
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7WdMdvC8hviEAL4wcebqaYbLEtVO
+    VEiyi/nozagw7BaWXmzbOWyy95gZLirTkhUb1P4Z4lgKLU2rD5NCbGPHAA==
+    -----END PUBLIC KEY-----
+type: Opaque
+---
+##
+## 5. MCP Controller Deployment
+##
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-controller
+  namespace: mcp-system
+  labels:
+    app: mcp-controller
+    app.kubernetes.io/part-of: mcp-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-controller
+  template:
+    metadata:
+      labels:
+        app: mcp-controller
+        app.kubernetes.io/part-of: mcp-gateway
+    spec:
+      serviceAccountName: mcp-controller
+      containers:
+        - name: controller
+          image: ghcr.io/kuadrant/mcp-controller:latest
+          command:
+            - ./mcp_controller
+          args:
+            - --log-level=0
+          ports:
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+            - name: metrics
+              containerPort: 8082
+              protocol: TCP
+          resources:
+            requests:
+              memory: '64Mi'
+              cpu: '50m'
+            limits:
+              memory: '256Mi'
+              cpu: '200m'
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+##
+## 6. Gateway
+##
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    networking.istio.io/service-type: ClusterIP
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: mcp
+      protocol: HTTP
+      port: 8080
+      allowedRoutes:
+        namespaces:
+          from: All
+---
+##
+## 7. MCPGatewayExtension (controller creates broker, HTTPRoute, and service)
+##
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPGatewayExtension
+metadata:
+  name: mcp-gateway-extension
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: mcp-gateway
+    namespace: mcp-system
+    sectionName: mcp
+  publicHost: mcp-gateway.{{ .Values.clusterDomain }}
+  trustedHeadersKey:
+    secretName: trusted-headers-public-key
+---
+{{/*
+  OpenShift / k8s MCP backends from OLS (openshift-lightspeed namespace) are optional.
+  Workshop hub uses ArgoCD MCP + Developer Hub Lightspeed direct catalog MCP.
+  Enable OLS-backed proxies when openshift-lightspeed operator is installed.
+*/}}
+{{- if .Values.openshiftMcp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: openshift-mcp-server-proxy
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: ExternalName
+  externalName: openshift-mcp-server.openshift-lightspeed.svc.cluster.local
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openshift-mcp-server-route
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostnames:
+    - mcp-gateway.{{ .Values.clusterDomain }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: mcp-gateway
+      namespace: mcp-system
+      sectionName: mcp
+  rules:
+    - backendRefs:
+        - name: openshift-mcp-server-proxy
+          port: 8080
+      matches:
+        - path:
+            type: PathPrefix
+            value: /openshift-mcp-server/mcp
+---
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPServerRegistration
+metadata:
+  name: openshift-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    name: openshift-mcp-server-route
+  toolPrefix: ocp
+  path: /mcp
+---
+{{- end }}
+{{- if .Values.k8sMcp.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-k8s-server-view
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: k8s-mcp-server
+    namespace: mcp-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-mcp-server
+  namespace: mcp-system
+  labels:
+    app: k8s-mcp-server
+    app.kubernetes.io/part-of: mcp-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-mcp-server
+  template:
+    metadata:
+      labels:
+        app: k8s-mcp-server
+    spec:
+      serviceAccountName: k8s-mcp-server
+      containers:
+        - name: k8s-mcp
+          image: {{ .Values.k8sMcp.image | quote }}
+          command: ["npx"]
+          args: ["-y", "kubernetes-mcp-server@latest", "http", "--port", "8085"]
+          ports:
+            - name: http
+              containerPort: 8085
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  selector:
+    app: k8s-mcp-server
+  ports:
+    - port: 8085
+      targetPort: 8085
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: k8s-mcp-server-route
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostnames:
+    - mcp-gateway.{{ .Values.clusterDomain }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: mcp-gateway
+      namespace: mcp-system
+      sectionName: mcp
+  rules:
+    - backendRefs:
+        - name: k8s-mcp-server
+          port: 8085
+      matches:
+        - path:
+            type: PathPrefix
+            value: /k8s-mcp-server/mcp
+---
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPServerRegistration
+metadata:
+  name: kubernetes-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    name: k8s-mcp-server-route
+  toolPrefix: k8s
+  path: /mcp
+---
+{{- end }}
+{{/*
+  RHDH MCP uses SSE; Kuadrant gateway expects Streamable HTTP — use Developer Hub Lightspeed direct.
+*/}}
+---
+##
+## 8b. ArgoCD MCP Server — Deployment, Services, HTTPRoute, MCPServerRegistration
+##
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-mcp-token
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+type: Opaque
+stringData:
+  ARGOCD_API_TOKEN: {{ .Values.argocdApiToken | default "" | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-mcp-server
+  namespace: mcp-system
+  labels:
+    app: argocd-mcp-server
+    app.kubernetes.io/part-of: mcp-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argocd-mcp-server
+  template:
+    metadata:
+      labels:
+        app: argocd-mcp-server
+        app.kubernetes.io/part-of: mcp-gateway
+    spec:
+      containers:
+        - name: argocd-mcp
+          image: registry.redhat.io/ubi9/nodejs-22:latest
+          command: ["npx"]
+          args: ["argocd-mcp@latest", "http"]
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: ARGOCD_BASE_URL
+              value: "https://openshift-gitops-server.openshift-gitops.svc.cluster.local"
+            - name: ARGOCD_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-mcp-token
+                  key: ARGOCD_API_TOKEN
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 5
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 120
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-mcp-server
+  namespace: mcp-system
+  labels:
+    app: argocd-mcp-server
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  selector:
+    app: argocd-mcp-server
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-mcp-server-proxy
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  type: ExternalName
+  externalName: argocd-mcp-server.mcp-system.svc.cluster.local
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-mcp-server-route
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostnames:
+    - mcp-gateway.{{ .Values.clusterDomain }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: mcp-gateway
+      namespace: mcp-system
+      sectionName: mcp
+  rules:
+    - backendRefs:
+        - name: argocd-mcp-server-proxy
+          port: 3000
+      matches:
+        - path:
+            type: PathPrefix
+            value: /argocd-mcp-server/mcp
+---
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPServerRegistration
+metadata:
+  name: argocd-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    name: argocd-mcp-server-route
+  toolPrefix: argo
+  path: /mcp
+---
+##
+## 9. Route — OpenShift route to expose the gateway
+##
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mcp-gateway
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  host: mcp-gateway.{{ .Values.clusterDomain }}
+  to:
+    kind: Service
+    name: mcp-gateway-istio
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+  wildcardPolicy: None

@@ -1,0 +1,49 @@
+clusterDomain: ""
+userCount: 50
+userProjects:
+  enabled: true
+  notebook:
+    enabled: true
+    image: quay.io/opendatahub-contrib/workbench-images:jupyter-minimal-elyra-py311-ubi9
+    cpu: "500m"
+    memory: 2Gi
+  # Example KServe InferenceService on ModelMesh (shared sklearn model on hub MinIO).
+  inferenceService:
+    enabled: true
+    name: workshop-sklearn
+    displayName: Workshop sklearn (ModelMesh)
+    modelFormat: sklearn
+    runtime: mlserver-1.x
+    storageSecretName: aws-connection-models
+    storagePath: anomaly-detection/model
+    s3:
+      accessKeyId: minio
+      secretAccessKey: minio123
+      region: us-east-1
+      bucket: models
+      endpoint: http://minio-hub.service-interconnect.svc:9000
+dashboardExtensions:
+  enabled: true
+modelServing:
+  # Workshop hub: ModelMesh multi-model + Knative (Serverless operator) for KServe serving.
+  modelMeshEnabled: true
+  serverlessEnabled: true
+  defaultDeploymentMode: ModelMesh
+maas:
+  endpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io"
+  # Injected at runtime from litemaas.apiKey (RHDP); never commit to Git.
+  apiKey: ""
+  credentialsSecretName: openshift-ai-maas-credentials
+  credentialsSecretKey: api-key
+  models:
+    - id: llama-scout-17b
+      displayName: Llama Scout 17B (workshop default)
+    - id: deepseek-r1-distill-qwen-14b
+      displayName: DeepSeek R1 Distill Qwen 14B
+    - id: codellama-7b-instruct
+      displayName: CodeLlama 7B Instruct
+playground:
+  enabled: true
+mcp:
+  enabled: true
+  deployServer: true

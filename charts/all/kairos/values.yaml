@@ -1,0 +1,65 @@
+clusterRole: hub
+clusterName: hub
+clusterDomain: apps.cluster.example.com
+
+operator:
+  channel: stable
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+
+# Existing cluster secret — never commit credentials; Argo must not prune this Secret.
+aiCredentials:
+  secretName: kairos-ai-credentials
+  secretKey: api-key
+
+aiModel:
+  apiURL: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1/chat/completions"
+  model: llama-scout-17b
+  temperature: "0.3"
+  timeoutSeconds: 60
+
+console:
+  enabled: true
+  name: kairos
+  image: quay.io/maximilianopizarro/kairos-console:v2.0.3
+
+# Cluster-local agent (reports to hub console from spokes).
+clusterAgent:
+  enabled: true
+  mode: supervised
+  dryRun: true
+  hubReporting:
+    enabled: true
+
+# Watch scaffolded Industrial Edge namespaces by suffix (Developer Hub templates).
+environmentAgents:
+  dev:
+    enabled: true
+    mode: autopilot
+    namespaceSuffix: "-dev"
+    maxActionsPerHour: 50
+    dryRun: false
+  qa:
+    enabled: true
+    mode: supervised
+    namespaceSuffix: "-qa"
+    maxActionsPerHour: 20
+    dryRun: false
+  prod:
+    enabled: true
+    mode: supervised
+    namespaceSuffix: "-prod"
+    maxActionsPerHour: 10
+    dryRun: true
+
+# SmartScalingPolicy (Kairos “scan” policies) for platform machine-sensors.
+sensorScanPolicies:
+  enabled: true
+  # Hub: paused mirror CRs so Scaling Policies UI lists east/west sensor policies (enforced on spokes).
+  displayOnHub: true
+  spokes:
+    - east
+    - west
+  baselineNamespace: industrial-edge-tst-all
+  otelEndpoint: cluster-collector-collector.openshift-opentelemetry.svc.cluster.local:4317
+  prometheusEndpoint: prometheus-k8s.openshift-monitoring.svc.cluster.local:9090

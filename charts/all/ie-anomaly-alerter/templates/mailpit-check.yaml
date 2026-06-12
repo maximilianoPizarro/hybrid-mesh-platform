@@ -1,0 +1,30 @@
+{{- if and .Values.mailpit.requireHubDomain (not .Values.mailpit.url) }}
+{{- $hub := .Values.hubClusterDomain | default .Values.global.hubClusterDomain }}
+{{- if not $hub }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ie-alerter-mailpit-config-check
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: fail
+          image: registry.redhat.io/ubi9/ubi-minimal:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "ERROR: clusters.hub.domain (or mailpit.url) must be set for Mailpit alerts."
+              echo "Patch spoke field-content with clusters.hub.domain=<hub-apps-domain>"
+              echo "See docs/rhdp-field-content.md"
+              exit 1
+{{- end }}
+{{- end }}

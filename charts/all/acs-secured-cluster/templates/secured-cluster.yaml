@@ -1,0 +1,19 @@
+apiVersion: platform.stackrox.io/v1alpha1
+kind: SecuredCluster
+metadata:
+  name: stackrox-secured-cluster-services
+  namespace: stackrox
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  clusterName: {{ .Values.clusterName }}
+  centralEndpoint: {{ if eq .Values.clusterRole "hub" }}central.stackrox.svc:443{{ else }}central-stackrox.{{ .Values.hubClusterDomain }}:443{{ end }}
+  admissionControl:
+    listenOnCreates: true
+    listenOnUpdates: true
+    listenOnEvents: true
+  perNode:
+    collector:
+      collection: EBPF
+      imageFlavor: Regular
+    taintToleration: TolerateTaints

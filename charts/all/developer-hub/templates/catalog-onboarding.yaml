@@ -1,0 +1,17 @@
+{{- /*
+  Workshop onboarding + TechDocs (mkdocs) — mounted in-pod so builder uses dir:. not GitHub Pages.
+*/ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-onboarding
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+{{- range $path, $_ := .Files.Glob "files/onboarding/**" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}

@@ -1,0 +1,20 @@
+clusterDomain: ""
+channel: alpha
+
+# primary = hub; agent = spoke (only when federatedETL.enabled)
+role: primary
+clusterName: hub
+clusterRole: hub
+
+# Free tier: single-cluster Kubecost on hub only.
+# Set enabled: true for Enterprise Federated ETL (hub aggregator + spoke agents).
+federatedETL:
+  enabled: false
+
+# Federated ETL object storage (MinIO centralized on hub) — only when federatedETL.enabled
+federatedStore:
+  bucket: kubecost
+  endpoint: minio.industrial-edge-ml-workspace.svc.cluster.local:9000
+  region: us-east-1
+  accessKey: minio
+  secretKey: minio123

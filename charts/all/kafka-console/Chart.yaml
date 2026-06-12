@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kafka-console
+description: Streams for Apache Kafka Console — centralized UI for monitoring all Kafka clusters across east/west spokes
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

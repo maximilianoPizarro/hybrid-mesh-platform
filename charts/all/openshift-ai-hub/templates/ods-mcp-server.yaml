@@ -1,0 +1,127 @@
+{{- if .Values.mcp.deployServer }}
+{{- $maas := .Values.maas | default dict -}}
+{{- $endpoint := $maas.endpoint | default "https://maas-rhdp.apps.maas.redhatworkshops.io" -}}
+{{- $secretName := $maas.credentialsSecretName | default "openshift-ai-maas-credentials" -}}
+{{- $secretKey := $maas.credentialsSecretKey | default "api-key" -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ods-maas-mcp-server
+  namespace: maas-workshop
+  labels:
+    opendatahub.io/dashboard: "true"
+    app.kubernetes.io/part-of: openshift-ai-workshop
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    opendatahub.io/mcp-server: "true"
+spec:
+  selector:
+    app: ods-maas-mcp-server
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ods-maas-mcp-server
+  namespace: maas-workshop
+  labels:
+    opendatahub.io/dashboard: "true"
+    app.kubernetes.io/part-of: openshift-ai-workshop
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ods-maas-mcp-server
+  template:
+    metadata:
+      labels:
+        app: ods-maas-mcp-server
+    spec:
+      containers:
+        - name: mcp
+          image: registry.redhat.io/ubi9/python-311:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MAAS_BASE
+              value: {{ trimSuffix "/" $endpoint | quote }}
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: {{ $secretKey }}
+                  optional: true
+          command:
+            - python3
+            - -c
+            - |
+              import json, os, urllib.request
+              from http.server import HTTPServer, BaseHTTPRequestHandler
+              BASE = os.environ.get("MAAS_BASE", "").rstrip("/")
+              KEY = os.environ.get("API_KEY", "")
+              TOOLS = [
+                {"name": "maas_chat", "description": "Chat completion via MaaS RHDP", "inputSchema": {"type": "object", "properties": {"prompt": {"type": "string"}}, "required": ["prompt"]}},
+                {"name": "maas_models_list", "description": "List configured MaaS models", "inputSchema": {"type": "object", "properties": {}}},
+              ]
+              class H(BaseHTTPRequestHandler):
+                  def do_POST(self):
+                      n = int(self.headers.get("Content-Length", 0))
+                      body = json.loads(self.rfile.read(n) or b"{}")
+                      if self.path.rstrip("/") != "/mcp":
+                          self.send_response(404); self.end_headers(); return
+                      method = body.get("method", "")
+                      if method == "tools/list":
+                          out = {"jsonrpc": "2.0", "id": body.get("id"), "result": {"tools": TOOLS}}
+                      elif method == "tools/call" and body.get("params", {}).get("name") == "maas_models_list":
+                          out = {"jsonrpc": "2.0", "id": body.get("id"), "result": {"content": [{"type": "text", "text": "llama-scout-17b, codellama-7b-instruct, deepseek-r1-distill-qwen-14b"}]}}
+                      elif method == "tools/call" and body.get("params", {}).get("name") == "maas_chat":
+                          prompt = body.get("params", {}).get("arguments", {}).get("prompt", "")
+                          req = urllib.request.Request(
+                              f"{BASE}/v1/chat/completions",
+                              data=json.dumps({"model": "llama-scout-17b", "messages": [{"role": "user", "content": prompt}]}).encode(),
+                              headers={"Content-Type": "application/json", "Authorization": f"Bearer {KEY}"},
+                              method="POST",
+                          )
+                          with urllib.request.urlopen(req, timeout=120) as r:
+                              data = json.loads(r.read())
+                          text = data.get("choices", [{}])[0].get("message", {}).get("content", str(data))
+                          out = {"jsonrpc": "2.0", "id": body.get("id"), "result": {"content": [{"type": "text", "text": text}]}}
+                      else:
+                          out = {"jsonrpc": "2.0", "id": body.get("id"), "error": {"code": -32601, "message": "method not found"}}
+                      raw = json.dumps(out).encode()
+                      self.send_response(200)
+                      self.send_header("Content-Type", "application/json")
+                      self.end_headers()
+                      self.wfile.write(raw)
+                  def log_message(self, *args): pass
+              print("ODS MaaS MCP server on :8080/mcp")
+              HTTPServer(("0.0.0.0", 8080), H).serve_forever()
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ods-mcp-server-registration
+  namespace: maas-workshop
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  mcp-server-url: "http://ods-maas-mcp-server.maas-workshop.svc.cluster.local:8080/mcp"
+  README.md: |
+    OpenShift AI MCP Server (workshop) — exposes MaaS chat tools at `/mcp`.
+    Register in the dashboard **AI Assistants → MCP Servers** using the in-cluster URL above,
+    or use Developer Hub Lightspeed + MCP Gateway for federated tools.
+{{- end }}

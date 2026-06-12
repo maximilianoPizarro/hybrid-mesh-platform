@@ -1,0 +1,5 @@
+apiVersion: v2
+name: distributed-tracing
+description: Centralized TempoStack with Jaeger UI for distributed tracing on the hub
+type: application
+version: 0.1.0

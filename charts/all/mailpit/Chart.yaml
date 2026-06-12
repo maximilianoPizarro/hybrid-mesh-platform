@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mailpit
+description: Mailpit email testing server for notifications
+type: application
+version: 0.1.0

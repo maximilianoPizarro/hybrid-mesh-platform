@@ -1,0 +1,5 @@
+apiVersion: v2
+name: acs-operator
+description: Red Hat Advanced Cluster Security - Central services
+type: application
+version: 0.1.0

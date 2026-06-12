@@ -1,0 +1,188 @@
+{{- if .Values.userProjects.enabled }}
+{{- $count := int (.Values.userCount | default 50) }}
+{{- $maas := .Values.maas | default dict -}}
+{{- $endpoint := $maas.endpoint | default "https://maas-rhdp.apps.maas.redhatworkshops.io" -}}
+{{- $secretName := $maas.credentialsSecretName | default "openshift-ai-maas-credentials" -}}
+{{- $secretKey := $maas.credentialsSecretKey | default "api-key" -}}
+{{- $isvc := $.Values.userProjects.inferenceService | default dict -}}
+{{- $s3 := $isvc.s3 | default dict -}}
+{{- range $i := until $count }}
+{{- $n := add $i 1 }}
+{{- $user := printf "user%d" $n }}
+{{- $project := printf "ai-%s" $user }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $project }}
+  labels:
+    opendatahub.io/dashboard: "true"
+    workshop.redhat.com/owner: {{ $user | quote }}
+    pod-security.kubernetes.io/enforce: baseline
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    openshift.io/display-name: {{ printf "OpenShift AI — %s" $user | quote }}
+    openshift.io/description: {{ printf "Pre-provisioned Data Science project for workshop %s (ModelMesh + MaaS)" $user | quote }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-admin" $user }}
+  namespace: {{ $project }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: {{ $user | quote }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $secretName }}
+  namespace: {{ $project }}
+  labels:
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/managed: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: Replace=true
+    opendatahub.io/connection-type: generic
+    openshift.io/display-name: MaaS RHDP API Key
+type: Opaque
+stringData:
+  {{- if $maas.apiKey }}
+  {{ $secretKey }}: {{ $maas.apiKey | quote }}
+  {{- else }}
+  {{ $secretKey }}: "CHANGEME-inject-via-RHDP-or-oc-create-secret"
+  {{- end }}
+  OPENAI_API_BASE: {{ printf "%s/v1" (trimSuffix "/" $endpoint) | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workshop-project-readme
+  namespace: {{ $project }}
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  README.md: |
+    # {{ $project }}
+
+    Pre-provisioned OpenShift AI project for **{{ $user }}**.
+
+    - **Developer Hub:** Catalog → Component `{{ $project }}` (owner {{ $user }})
+    - **Dashboard:** Data Science Projects → **{{ $project }}**
+    - **MaaS model:** llama-scout-17b via secret `{{ $secretName }}`
+    - **Serving:** ModelMesh (multi-model) + Knative via OpenShift Serverless on the hub
+    - **Example ISVC:** `{{ $isvc.name | default "workshop-sklearn" }}` (sklearn on shared MinIO — ModelMesh)
+---
+{{- if ($isvc.enabled | default false) }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $isvc.storageSecretName | default "aws-connection-models" }}
+  namespace: {{ $project }}
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    opendatahub.io/connection-type: s3
+    openshift.io/display-name: Workshop models (MinIO)
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: {{ $s3.accessKeyId | default "minio" | quote }}
+  AWS_SECRET_ACCESS_KEY: {{ $s3.secretAccessKey | default "minio123" | quote }}
+  AWS_DEFAULT_REGION: {{ $s3.region | default "us-east-1" | quote }}
+  AWS_S3_BUCKET: {{ $s3.bucket | default "models" | quote }}
+  AWS_S3_ENDPOINT: {{ $s3.endpoint | default "http://minio-hub.service-interconnect.svc:9000" | quote }}
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: {{ $isvc.name | default "workshop-sklearn" }}
+  namespace: {{ $project }}
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    serving.kserve.io/deploymentMode: ModelMesh
+    maas.redhat.com/display-name: {{ $isvc.displayName | default "Workshop sklearn (ModelMesh)" | quote }}
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: {{ $isvc.modelFormat | default "sklearn" | quote }}
+      runtime: {{ $isvc.runtime | default "mlserver-1.x" | quote }}
+      storage:
+        key: {{ $isvc.storageSecretName | default "aws-connection-models" }}
+        path: {{ $isvc.storagePath | default "anomaly-detection/model" | quote }}
+---
+{{- end }}
+{{- if $.Values.userProjects.notebook.enabled }}
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  name: workshop-notebook
+  namespace: {{ $project }}
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    notebooks.opendatahub.io/server-type: Jupyter
+spec:
+  template:
+    spec:
+      containers:
+        - name: workshop-notebook
+          image: {{ $.Values.userProjects.notebook.image | quote }}
+          env:
+            - name: OPENAI_API_BASE
+              value: {{ printf "%s/v1" (trimSuffix "/" $endpoint) | quote }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secretName }}
+                  key: {{ $secretKey }}
+                  optional: true
+          resources:
+            requests:
+              cpu: {{ $.Values.userProjects.notebook.cpu | default "500m" | quote }}
+              memory: {{ $.Values.userProjects.notebook.memory | default "2Gi" | quote }}
+            limits:
+              memory: {{ $.Values.userProjects.notebook.memory | default "2Gi" | quote }}
+          volumeMounts:
+            - name: workshop-notebook-data
+              mountPath: /opt/app-root/src
+      volumes:
+        - name: workshop-notebook-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workshop-maas-notebook
+  namespace: {{ $project }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+data:
+  maas-smoke-test.ipynb: |
+    {
+      "cells": [
+        {"cell_type": "markdown", "metadata": {}, "source": ["# MaaS smoke test — {{ $user }}\n", "Open **ai-{{ $user }}** project notebook and run cells to call the shared MaaS endpoint."]},
+        {"cell_type": "code", "metadata": {}, "source": ["import os, json, urllib.request\n", "base = os.environ.get('OPENAI_API_BASE', '').rstrip('/')\n", "key = os.environ.get('OPENAI_API_KEY', '')\n", "req = urllib.request.Request(f\"{base}/chat/completions\", data=json.dumps({\"model\": \"llama-scout-17b\", \"messages\": [{\"role\": \"user\", \"content\": \"Say hello from {{ $user }} notebook\"}]}).encode(), headers={\"Content-Type\": \"application/json\", \"Authorization\": f\"Bearer {key}\"}, method=\"POST\")\n", "print(json.loads(urllib.request.urlopen(req, timeout=60).read())['choices'][0]['message']['content'])"], "outputs": [], "execution_count": null}
+      ],
+      "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"}},
+      "nbformat": 4,
+      "nbformat_minor": 5
+    }
+{{- end }}
+{{- end }}

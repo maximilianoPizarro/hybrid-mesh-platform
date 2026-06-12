@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quay-workshop-org-setup
+  namespace: quay-registry
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: quay-org-setup
+      restartPolicy: Never
+      containers:
+        - name: setup
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          env:
+            - name: QUAY_HOST
+              value: quay-registry.apps.cluster-r7964.dynamic2.redhatworkshops.io
+            - name: QUAY_ORG
+              value: workshop
+            - name: ROBOT_NAME
+              value: push
+            - name: QUAY_ADMIN_USER
+              value: quayadmin
+            - name: QUAY_ADMIN_PASSWORD
+              value: Welcome123!
+            - name: QUAY_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: quay-admin-api-token
+                  key: token
+                  optional: true
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              DOCKERCFG=$(python3 /scripts/setup.py)
+              apply_secret() {
+                NS="$1"
+                oc create secret generic quay-workshop-push \
+                  --from-literal=.dockerconfigjson="$DOCKERCFG" \
+                  --type=kubernetes.io/dockerconfigjson \
+                  -n "$NS" --dry-run=client -o yaml | oc apply -f -
+                echo "Secret quay-workshop-push applied in ${NS}"
+              }
+              apply_secret quay-registry
+              apply_secret developer-hub
+              apply_secret openshift-gitops
+      volumes:
+        - name: script
+          configMap:
+            name: quay-org-setup-script

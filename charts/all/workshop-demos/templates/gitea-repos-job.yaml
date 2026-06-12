@@ -1,0 +1,47 @@
+{{- $giteaUrl := .Values.gitea.url | default (printf "https://gitea-gitea.%s" (.Values.hubClusterDomain | default .Values.clusterDomain)) -}}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: workshop-demos-gitea-org
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: registry.access.redhat.com/ubi9/curl:latest
+          env:
+            - name: GITEA_URL
+              value: {{ $giteaUrl | quote }}
+            - name: GITEA_USER
+              value: {{ .Values.gitea.adminUser | quote }}
+            - name: GITEA_PASSWORD
+              value: {{ .Values.gitea.adminPassword | quote }}
+            - name: GITEA_ORG
+              value: {{ .Values.gitea.org | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              TOKEN=$(curl -sk -X POST "${GITEA_URL}/api/v1/users/${GITEA_USER}/tokens" \
+                -u "${GITEA_USER}:${GITEA_PASSWORD}" \
+                -H 'Content-Type: application/json' \
+                -d '{"name":"workshop-demos-bootstrap","scopes":["write:organization","write:repository"]}' \
+                | sed -n 's/.*"sha1":"\([^"]*\)".*/\1/p' || true)
+              if [ -z "$TOKEN" ]; then
+                echo "Gitea token bootstrap skipped (org may already exist)"
+                exit 0
+              fi
+              curl -sk -X POST "${GITEA_URL}/api/v1/orgs" \
+                -H "Authorization: token ${TOKEN}" \
+                -H 'Content-Type: application/json' \
+                -d "{\"username\":\"${GITEA_ORG}\",\"visibility\":\"public\",\"description\":\"Hybrid Mesh AI shared Plan B repos\"}" \
+                || echo "org create returned non-zero (may exist)"
+              echo "workshop-demos org bootstrap complete"

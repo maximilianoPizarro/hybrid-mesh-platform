@@ -1,0 +1,5 @@
+apiVersion: v2
+name: acm-hub-spoke
+description: ACM hub-spoke resources - Placement, GitOpsCluster, ApplicationSet
+type: application
+version: 0.1.0

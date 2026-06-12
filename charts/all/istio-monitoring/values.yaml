@@ -1,0 +1,4 @@
+# Optional overrides (defaults are in templates)
+clusterDomain: ""
+# Suffix appended to strimzi_io_cluster label for spoke metrics (e.g., "-east", "-west")
+clusterSuffix: ""

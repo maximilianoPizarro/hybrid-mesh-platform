@@ -1,0 +1,42 @@
+{{- $gwNs := .Values.gateway.namespace }}
+{{- range $name, $api := .Values.apis }}
+{{- if and $api.enabled $api.host }}
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: workshop-ext-{{ $name }}
+  namespace: {{ $gwNs }}
+  labels:
+    app.kubernetes.io/part-of: workshop-kuadrant-apis
+    workshop.kuadrant.io/api: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  hosts:
+    - {{ $api.host | quote }}
+  ports:
+    - number: {{ $api.port | default 443 }}
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: workshop-ext-{{ $name }}
+  namespace: {{ $gwNs }}
+  labels:
+    app.kubernetes.io/part-of: workshop-kuadrant-apis
+    workshop.kuadrant.io/api: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  host: {{ $api.host | quote }}
+  trafficPolicy:
+    tls:
+      mode: SIMPLE
+      sni: {{ $api.host | quote }}
+{{- end }}
+{{- end }}

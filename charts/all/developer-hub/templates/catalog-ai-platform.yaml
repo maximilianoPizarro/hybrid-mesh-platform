@@ -1,0 +1,92 @@
+{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-ai-platform
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  ai-platform.yaml: |
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: System
+    metadata:
+      name: hybrid-mesh-ai-platform
+      title: Hybrid Mesh AI — Platform AI Services
+      description: AI Gateway (Kuadrant + Gateway API), MCP Gateway, NeuroFace vision, OpenShift AI
+      tags: [ai, gateway, mcp, workshop]
+    spec:
+      owner: platform-engineering
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: workshop-ai-gateway
+      title: AI Gateway — MaaS via Kuadrant
+      description: Gateway API HTTPRoute to external MaaS at /llm with API key auth and token rate limits
+      tags: [ai, kuadrant, gateway-api, maas]
+      annotations:
+        backstage.io/kubernetes-namespace: hub-gateway-system
+        backstage.io/kubernetes-cluster: hub
+      links:
+        - url: https://workshop-apis.{{ $hub }}/llm/v1/chat/completions
+          title: MaaS LLM route (API key)
+          icon: api
+        - url: https://developer-hub.{{ $hub }}/kuadrant
+          title: Kuadrant API keys
+          icon: catalog
+    spec:
+      type: api
+      lifecycle: production
+      owner: platform-engineering
+      system: hybrid-mesh-ai-platform
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: workshop-mcp-gateway
+      title: MCP Gateway (Kuadrant community CRDs)
+      description: Federates ArgoCD MCP + k8s MCP tools for Lightspeed and OpenShift AI assistants
+      tags: [mcp, kuadrant, gateway-api, lightspeed]
+      annotations:
+        backstage.io/kubernetes-namespace: mcp-system
+        backstage.io/kubernetes-cluster: hub
+      links:
+        - url: https://mcp-gateway.{{ $hub }}/mcp
+          title: MCP Gateway endpoint
+          icon: api
+        - url: https://developer-hub.{{ $hub }}/lightspeed
+          title: Developer Hub Lightspeed
+          icon: catalog
+    spec:
+      type: service
+      lifecycle: production
+      owner: platform-engineering
+      system: hybrid-mesh-ai-platform
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: neuroface-workshop
+      title: NeuroFace — Vision + MaaS chat
+      description: OVMS local face/object detection; /api/chat proxies to MaaS; hub ModelMesh optional
+      tags: [ai, neuroface, vision, maas]
+      annotations:
+        backstage.io/kubernetes-namespace: neuroface
+        backstage.io/kubernetes-cluster: hub
+        openshift.ai/project: neuroface
+      links:
+        - url: https://neuroface.{{ $hub }}
+          title: NeuroFace UI
+          icon: dashboard
+        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
+          title: OpenShift AI Dashboard
+          icon: catalog
+    spec:
+      type: website
+      lifecycle: production
+      owner: platform-engineering
+      system: hybrid-mesh-ai-platform

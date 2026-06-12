@@ -1,0 +1,17 @@
+clusterRole: hub
+userCount: 50
+
+clusters:
+  hub:
+    domain: ""
+    apiUrl: ""
+  east:
+    domain: ""
+    apiUrl: ""
+  west:
+    domain: ""
+    apiUrl: ""
+
+deployer:
+  domain: ""
+  apiUrl: ""

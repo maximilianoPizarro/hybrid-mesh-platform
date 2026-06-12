@@ -1,0 +1,16 @@
+{{- /*
+  Public OpenAPI demo APIs — bundled in-chart for catalog ingestion and Try It Out.
+  Published copy also lives under docs/assets/backstage/catalog/ for GitHub Pages.
+*/ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-public-apis
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  public-apis.yaml: |
+{{ .Files.Get "files/catalog/public-apis.yaml" | indent 4 }}

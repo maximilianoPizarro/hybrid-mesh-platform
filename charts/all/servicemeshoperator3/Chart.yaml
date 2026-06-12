@@ -1,0 +1,5 @@
+apiVersion: v2
+name: servicemeshoperator3
+description: OpenShift Service Mesh 3 with ambient mode
+type: application
+version: 0.1.0

@@ -1,0 +1,3 @@
+clusterDomain: ""
+channel: release-2.16
+source: redhat-operators

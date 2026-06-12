@@ -1,0 +1,69 @@
+{{- if .Values.vm.enabled }}
+---
+apiVersion: hco.kubevirt.io/v1beta1
+kind: HyperConverged
+metadata:
+  name: kubevirt-hyperconverged
+  namespace: openshift-cnv
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec: {}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.vm.namespace | default "cnv-workshop" }}
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ .Values.vm.name }}
+  namespace: {{ .Values.vm.namespace | default "cnv-workshop" }}
+  labels:
+    app: cnv-workshop
+    app.kubernetes.io/part-of: platform-hub-spoke
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: {{ .Values.vm.name }}
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 1
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              user: {{ .Values.vm.username | default "cirros" }}
+              password: {{ .Values.vm.password | default "Welcome123!" }}
+              chpasswd: { expire: false }
+              ssh_pwauth: true
+{{- end }}

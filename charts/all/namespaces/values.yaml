@@ -1,0 +1,3 @@
+clusterDomain: ""
+# hub: platform namespaces only; spoke: includes industrial-edge namespaces
+clusterRole: ""

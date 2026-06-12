@@ -1,0 +1,37 @@
+# Allow ApplicationSet controller to read PlacementDecision objects (clusterDecisionResource generator).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: applicationset-placementdecisions
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups:
+      - cluster.open-cluster-management.io
+    resources:
+      - placementdecisions
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: applicationset-placementdecisions
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: applicationset-placementdecisions
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-applicationset-controller
+    namespace: openshift-gitops

@@ -1,0 +1,200 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: hybrid-mesh-shared-demos
+  title: Hybrid Mesh AI — Shared Demos (Plan B)
+  description: Pre-deployed examples for every Software Template. All workshop users can browse without scaffolding.
+  tags:
+    - workshop
+    - demo
+    - plan-b
+spec:
+  owner: platform-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-industrial-edge-east
+  title: Industrial Edge (shared)
+  description: Line dashboard on east spoke — Plan B when scaffold fails
+  tags: [workshop, industrial-edge, plan-b]
+  annotations:
+    backstage.io/kubernetes-namespace: industrial-edge-tst-all
+    backstage.io/kubernetes-cluster: east
+    backstage.io/kubernetes-id: line-dashboard
+    janus-idp.io/tekton: industrial-edge-ci
+  links:
+    - url: https://line-dashboard-industrial-edge-tst-all.YOUR_EAST_DOMAIN
+      title: Line Dashboard
+      icon: dashboard
+    - url: https://devspaces.YOUR_EAST_DOMAIN
+      title: DevSpaces (east)
+      icon: catalog
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-camel-kaoto-east
+  title: Camel Kaoto (shared)
+  description: DevSpaces + Kaoto for mqtt-to-kafka pattern
+  tags: [workshop, camel, plan-b]
+  links:
+    - url: https://gitea-gitea.YOUR_HUB_DOMAIN/workshop-demos/camel-kaoto-showcase-east
+      title: Gitea repo
+      icon: catalog
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-camel-cdc-east
+  title: Camel CDC (shared)
+  description: Pre-built CDC Integration on east spoke
+  tags: [workshop, camel, cdc, plan-b]
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-ie-api-product
+  title: API Product (shared)
+  description: Kuadrant APIProduct demo namespace
+  tags: [workshop, kuadrant, plan-b]
+  links:
+    - url: https://workshop-apis.YOUR_HUB_DOMAIN
+      title: Workshop APIs
+      icon: api
+    - url: https://developer-hub.YOUR_HUB_DOMAIN/kuadrant
+      title: Kuadrant API keys
+      icon: catalog
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-ods-workspace
+  title: OpenShift AI (shared — legacy alias)
+  description: Plan B alias — use catalog System openshift-ai-workshop / maas-workshop-shared instead
+  tags: [workshop, ai, plan-b]
+  links:
+    - url: https://rhods-dashboard-redhat-ods-applications.YOUR_HUB_DOMAIN
+      title: ODS Dashboard
+      icon: dashboard
+    - url: https://developer-hub.YOUR_HUB_DOMAIN/catalog/default/system/openshift-ai-workshop
+      title: OpenShift AI Workshop (per-user projects)
+      icon: catalog
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-cnv-vm
+  title: CNV VM (shared)
+  description: workshop-cnv-demo in cnv-workshop
+  tags: [workshop, cnv, plan-b]
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-neuroface
+  title: NeuroFace (shared)
+  description: Webcam face/object AI + MaaS chat — replaces LibreChat
+  tags: [workshop, ai, neuroface, plan-b]
+  links:
+    - url: https://neuroface.YOUR_HUB_DOMAIN
+      title: NeuroFace UI
+      icon: dashboard
+    - url: https://developer-hub.YOUR_HUB_DOMAIN/catalog/default/component/neuroface-workshop
+      title: NeuroFace catalog
+      icon: catalog
+spec:
+  type: website
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-ai-gateway
+  title: AI Gateway (shared)
+  description: Kuadrant-protected MaaS LLM at workshop-apis — Plan B reference
+  tags: [workshop, kuadrant, ai, plan-b]
+  links:
+    - url: https://developer-hub.YOUR_HUB_DOMAIN/catalog/default/component/workshop-ai-gateway
+      title: AI Gateway catalog
+      icon: api
+    - url: https://workshop-apis.YOUR_HUB_DOMAIN/llm/v1/chat/completions
+      title: MaaS LLM route
+      icon: web
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-mcp-gateway
+  title: MCP Gateway (shared)
+  description: Federated MCP tools for Lightspeed and OpenShift AI extensions
+  tags: [workshop, mcp, plan-b]
+  links:
+    - url: https://developer-hub.YOUR_HUB_DOMAIN/catalog/default/component/workshop-mcp-gateway
+      title: MCP Gateway catalog
+      icon: catalog
+    - url: https://mcp-gateway.YOUR_HUB_DOMAIN/mcp
+      title: MCP Gateway endpoint
+      icon: web
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-mailpit-templates
+  title: Mailpit Templates (shared)
+  description: Scaffolder and CDC notification inbox — separate from IE sensor alerts
+  tags: [workshop, mailpit, plan-b]
+  links:
+    - url: https://mailpit-templates.YOUR_HUB_DOMAIN
+      title: Mailpit Templates UI
+      icon: email
+    - url: https://mailpit.YOUR_HUB_DOMAIN
+      title: Mailpit IE alerts
+      icon: email
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: hybrid-mesh-shared-demos

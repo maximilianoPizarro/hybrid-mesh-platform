@@ -1,0 +1,20 @@
+clusterDomain: ""
+hubClusterDomain: ""
+eastClusterDomain: ""
+gitea:
+  url: ""
+  adminUser: gitea_admin
+  adminPassword: openshift
+  org: workshop-demos
+demos:
+  catalog:
+    enabled: true
+  camelCdc:
+    enabled: true
+    namespace: workshop-demo-cdc-east
+  apiProduct:
+    enabled: true
+    namespace: workshop-demo-apis-east
+  networkPolicyDemo:
+    enabled: true
+    namespace: industrial-edge-tst-all

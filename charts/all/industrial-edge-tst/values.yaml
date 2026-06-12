@@ -1,0 +1,10 @@
+clusterDomain: ""
+clusterName: ""
+clusterRole: ""
+global:
+  localClusterDomain: ""
+  hubClusterDomain: ""
+# KServe InferenceService + Route. Requires ODH Ready, minio model at
+# s3://models/anomaly-detection/model, and RawDeployment serving runtime.
+anomalyDetection:
+  enabled: false

@@ -1,0 +1,32 @@
+{{- if .Values.demos.networkPolicyDemo.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ie-workshop-allow-dashboard
+  namespace: {{ .Values.demos.networkPolicyDemo.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    workshop.demo/maximilianopizarro: network-policy-module-19
+spec:
+  podSelector:
+    matchLabels:
+      app: line-dashboard
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+      ports:
+        - protocol: TCP
+          port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              app: machine-sensor
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}

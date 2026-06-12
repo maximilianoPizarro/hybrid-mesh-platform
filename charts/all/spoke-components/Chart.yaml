@@ -1,0 +1,6 @@
+apiVersion: v2
+name: spoke-components
+description: App-of-apps for spoke clusters — generates Argo CD Applications per component
+type: application
+version: 0.1.0
+appVersion: "1.0"

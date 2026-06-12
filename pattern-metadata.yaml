@@ -1,0 +1,55 @@
+metadata_version: "1.0"
+name: hybrid-mesh-platform
+description: >-
+  Hub-spoke multi-cluster GitOps on OpenShift with ACM, ambient Service Mesh,
+  Service Interconnect (Skupper), Red Hat Connectivity Link (RHCL/Kuadrant),
+  Industrial Edge, OpenShift AI, ACS, and observability — Validated Patterns layout.
+pattern_version: "1.0"
+display_name: Hybrid Mesh Platform
+repo_url: https://github.com/maximilianoPizarro/hybrid-mesh-platform
+docs_repo_url: https://github.com/validatedpatterns/docs
+issues_url: https://github.com/maximilianoPizarro/hybrid-mesh-platform/issues
+docs_url: https://validatedpatterns.io/patterns/hybrid-mesh-platform/
+tier: sandbox
+owners: maximilianoPizarro
+requirements:
+  hub:
+    compute:
+      platform:
+        aws:
+          replicas: 3
+          type: m5.2xlarge
+        azure:
+          replicas: 3
+          type: Standard_D8s_v3
+        gcp:
+          replicas: 3
+          type: n1-standard-8
+    controlPlane:
+      platform:
+        aws:
+          replicas: 3
+          type: m5.xlarge
+  spoke:
+    compute:
+      platform:
+        aws:
+          replicas: 3
+          type: m5.xlarge
+        azure:
+          replicas: 3
+          type: Standard_D8s_v3
+        gcp:
+          replicas: 3
+          type: n1-standard-8
+    controlPlane:
+      platform:
+        aws:
+          replicas: 3
+          type: m5.xlarge
+extra_features:
+  hypershift_support: false
+  spoke_support: true
+external_requirements:
+  - MaaS endpoint or OpenShift AI on hub for Kairos/Lightspeed optional features
+  - Workshop Showroom content remains in showroom-hybrid-mesh-ai (separate repo)

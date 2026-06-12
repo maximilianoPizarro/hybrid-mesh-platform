@@ -1,0 +1,5 @@
+apiVersion: v2
+name: service-interconnect
+description: Red Hat Service Interconnect (Skupper) site on the hub for cross-cluster service exposure
+type: application
+version: 0.1.0

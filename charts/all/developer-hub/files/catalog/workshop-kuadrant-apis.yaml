@@ -1,0 +1,88 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: workshop-kuadrant-apis
+  title: Workshop Kuadrant API Products
+  description: Hub Gateway API products (httpbin, REST Countries, MaaS) exposed via Kuadrant
+  tags:
+    - workshop
+    - kuadrant
+    - gateway-api
+spec:
+  owner: platform-engineering
+  domain: hub-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: workshop-httpbin-api
+  title: Workshop httpbin API Product
+  description: External httpbin.org proxied through hub Gateway API and Kuadrant PlanPolicy
+  annotations:
+    backstage.io/kubernetes-namespace: hub-gateway-system
+    backstage.io/kubernetes-cluster: hub
+    backstage.io/kubernetes-id: workshop-httpbin
+    argocd/app-name: field-content-workshop-kuadrant-apis
+  links:
+    - url: https://workshop-apis.__HUB_APPS_DOMAIN__/httpbin/get
+      title: Try httpbin (needs API key)
+      icon: web
+    - url: https://developer-hub.__HUB_APPS_DOMAIN__/kuadrant
+      title: Request API key
+      icon: catalog
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: workshop-kuadrant-apis
+  domain: hub-platform
+  dependsOn:
+    - component:hub-gateway
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: workshop-restcountries-api
+  title: Workshop REST Countries API Product
+  description: External restcountries.com via Kuadrant gateway
+  annotations:
+    backstage.io/kubernetes-namespace: hub-gateway-system
+    backstage.io/kubernetes-cluster: hub
+    backstage.io/kubernetes-id: workshop-restcountries
+    argocd/app-name: field-content-workshop-kuadrant-apis
+  links:
+    - url: https://workshop-apis.__HUB_APPS_DOMAIN__/countries/name/chile
+      title: Try REST Countries
+      icon: web
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: workshop-kuadrant-apis
+  domain: hub-platform
+  dependsOn:
+    - component:hub-gateway
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: workshop-maas-api
+  title: Workshop MaaS LLM API Product
+  description: OpenAI-compatible MaaS with TokenRateLimitPolicy at hub gateway
+  annotations:
+    backstage.io/kubernetes-namespace: hub-gateway-system
+    backstage.io/kubernetes-cluster: hub
+    backstage.io/kubernetes-id: workshop-maas
+    argocd/app-name: field-content-workshop-kuadrant-apis
+  links:
+    - url: https://developer-hub.__HUB_APPS_DOMAIN__/kuadrant
+      title: Request API key
+      icon: catalog
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: workshop-kuadrant-apis
+  domain: hub-platform
+  dependsOn:
+    - component:hub-gateway

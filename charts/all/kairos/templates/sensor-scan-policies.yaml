@@ -1,0 +1,56 @@
+{{- /*
+  Scan policies (SmartScalingPolicy): monitor platform machine-sensor workloads.
+  Scaffolded IE instances (-dev / -qa / -prod) are analyzed by environment KairosAgents.
+*/ -}}
+{{- if and .Values.sensorScanPolicies.enabled (eq .Values.clusterRole "spoke") }}
+{{- $otel := .Values.sensorScanPolicies.otelEndpoint }}
+{{- $prom := .Values.sensorScanPolicies.prometheusEndpoint }}
+{{- $baseNs := .Values.sensorScanPolicies.baselineNamespace }}
+{{- range $sensor := list "machine-sensor-1" "machine-sensor-2" }}
+---
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: SmartScalingPolicy
+metadata:
+  name: scan-policy-{{ $sensor }}
+  namespace: kairos-system
+  labels:
+    kairos.io/policy-type: sensor-scan
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  scope: cluster
+  target:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $sensor }}
+    namespace: {{ $baseNs }}
+  otelEndpoint: {{ $otel | quote }}
+  prometheusEndpoint: {{ $prom | quote }}
+  rules:
+    - name: sensor-cpu-hot
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: GreaterThan
+        threshold: "70"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseCPUPercent: 25
+        maxCPU: "1"
+        cooldown: 5m
+    - name: sensor-memory-hot
+      when:
+        metric: container_memory_working_set_bytes
+        operator: GreaterThan
+        threshold: "80"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseMemoryPercent: 20
+        maxMemory: 1Gi
+        cooldown: 5m
+  ai:
+    enabled: true
+  paused: false
+{{- end }}
+{{- end }}

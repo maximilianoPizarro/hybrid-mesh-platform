@@ -1,0 +1,5 @@
+apiVersion: v2
+name: workshop-registration
+description: Hybrid Mesh AI workshop registration with progress API and Showroom redirect
+version: 0.1.0
+type: application

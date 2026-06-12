@@ -1,0 +1,5 @@
+apiVersion: v2
+name: kubecost
+description: Red Hat certified Kubecost operator — single-cluster (free) or Federated ETL (enterprise)
+type: application
+version: 0.1.0

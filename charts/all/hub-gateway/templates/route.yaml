@@ -1,0 +1,20 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hub-gateway
+  namespace: hub-gateway-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    haproxy.router.openshift.io/timeout: 3600s
+    haproxy.router.openshift.io/hsts_header: max-age=0
+spec:
+  host: industrial-edge.{{ .Values.clusterDomain }}
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: hub-gateway-istio
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

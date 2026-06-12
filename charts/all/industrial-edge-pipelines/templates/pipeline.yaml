@@ -1,0 +1,55 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: build-and-test-iot-component
+  namespace: industrial-edge-ci
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  params:
+    - name: COMPONENT
+      type: string
+      description: Component to build (iot-frontend, iot-consumer, iot-software-sensor)
+    - name: GIT_REVISION
+      type: string
+      default: main
+  workspaces:
+    - name: shared-workspace
+    - name: git-credentials
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: "https://github.com/maximilianoPizarro/platform-hub-spoke-config.git"
+        - name: revision
+          value: $(params.GIT_REVISION)
+    - name: build
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: IMAGE
+          value: "image-registry.openshift-image-registry.svc:5000/industrial-edge-ci/$(params.COMPONENT):latest"

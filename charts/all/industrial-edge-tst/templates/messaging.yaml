@@ -1,0 +1,37 @@
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: messaging
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  deploymentPlan:
+    size: 1
+  acceptors:
+    - name: mqtt
+      protocols: mqtt
+      port: 1883
+    - name: amqp
+      protocols: amqp
+      port: 5672
+---
+# Stable DNS alias for sensors and iot-consumer (broker operator pods use these labels).
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  selector:
+    ActiveMQArtemis: messaging
+    application: messaging-app
+  ports:
+    - name: mqtt
+      port: 1883
+      targetPort: 1883
+    - name: amqp
+      port: 5672
+      targetPort: 5672

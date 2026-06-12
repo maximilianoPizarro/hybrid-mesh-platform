@@ -1,0 +1,5 @@
+apiVersion: v2
+name: cnv-example
+description: OpenShift Virtualization — sample VM workshop demo
+type: application
+version: 0.1.0

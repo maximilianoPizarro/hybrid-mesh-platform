@@ -1,0 +1,5 @@
+apiVersion: v2
+name: industrial-edge-data-lake
+description: Industrial Edge central data lake - Kafka + S3 storage
+type: application
+version: 0.1.0

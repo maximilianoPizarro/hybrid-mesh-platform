@@ -1,0 +1,5 @@
+apiVersion: v2
+name: industrial-edge-stormshift
+description: Industrial Edge stormshift - factory messaging and sensors with Kafka Mirror
+type: application
+version: 0.1.0

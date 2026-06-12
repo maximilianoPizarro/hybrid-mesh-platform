@@ -1,0 +1,25 @@
+clusterDomain: ""
+
+neuroface:
+  fullnameOverride: neuroface
+  backend:
+    image:
+      tag: v1.2.0
+  frontend:
+    image:
+      tag: v1.2.0
+  chat:
+    enabled: true
+    modelEndpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
+    modelName: "llama-scout-17b"
+    apiKey: ""
+    autoServiceAccount: true
+  ovms:
+    enabled: true
+    replicas: 1
+    modelName: "face-detection-retail-0005"
+  litellm:
+    enabled: false
+  route:
+    enabled: true
+    host: ""

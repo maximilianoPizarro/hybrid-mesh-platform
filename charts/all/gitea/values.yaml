@@ -1,0 +1,5 @@
+clusterDomain: ""
+adminUser: gitea_admin
+adminPassword: "openshift"
+adminEmail: "admin@gitea.local"
+userCount: 50

@@ -1,0 +1,118 @@
+{{- $uwmNs := "openshift-user-workload-monitoring" }}
+{{- $promSa := "prometheus-user-workload" }}
+{{- $meshNamespaces := list "hub-gateway-system" "industrial-edge-tst-all" "industrial-edge-data-lake" "industrial-edge-stormshift-messaging" }}
+{{- $rbacNamespaces := concat (list "istio-system" "ztunnel") $meshNamespaces }}
+{{- /* Strimzi labels Kafka broker pods with strimzi.io/name=<cluster>-kafka (not the node pool name). */}}
+{{- $kafkaScrapes := list
+      (dict "namespace" "industrial-edge-data-lake" "strimziName" "prod-cluster-kafka")
+      (dict "namespace" "industrial-edge-tst-all" "strimziName" "dev-cluster-kafka")
+      (dict "namespace" "industrial-edge-stormshift-messaging" "strimziName" "factory-cluster-kafka")
+}}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: istiod-monitor
+  namespace: istio-system
+  labels:
+    app: istiod
+    release: openshift-user-workload-monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  selector:
+    matchLabels:
+      app: istiod
+  endpoints:
+    - port: http-monitoring
+      interval: 15s
+      path: /metrics
+      scheme: http
+---
+{{- range $meshNamespaces }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: istio-mesh-metrics
+  namespace: {{ . }}
+  labels:
+    release: openshift-user-workload-monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  selector:
+    matchExpressions:
+      - key: gateway.istio.io/managed
+        operator: Exists
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 15s
+      path: /stats/prometheus
+      scheme: http
+---
+{{- end }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ztunnel-metrics
+  namespace: ztunnel
+  labels:
+    release: openshift-user-workload-monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  selector:
+    matchLabels:
+      app: ztunnel
+  podMetricsEndpoints:
+    - port: ztunnel-stats
+      interval: 15s
+      path: /stats/prometheus
+      scheme: http
+---
+{{- range $kafkaScrapes }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: strimzi-kafka-metrics
+  namespace: {{ .namespace }}
+  labels:
+    release: openshift-user-workload-monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/name: {{ .strimziName | quote }}
+  podMetricsEndpoints:
+    - port: tcp-prometheus
+      interval: 15s
+      path: /metrics
+      scheme: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_label_strimzi_io_cluster]
+          targetLabel: strimzi_io_cluster
+{{- if $.Values.clusterSuffix }}
+          regex: (.+)
+          replacement: ${1}{{ $.Values.clusterSuffix }}
+{{- end }}
+---
+{{- end }}
+{{- range $rbacNamespaces }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-user-workload
+  namespace: {{ . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-k8s
+subjects:
+  - kind: ServiceAccount
+    name: {{ $promSa }}
+    namespace: {{ $uwmNs }}
+---
+{{- end }}

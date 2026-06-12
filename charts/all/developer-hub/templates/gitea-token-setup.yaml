@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gitea-token-setup
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitea-token-setup
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["developer-hub-oidc-auth"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["backstage-developer-hub"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitea-token-setup
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitea-token-setup
+subjects:
+  - kind: ServiceAccount
+    name: gitea-token-setup
+    namespace: developer-hub
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitea-token-setup
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded,HookFailed
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: gitea-token-setup
+      containers:
+        - name: setup
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          env:
+            - name: GITEA_ADMIN_USER
+              value: {{ .Values.giteaAdminUser | default "gitea_admin" | quote }}
+            - name: GITEA_ADMIN_PASS
+              value: {{ .Values.giteaAdminPassword | default "openshift" | quote }}
+            - name: GITEA_INTERNAL_URL
+              value: "http://field-content-gitea-chart-http.gitea.svc.cluster.local:3000"
+            - name: RHDH_NAMESPACE
+              value: developer-hub
+            - name: RHDH_DEPLOYMENT
+              value: backstage-developer-hub
+            - name: OIDC_SECRET
+              value: developer-hub-oidc-auth
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              AUTH="${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASS}"
+              BASE="${GITEA_INTERNAL_URL}"
+
+              echo "Waiting for Gitea API..."
+              for attempt in $(seq 1 60); do
+                if curl -sf "$BASE/api/v1/version" >/dev/null 2>&1; then break; fi
+                echo "  attempt ${attempt}/60 ..."
+                sleep 5
+              done
+              curl -sf "$BASE/api/v1/version" || { echo "Gitea not available" >&2; exit 1; }
+              echo "Gitea API ready."
+
+              CURRENT=$(oc get secret "${OIDC_SECRET}" -n "${RHDH_NAMESPACE}" \
+                -o jsonpath='{.data.GITEA_TOKEN}' 2>/dev/null | base64 -d 2>/dev/null || true)
+              if [ -n "${CURRENT}" ] && [ "${CURRENT}" != "CHANGEME-create-token-in-gitea-admin" ]; then
+                HTTP=$(curl -sS -o /dev/null -w "%{http_code}" \
+                  -H "Authorization: token ${CURRENT}" \
+                  "${BASE}/api/v1/user" || echo "000")
+                if [ "${HTTP}" = "200" ]; then
+                  echo "GITEA_TOKEN is valid (HTTP 200) — skipping token creation and rollout."
+                  exit 0
+                fi
+                echo "Existing token invalid (HTTP ${HTTP}), creating new token..."
+              else
+                echo "No valid GITEA_TOKEN in secret — creating new token..."
+              fi
+
+              curl -sS -o /dev/null -X DELETE \
+                "${BASE}/api/v1/users/${GITEA_ADMIN_USER}/tokens/developer-hub" \
+                -u "${AUTH}" || true
+
+              RESP=$(curl -sS -X POST "${BASE}/api/v1/users/${GITEA_ADMIN_USER}/tokens" \
+                -u "${AUTH}" \
+                -H "Content-Type: application/json" \
+                -d '{"name":"developer-hub","scopes":["write:repository","write:user","write:organization","read:user","read:organization","read:repository"]}')
+              NEW_TOKEN=$(echo "${RESP}" | sed -n 's/.*"sha1"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+              if [ -z "${NEW_TOKEN}" ]; then
+                echo "Failed to create Gitea token. Response: ${RESP}" >&2
+                exit 1
+              fi
+              echo "Created Gitea token for developer-hub."
+
+              oc patch secret "${OIDC_SECRET}" -n "${RHDH_NAMESPACE}" --type merge \
+                -p "{\"stringData\":{\"GITEA_TOKEN\":\"${NEW_TOKEN}\"}}"
+              echo "Patched ${OIDC_SECRET} with new GITEA_TOKEN."
+
+              oc rollout restart "deployment/${RHDH_DEPLOYMENT}" -n "${RHDH_NAMESPACE}"
+              echo "Restarted ${RHDH_DEPLOYMENT}. gitea-token-setup complete."

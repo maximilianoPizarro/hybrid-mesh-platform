@@ -1,0 +1,61 @@
+{{- /*
+  Hub console lists SmartScalingPolicy from the local API only. Spoke scan policies
+  live on east/west; these read-only mirrors (paused) appear in the hub UI.
+*/ -}}
+{{- if and .Values.sensorScanPolicies.enabled (eq .Values.clusterRole "hub") (.Values.sensorScanPolicies.displayOnHub | default true) }}
+{{- $otel := .Values.sensorScanPolicies.otelEndpoint }}
+{{- $prom := .Values.sensorScanPolicies.prometheusEndpoint }}
+{{- $baseNs := .Values.sensorScanPolicies.baselineNamespace }}
+{{- range $spoke := .Values.sensorScanPolicies.spokes | default (list "east" "west") }}
+{{- range $sensor := list "machine-sensor-1" "machine-sensor-2" }}
+---
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: SmartScalingPolicy
+metadata:
+  name: {{ $spoke }}-scan-policy-{{ $sensor }}
+  namespace: kairos-system
+  labels:
+    kairos.io/policy-type: sensor-scan
+    kairos.io/spoke: {{ $spoke }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    kairos.io/display-cluster: {{ $spoke }}
+    kairos.io/display-only: "true"
+spec:
+  scope: cluster
+  target:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $sensor }}
+    namespace: {{ $baseNs }}
+  otelEndpoint: {{ $otel | quote }}
+  prometheusEndpoint: {{ $prom | quote }}
+  rules:
+    - name: sensor-cpu-hot
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: GreaterThan
+        threshold: "70"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseCPUPercent: 25
+        maxCPU: "1"
+        cooldown: 5m
+    - name: sensor-memory-hot
+      when:
+        metric: container_memory_working_set_bytes
+        operator: GreaterThan
+        threshold: "80"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseMemoryPercent: 20
+        maxMemory: 1Gi
+        cooldown: 5m
+  ai:
+    enabled: true
+  paused: true
+{{- end }}
+{{- end }}
+{{- end }}

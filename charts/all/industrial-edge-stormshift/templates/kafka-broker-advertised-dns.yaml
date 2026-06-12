@@ -1,0 +1,23 @@
+{{- $pod := lookup "v1" "Pod" "industrial-edge-stormshift-messaging" "factory-cluster-broker-0" }}
+{{- if and $pod $pod.status.podIP }}
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: factory-cluster-kafka-brokers-advertised
+  namespace: industrial-edge-stormshift-messaging
+  labels:
+    kubernetes.io/service-name: factory-cluster-kafka-brokers
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+addressType: IPv4
+ports:
+  - name: tcp
+    port: 9092
+    protocol: TCP
+endpoints:
+  - addresses:
+      - {{ $pod.status.podIP | quote }}
+    hostname: factory-cluster-broker-0-{{ .Values.clusterName }}
+    conditions:
+      ready: true
+{{- end }}

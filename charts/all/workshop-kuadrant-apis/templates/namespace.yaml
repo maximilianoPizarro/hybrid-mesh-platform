@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: workshop-kuadrant-apis
+  labels:
+    kuadrant.io/managed: "true"
+    workshop.demo/maximilianopizarro: kuadrant-apis
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

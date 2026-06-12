@@ -1,0 +1,12 @@
+clusterDomain: ""
+global:
+  localClusterDomain: ""
+  hubClusterDomain: ""
+minioAccessKey: "minio"
+minioSecretKey: "minio123"
+bucketInit:
+  enabled: true
+  image: quay.io/minio/mc:latest
+  buckets:
+    - quay
+    - kubecost

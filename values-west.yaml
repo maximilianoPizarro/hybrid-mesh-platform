@@ -1,0 +1,217 @@
+clusterGroup:
+  name: west
+  namespaces:
+    industrial-edge-tst-all: {}
+    industrial-edge-stormshift-messaging: {}
+    industrial-edge-ml-workspace: {}
+    industrial-edge-ci: {}
+    ml-development: {}
+    industrial-edge-data-lake: {}
+    stackrox: {}
+    devspaces: {}
+    camel-dashboard: {}
+    spoke-gateway-system: {}
+    service-interconnect: {}
+    kairos-system: {}
+    openshift-cluster-observability-operator: {}
+    openshift-opentelemetry: {}
+    istio-system: {}
+    redhat-connectivity-link-operator: {}
+    external-secrets-operator:
+      operatorGroup: true
+      targetNamespaces: []
+    external-secrets: {}
+  subscriptions:
+    amq-broker-rhel8:
+      name: amq-broker-rhel8
+      namespace: openshift-operators
+      channel: 7.12.x
+      source: redhat-operators
+    camel-k:
+      name: camel-k
+      namespace: openshift-operators
+      channel: stable-v2
+      source: community-operators
+    amq-streams:
+      name: amq-streams
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    devspaces:
+      name: devspaces
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    kubernetes-imagepuller-operator:
+      name: kubernetes-imagepuller-operator
+      namespace: openshift-operators
+      channel: stable
+      source: community-operators
+    rhacs-operator:
+      name: rhacs-operator
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    skupper-operator:
+      name: skupper-operator
+      namespace: openshift-operators
+      channel: stable-2
+      source: redhat-operators
+    grafana-operator:
+      name: grafana-operator
+      namespace: openshift-operators
+      channel: v5
+      source: community-operators
+    opentelemetry-product:
+      name: opentelemetry-product
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    kiali-ossm:
+      name: kiali-ossm
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    rhods-operator:
+      name: rhods-operator
+      namespace: redhat-ods-operator
+      channel: stable-2.25
+      source: redhat-operators
+    eso:
+      name: openshift-external-secrets-operator
+      namespace: external-secrets-operator
+      channel: stable-v1
+  argoProjects:
+  - spoke
+  - external-secrets
+  sharedValueFiles:
+  - /overrides/values-{{ $.Values.global.clusterPlatform }}.yaml
+  - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
+    }}.yaml
+  applications:
+    platform-users:
+      name: platform-users
+      namespace: openshift-gitops
+      argoProject: spoke
+      syncWave: '0'
+    namespaces:
+      name: namespaces
+      namespace: openshift-gitops
+      argoProject: spoke
+      syncWave: '1'
+    operators:
+      name: operators
+      namespace: openshift-operators
+      argoProject: spoke
+      syncWave: '2'
+    kairos:
+      name: kairos
+      namespace: kairos-system
+      argoProject: spoke
+      syncWave: '3'
+    camel-dashboard-openshift:
+      name: camel-dashboard-openshift
+      namespace: camel-dashboard
+      argoProject: spoke
+      syncWave: '3'
+    servicemeshoperator3:
+      name: servicemeshoperator3
+      namespace: openshift-operators
+      argoProject: spoke
+      syncWave: '3'
+    observability:
+      name: observability
+      namespace: openshift-cluster-observability-operator
+      argoProject: spoke
+      syncWave: '4'
+    acs-secured-cluster:
+      name: acs-secured-cluster
+      namespace: stackrox
+      argoProject: spoke
+      syncWave: '4'
+    spoke-dashboards:
+      name: spoke-dashboards
+      namespace: openshift-cluster-observability-operator
+      argoProject: spoke
+      syncWave: '4'
+    istio-monitoring:
+      name: istio-monitoring
+      namespace: istio-system
+      argoProject: spoke
+      syncWave: '4'
+    opentelemetry:
+      name: opentelemetry
+      namespace: openshift-opentelemetry
+      argoProject: spoke
+      syncWave: '4'
+    rhcl-operator:
+      name: rhcl-operator
+      namespace: redhat-connectivity-link-operator
+      argoProject: spoke
+      syncWave: '4'
+    kiali:
+      name: kiali
+      namespace: openshift-cluster-observability-operator
+      argoProject: spoke
+      syncWave: '4'
+    industrial-edge-tst:
+      name: industrial-edge-tst
+      namespace: industrial-edge-tst-all
+      argoProject: spoke
+      syncWave: '5'
+    industrial-edge-stormshift:
+      name: industrial-edge-stormshift
+      namespace: industrial-edge-stormshift-messaging
+      argoProject: spoke
+      syncWave: '5'
+    industrial-edge-pipelines:
+      name: industrial-edge-pipelines
+      namespace: industrial-edge-ci
+      argoProject: spoke
+      syncWave: '5'
+    industrial-edge-data-science-cluster:
+      name: industrial-edge-data-science-cluster
+      namespace: redhat-ods-applications
+      argoProject: spoke
+      syncWave: '5'
+    industrial-edge-data-lake:
+      name: industrial-edge-data-lake
+      namespace: industrial-edge-data-lake
+      argoProject: spoke
+      syncWave: '5'
+    industrial-edge-data-science-project:
+      name: industrial-edge-data-science-project
+      namespace: ml-development
+      argoProject: spoke
+      syncWave: '5'
+    ie-anomaly-alerter:
+      name: ie-anomaly-alerter
+      namespace: industrial-edge-tst-all
+      argoProject: spoke
+      syncWave: '6'
+    spoke-gateway:
+      name: spoke-gateway
+      namespace: spoke-gateway-system
+      argoProject: spoke
+      syncWave: '6'
+    spoke-interconnect:
+      name: spoke-interconnect
+      namespace: service-interconnect
+      argoProject: spoke
+      syncWave: '6'
+    devspaces:
+      name: devspaces
+      namespace: devspaces
+      argoProject: spoke
+      syncWave: '7'
+    console-links:
+      name: console-links
+      namespace: openshift-gitops
+      argoProject: spoke
+      syncWave: '9'
+    openshift-external-secrets:
+      name: openshift-external-secrets
+      namespace: external-secrets
+      argoProject: spoke
+      chart: openshift-external-secrets
+      chartVersion: 0.0.*

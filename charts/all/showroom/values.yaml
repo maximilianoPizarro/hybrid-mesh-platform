@@ -1,0 +1,49 @@
+# Showroom Lab Guide Configuration
+showroom:
+  enabled: true
+  namespace: showroom
+  name: showroom
+
+  # Lab guide Git repository
+  content:
+    repoUrl: "https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai.git"
+    repoRef: "main"
+    antoraPlaybook: "site.yml"
+    image: "quay.io/rhpds/showroom-content:v1.3.1"
+
+  nookbag:
+    enabled: false
+
+  # Terminal configuration
+  terminal:
+    enabled: true
+    image: "quay.io/rhpds/openshift-showroom-terminal-ocp:latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+
+# Injected by parent chart
+deployer:
+  domain: ""
+
+clusters:
+  hub:
+    domain: ""
+    apiUrl: ""
+  east:
+    domain: ""
+    apiUrl: ""
+  west:
+    domain: ""
+    apiUrl: ""
+
+registration:
+  url: ""
+
+demo:
+  namespace: ""
+  appName: ""

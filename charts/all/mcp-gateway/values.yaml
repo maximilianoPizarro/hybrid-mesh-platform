@@ -1,0 +1,12 @@
+clusterDomain: ""
+# Injected at deploy time (never commit)
+mcpToken: ""
+argocdApiToken: ""
+# Standalone MCP servers (no OpenShift Lightspeed operator required)
+k8sMcp:
+  enabled: true
+  image: registry.redhat.io/ubi9/nodejs-22:latest
+  # @modelcontextprotocol/server-kubernetes via npx
+openshiftMcp:
+  enabled: false
+  # Requires openshift-lightspeed operator + OLSConfig (see components/openshift-lightspeed-mcp/)

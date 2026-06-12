@@ -1,0 +1,10 @@
+clusterDomain: ""
+# Hub-only. ROX_ADMIN_PASSWORD from Secret acs-init-credentials (never commit).
+initBundleSync:
+  enabled: true
+  centralEndpoint: central.stackrox.svc:443
+  clusters: "hub,east,west"
+  schedule: "0 */12 * * *"
+  image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:latest
+  maxRetries: 12
+  retryInterval: 30

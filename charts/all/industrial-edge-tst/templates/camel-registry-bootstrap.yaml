@@ -1,0 +1,87 @@
+{{- /*
+  OpenShift internal registry: Camel K build (jib) and Integration pods need push/pull creds.
+  PostSync Job creates camel-k-registry-docker from the namespace builder SA token.
+*/ -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: camel-k-registry-bootstrap
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: camel-k-registry-bootstrap
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: [""]
+    resourceNames: ["builder"]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
+  - apiGroups: ["camel.apache.org"]
+    resources: ["integrationplatforms"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: camel-k-registry-bootstrap
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: camel-k-registry-bootstrap
+subjects:
+  - kind: ServiceAccount
+    name: camel-k-registry-bootstrap
+    namespace: industrial-edge-tst-all
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: camel-k-registry-bootstrap
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      serviceAccountName: camel-k-registry-bootstrap
+      restartPolicy: Never
+      containers:
+        - name: bootstrap
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              NS="industrial-edge-tst-all"
+              REGISTRY="image-registry.openshift-image-registry.svc:5000"
+              TOKEN="$(oc create token builder -n "${NS}" --duration=8760h)"
+              oc create secret docker-registry camel-k-registry-docker \
+                --docker-server="${REGISTRY}" \
+                --docker-username=unused \
+                --docker-password="${TOKEN}" \
+                -n "${NS}" \
+                --dry-run=client -o yaml | oc apply -f -
+              oc patch integrationplatform camel-k -n "${NS}" --type merge \
+                -p '{"spec":{"build":{"registry":{"secret":"camel-k-registry-docker"}}}}'
+              oc secrets link default camel-k-registry-docker --for=pull -n "${NS}" || true
+              oc secrets link deployer camel-k-registry-docker --for=pull -n "${NS}" || true
+              echo "OK: camel-k-registry-docker ready"

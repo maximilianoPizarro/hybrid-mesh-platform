@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rhcl-operator
+description: Red Hat Connectivity Link - Kuadrant operator (policies disabled)
+type: application
+version: 0.1.0

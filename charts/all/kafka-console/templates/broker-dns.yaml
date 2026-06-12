@@ -1,0 +1,167 @@
+{{- /*
+  Headless Services + EndpointSlices for Kafka broker DNS on the hub.
+  Maps broker advertised hostnames to Skupper listener ClusterIPs.
+  Lookup runs in this chart at Argo sync time (hub cluster); values.brokerDns.*
+  remains an optional override from the parent Application.
+*/ -}}
+{{- $eastTstIP := .Values.brokerDns.eastTst | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "service-interconnect" "kafka-east-tst")) }}
+{{- $westTstIP := .Values.brokerDns.westTst | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "service-interconnect" "kafka-west-tst")) }}
+{{- $eastStormshiftIP := .Values.brokerDns.eastStormshift | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "service-interconnect" "kafka-east-stormshift")) }}
+{{- $westStormshiftIP := .Values.brokerDns.westStormshift | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "service-interconnect" "kafka-west-stormshift")) }}
+{{- $eastDatalakeIP := .Values.brokerDns.eastDatalake | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "service-interconnect" "kafka-east-datalake")) }}
+{{- $westDatalakeIP := .Values.brokerDns.westDatalake | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "service-interconnect" "kafka-west-datalake")) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: industrial-edge-stormshift-messaging
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: industrial-edge-data-lake
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dev-cluster-kafka-brokers
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  clusterIP: None
+  ports:
+    - name: tcp
+      port: 9092
+      protocol: TCP
+      targetPort: 9092
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: dev-cluster-kafka-brokers
+  namespace: industrial-edge-tst-all
+  labels:
+    kubernetes.io/service-name: dev-cluster-kafka-brokers
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+addressType: IPv4
+ports:
+  - name: tcp
+    port: 9092
+    protocol: TCP
+endpoints:
+{{- if $eastTstIP }}
+  - addresses:
+      - {{ $eastTstIP | quote }}
+    hostname: dev-cluster-broker-0-east
+    conditions:
+      ready: true
+{{- end }}
+{{- if $westTstIP }}
+  - addresses:
+      - {{ $westTstIP | quote }}
+    hostname: dev-cluster-broker-0-west
+    conditions:
+      ready: true
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: factory-cluster-kafka-brokers
+  namespace: industrial-edge-stormshift-messaging
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  clusterIP: None
+  ports:
+    - name: tcp
+      port: 9092
+      protocol: TCP
+      targetPort: 9092
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: factory-cluster-kafka-brokers
+  namespace: industrial-edge-stormshift-messaging
+  labels:
+    kubernetes.io/service-name: factory-cluster-kafka-brokers
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+addressType: IPv4
+ports:
+  - name: tcp
+    port: 9092
+    protocol: TCP
+endpoints:
+{{- if $eastStormshiftIP }}
+  - addresses:
+      - {{ $eastStormshiftIP | quote }}
+    hostname: factory-cluster-broker-0-east
+    conditions:
+      ready: true
+{{- end }}
+{{- if $westStormshiftIP }}
+  - addresses:
+      - {{ $westStormshiftIP | quote }}
+    hostname: factory-cluster-broker-0-west
+    conditions:
+      ready: true
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prod-cluster-kafka-brokers
+  namespace: industrial-edge-data-lake
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  clusterIP: None
+  ports:
+    - name: tcp
+      port: 9092
+      protocol: TCP
+      targetPort: 9092
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: prod-cluster-kafka-brokers
+  namespace: industrial-edge-data-lake
+  labels:
+    kubernetes.io/service-name: prod-cluster-kafka-brokers
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+addressType: IPv4
+ports:
+  - name: tcp
+    port: 9092
+    protocol: TCP
+endpoints:
+{{- if $eastDatalakeIP }}
+  - addresses:
+      - {{ $eastDatalakeIP | quote }}
+    hostname: prod-cluster-broker-0-east
+    conditions:
+      ready: true
+{{- end }}
+{{- if $westDatalakeIP }}
+  - addresses:
+      - {{ $westDatalakeIP | quote }}
+    hostname: prod-cluster-broker-0-west
+    conditions:
+      ready: true
+{{- end }}

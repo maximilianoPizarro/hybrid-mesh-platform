@@ -1,0 +1,6 @@
+dependencies:
+- name: camel-dashboard-openshift-all
+  repository: https://camel-tooling.github.io/camel-dashboard/charts
+  version: 4.20.2
+digest: sha256:4a686e224a5fa570b788bf5457b080d11a5160b5bfefdce5d80e90ee4189f501
+generated: "2026-06-01T21:52:29.5912348-03:00"

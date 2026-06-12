@@ -1,0 +1,5 @@
+apiVersion: v2
+name: hub-gateway
+description: Istio Gateway acting as F5 with weighted HTTPRoutes for east/west traffic
+type: application
+version: 0.1.0

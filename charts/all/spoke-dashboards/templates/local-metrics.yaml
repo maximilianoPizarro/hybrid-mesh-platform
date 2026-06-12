@@ -1,0 +1,464 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: local-metrics
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+          "id": 100,
+          "panels": [],
+          "title": "Istio ambient L4 (ztunnel)",
+          "type": "row"
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "mappings": [],
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+              "unit": "cps"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 0, "y": 1},
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "textMode": "auto"
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(rate(istio_tcp_connections_opened_total[5m]))",
+              "legendFormat": "opened",
+              "refId": "A"
+            }
+          ],
+          "title": "TCP connections opened (L4)",
+          "type": "gauge",
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto"
+          }
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "mappings": [],
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05}]},
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 6, "y": 1},
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "textMode": "auto"
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=~\"industrial-edge.*\"})",
+              "legendFormat": "restarts",
+              "refId": "A"
+            }
+          ],
+          "title": "Pod restarts (Industrial Edge)",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "mappings": [],
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1}]},
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 12, "y": 1},
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "textMode": "auto"
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(rate(istio_tcp_received_bytes_total[5m]))",
+              "legendFormat": "received",
+              "refId": "A"
+            }
+          ],
+          "title": "TCP bytes received (L4)",
+          "type": "gauge",
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto"
+          }
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "thresholds"},
+              "mappings": [{"options": {"0": {"color": "red", "text": "Down"}, "1": {"color": "green", "text": "Up"}}, "type": "value"}],
+              "max": 1,
+              "min": 0,
+              "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]},
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 18, "y": 1},
+          "id": 6,
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto"
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "count(kube_pod_status_phase{namespace=\"ztunnel\", phase=\"Running\"}) / count(kube_pod_info{namespace=\"ztunnel\"})",
+              "legendFormat": "ztunnel ready",
+              "refId": "A"
+            }
+          ],
+          "title": "ztunnel DaemonSet readiness",
+          "type": "gauge"
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {"type": "linear"},
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {"group": "A", "mode": "none"},
+                "thresholdsStyle": {"mode": "off"}
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 6},
+          "id": 4,
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(rate(istio_tcp_sent_bytes_total[5m])) by (destination_workload_namespace)",
+              "legendFormat": "{{ "{{destination_workload_namespace}}" }}",
+              "refId": "A"
+            }
+          ],
+          "title": "TCP sent bytes by destination namespace (L4)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {"type": "linear"},
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {"group": "A", "mode": "none"},
+                "thresholdsStyle": {"mode": "off"}
+              },
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 15},
+          "id": 5,
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "topk(8, sum(kafka_network_requestmetrics_requestspersec_total) by (request))",
+              "legendFormat": "{{ "{{request}}" }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Kafka API requests/sec by type",
+          "type": "bargauge",
+          "options": {
+            "displayMode": "gradient",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "orientation": "horizontal",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
+          "id": 200,
+          "panels": [],
+          "title": "Kafka (Strimzi local)",
+          "type": "row"
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "opacity",
+                "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {"type": "linear"},
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {"group": "A", "mode": "none"},
+                "thresholdsStyle": {"mode": "off"}
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 9, "w": 12, "x": 0, "y": 25},
+          "id": 201,
+          "options": {
+            "legend": {"calcs": ["mean"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "count(kafka_server_kafkaserver_brokerstate == 3)",
+              "legendFormat": "running brokers",
+              "refId": "A"
+            },
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(kafka_server_replicamanager_leadercount)",
+              "legendFormat": "leader partitions",
+              "refId": "B"
+            },
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(kafka_server_replicamanager_underreplicatedpartitions)",
+              "legendFormat": "under-replicated",
+              "refId": "C"
+            }
+          ],
+          "title": "Kafka cluster snapshot",
+          "type": "piechart",
+          "options": {
+            "legend": {"displayMode": "table", "placement": "right", "showLegend": true, "values": ["value"]},
+            "pieType": "donut",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "tooltip": {"mode": "single", "sort": "none"}
+          }
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "continuous-BlYlRd"},
+              "max": 20,
+              "min": 0,
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 9, "w": 12, "x": 12, "y": 25},
+          "id": 202,
+          "options": {
+            "displayMode": "lcd",
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "orientation": "horizontal",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(kafka_server_replicamanager_partitioncount) by (namespace)",
+              "legendFormat": "{{ "{{namespace}}" }}",
+              "refId": "A"
+            },
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(kafka_server_replicamanager_leadercount) by (namespace)",
+              "legendFormat": "leaders {{ "{{namespace}}" }}",
+              "refId": "B"
+            }
+          ],
+          "title": "Partitions & leaders by namespace",
+          "type": "bargauge"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 34},
+          "id": 300,
+          "panels": [],
+          "title": "Application workloads",
+          "type": "row"
+        },
+        {
+          "datasource": {"type": "prometheus"},
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {"type": "linear"},
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {"group": "A", "mode": "normal"},
+                "thresholdsStyle": {"mode": "off"}
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 9, "w": 24, "x": 0, "y": 35},
+          "id": 301,
+          "options": {
+            "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+            "tooltip": {"mode": "multi", "sort": "desc"}
+          },
+          "targets": [
+            {
+              "datasource": {"type": "prometheus"},
+              "expr": "sum(rate(istio_requests_total{reporter=\"source\", destination_service_namespace=~\"industrial-edge.*\"}[5m])) by (destination_service_name, response_code)",
+              "legendFormat": "{{ "{{destination_service_name}}" }} [{{ "{{response_code}}" }}]",
+              "refId": "A"
+            }
+          ],
+          "title": "Industrial Edge services request rate by response code",
+          "type": "timeseries"
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["istio", "kafka", "spoke", "local"],
+      "templating": {"list": []},
+      "time": {"from": "now-30m", "to": "now"},
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Local cluster metrics",
+      "uid": "spoke-local-metrics"
+    }

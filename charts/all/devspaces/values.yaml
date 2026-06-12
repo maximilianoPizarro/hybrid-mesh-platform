@@ -1,0 +1,9 @@
+clusterDomain: ""
+userCount: 50
+hubClusterDomain: ""
+continueAi:
+  apiBase: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
+  model: "deepseek-r1-distill-qwen-14b"
+  credentialsSecretName: kairos-ai-credentials
+  credentialsSecretNamespace: kairos-system
+  credentialsSecretKey: api-key

@@ -1,0 +1,19 @@
+{{- /*
+  Workshop Kuadrant API Products — bundled in-chart for Developer Hub catalog.
+  Domain placeholder __HUB_APPS_DOMAIN__ replaced from RHDP-injected clusterDomain.
+*/ -}}
+{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" -}}
+{{- $catalog := .Files.Get "files/catalog/workshop-kuadrant-apis.yaml" -}}
+{{- $catalog = replace $catalog "__HUB_APPS_DOMAIN__" $hub -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-workshop-kuadrant-apis
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  workshop-kuadrant-apis.yaml: |
+{{ $catalog | indent 4 }}

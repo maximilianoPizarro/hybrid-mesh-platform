@@ -1,0 +1,45 @@
+{{- if .Values.dashboardExtensions.enabled }}
+---
+apiVersion: opendatahub.io/v1alpha
+kind: OdhDashboardConfig
+metadata:
+  name: odh-dashboard-config
+  namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  dashboardConfig:
+    disableModelServing: false
+    disableProjectSharing: false
+    disableCustomServingRuntimes: false
+    disableStandardServingRuntimes: false
+    disableNIMModelServing: true
+    disablePerformanceMetrics: false
+    disableTrustyBiasMetrics: false
+    disableServingMetrics: false
+  modelServingPlatforms:
+    - name: Single-model serving platform
+      enabled: true
+    - name: Multi-model serving platform
+      enabled: {{ .Values.modelServing.modelMeshEnabled | default true }}
+  notebookSizes:
+    - name: Small
+      enabled: true
+      resources:
+        requests:
+          cpu: "1"
+          memory: 8Gi
+        limits:
+          cpu: "2"
+          memory: 8Gi
+    - name: Medium
+      enabled: true
+      resources:
+        requests:
+          cpu: "2"
+          memory: 16Gi
+        limits:
+          cpu: "4"
+          memory: 16Gi
+{{- end }}

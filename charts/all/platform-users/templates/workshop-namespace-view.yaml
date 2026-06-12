@@ -1,0 +1,22 @@
+{{- $count := int .Values.userCount }}
+{{- $namespaces := list "industrial-edge-tst-all" "industrial-edge-data-lake" "hub-gateway-system" "workshop-kuadrant-apis" "neuroface" "developer-hub" "maas-workshop" "mailpit-templates" "mcp-system" "showroom" "redhat-ods-applications" "openshift-gitops" }}
+{{- range $ns := $namespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: workshop-users-view
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+{{- range $i := until $count }}
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: {{ printf "user%d" (add $i 1) | quote }}
+{{- end }}
+{{- end }}

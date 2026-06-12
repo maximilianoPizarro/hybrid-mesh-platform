@@ -1,0 +1,138 @@
+{{- $gwNs := .Values.gateway.namespace }}
+{{- $hostname := .Values.gateway.hostname | default (printf "workshop-apis.%s" .Values.clusterDomain) }}
+{{- $baseUrl := printf "https://%s" $hostname }}
+{{- if .Values.apis.httpbin.enabled }}
+---
+apiVersion: devportal.kuadrant.io/v1alpha1
+kind: APIProduct
+metadata:
+  name: workshop-httpbin
+  namespace: {{ $gwNs }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  displayName: {{ .Values.apis.httpbin.displayName | default "Workshop httpbin (external)" }}
+  description: >
+    Public httpbin.org proxied through hub Gateway API and Connectivity Link.
+    Kuadrant API keys and PlanPolicy tiers (bronze/silver/gold) apply at the gateway.
+  publishStatus: Published
+  approvalMode: automatic
+  version: v1
+  tags:
+    - workshop
+    - httpbin
+    - external-api
+  documentation:
+    openAPISpecURL: https://httpbin.org/spec.json
+  contact:
+    email: platform@example.com
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: workshop-httpbin
+{{- end }}
+{{- if .Values.apis.restcountries.enabled }}
+---
+apiVersion: devportal.kuadrant.io/v1alpha1
+kind: APIProduct
+metadata:
+  name: workshop-restcountries
+  namespace: {{ $gwNs }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  displayName: {{ .Values.apis.restcountries.displayName | default "Workshop REST Countries (external)" }}
+  description: >
+    External restcountries.com API exposed via Gateway API. Requires Kuadrant API key;
+    rate limits apply per plan tier.
+  publishStatus: Published
+  approvalMode: automatic
+  version: v1
+  tags:
+    - workshop
+    - restcountries
+    - external-api
+  documentation:
+    docsURL: https://restcountries.com
+  contact:
+    email: platform@example.com
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: workshop-restcountries
+{{- end }}
+{{- if .Values.apis.maas.enabled }}
+---
+apiVersion: devportal.kuadrant.io/v1alpha1
+kind: APIProduct
+metadata:
+  name: workshop-llm-tokens
+  namespace: {{ $gwNs }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  displayName: {{ .Values.apis.maas.displayName | default "Workshop LLM API (MaaS + TokenRateLimit)" }}
+  description: >
+    OpenAI-compatible MaaS endpoint (external) with TokenRateLimitPolicy on chat completions.
+    Workshop users authenticate with Kuadrant API keys (free/gold); gateway injects MaaS credentials upstream.
+  publishStatus: Published
+  approvalMode: automatic
+  version: v1
+  tags:
+    - workshop
+    - llm
+    - maas
+    - token-rate-limit
+    - external-api
+  documentation:
+    openAPISpecURL: https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
+  contact:
+    email: platform@example.com
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: workshop-maas
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workshop-kuadrant-apis-readme
+  namespace: workshop-kuadrant-apis
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+data:
+  README.md: |
+    # Kuadrant workshop APIs (userN) — external backends
+
+    Base URL: {{ $baseUrl }}
+
+    Backends are **public web APIs** registered via Istio `ServiceEntry` + `DestinationRule`
+    (TLS origination) and routed through **hub Gateway API** (`HTTPRoute` → `Hostname` backendRef).
+    No in-cluster proxy images from Docker Hub.
+
+    | Path | External host | Kuadrant policy |
+    |------|---------------|-----------------|
+    | `/httpbin/*` | httpbin.org | PlanPolicy (bronze/silver/gold) |
+    | `/countries/*` | restcountries.com | PlanPolicy |
+    | `/llm/v1/chat/completions` | MaaS RHDP | TokenRateLimitPolicy (free/gold) |
+
+    ## Developer Hub
+    1. Log in as userN (Keycloak)
+    2. Open **Kuadrant** → select an API Product
+    3. Request an API key (auto-approved)
+    4. Call APIs with header: `Authorization: APIKEY <your-key>`
+
+    ## Examples
+    ```bash
+    curl -H "Authorization: APIKEY $KEY" {{ $baseUrl }}/httpbin/get
+    curl -H "Authorization: APIKEY $KEY" {{ $baseUrl }}/countries/name/chile
+    curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
+      -X POST {{ $baseUrl }}/llm/v1/chat/completions \
+      -d '{"model":"llama-scout-17b","messages":[{"role":"user","content":"Hello"}],"max_tokens":50,"stream":false}'
+    ```
+
+    TokenRateLimit counts `usage.total_tokens` from MaaS responses — repeat until HTTP 429.

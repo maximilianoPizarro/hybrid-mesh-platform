@@ -1,0 +1,8 @@
+clusterDomain: ""
+vm:
+  enabled: true
+  name: workshop-cnv-demo
+  namespace: cnv-workshop
+  # Cirros default user; required for OpenShift console guest credentials + cloud-init login.
+  username: cirros
+  password: Welcome123!

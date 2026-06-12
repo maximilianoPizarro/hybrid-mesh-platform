@@ -1,0 +1,24 @@
+{{- /*
+  Industrial Edge catalog entities — bundled in-chart (no GitHub API).
+  Domain placeholders __HUB_APPS_DOMAIN__ / __EAST_APPS_DOMAIN__ / __WEST_APPS_DOMAIN__
+  are replaced from RHDP-injected clusterDomain and spoke domains.
+*/ -}}
+{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" -}}
+{{- $east := .Values.spokeDomains.east | default "apps.cluster-east.example.com" -}}
+{{- $west := .Values.spokeDomains.west | default "apps.cluster-west.example.com" -}}
+{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" -}}
+{{- $catalog = replace $catalog "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $catalog = replace $catalog "__EAST_APPS_DOMAIN__" $east -}}
+{{- $catalog = replace $catalog "__WEST_APPS_DOMAIN__" $west -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-ie
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  industrial-edge-system.yaml: |
+{{ $catalog | indent 4 }}

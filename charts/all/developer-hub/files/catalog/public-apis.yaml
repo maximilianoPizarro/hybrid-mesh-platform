@@ -1,0 +1,284 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: public-api-demos
+  title: Public API Demos
+  description: Well-known public REST APIs with OpenAPI specs — Try It Out enabled in Developer Hub
+  tags:
+    - openapi
+    - public
+    - demo
+spec:
+  owner: platform-engineering
+  domain: hub-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: petstore-api
+  title: Swagger Petstore (Public)
+  description: Classic OpenAPI 3 reference API — CORS enabled, Try It Out works in browser
+  tags:
+    - openapi
+    - public
+    - demo
+  links:
+    - url: https://petstore3.swagger.io/
+      title: Live API
+      icon: web
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-engineering
+  system: public-api-demos
+  definition:
+    $text: https://petstore3.swagger.io/api/v3/openapi.json
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: httpbin-api
+  title: httpbin.org (Public)
+  description: HTTP request/response testing service — full CORS, no auth for GET
+  tags:
+    - openapi
+    - public
+    - demo
+  links:
+    - url: https://httpbin.org
+      title: Live API
+      icon: web
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-engineering
+  system: public-api-demos
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: httpbin.org
+      version: 1.0.0
+      description: HTTP request/response testing service
+    servers:
+      - url: https://httpbin.org
+    paths:
+      /get:
+        get:
+          summary: Returns GET request data
+          operationId: getRequest
+          responses:
+            "200":
+              description: Echo of GET request
+      /status/{code}:
+        get:
+          summary: Returns given HTTP status code
+          operationId: getStatus
+          parameters:
+            - name: code
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: Status response
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: restcountries-api
+  title: REST Countries (Public)
+  description: Country metadata REST API — open CORS, simple GET endpoints
+  tags:
+    - openapi
+    - public
+    - demo
+  links:
+    - url: https://restcountries.com
+      title: Live API
+      icon: web
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-engineering
+  system: public-api-demos
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: REST Countries API
+      version: 3.1.0
+      description: Get country data by name, code, or region
+    servers:
+      - url: https://restcountries.com/v3.1
+    paths:
+      /all:
+        get:
+          summary: Get all countries
+          operationId: getAllCountries
+          responses:
+            "200":
+              description: List of countries
+      /name/{name}:
+        get:
+          summary: Search countries by name
+          operationId: getCountryByName
+          parameters:
+            - name: name
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            "200":
+              description: Matching countries
+      /alpha/{code}:
+        get:
+          summary: Get country by ISO alpha code
+          operationId: getCountryByCode
+          parameters:
+            - name: code
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            "200":
+              description: Country details
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: jsonplaceholder-api
+  title: JSONPlaceholder (Public)
+  description: Fake REST API for testing CRUD — CORS enabled
+  tags:
+    - openapi
+    - public
+    - demo
+  links:
+    - url: https://jsonplaceholder.typicode.com
+      title: Live API
+      icon: web
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-engineering
+  system: public-api-demos
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: JSONPlaceholder
+      version: 1.0.0
+      description: Fake online REST API for testing and prototyping
+    servers:
+      - url: https://jsonplaceholder.typicode.com
+    paths:
+      /posts:
+        get:
+          summary: List posts
+          operationId: listPosts
+          responses:
+            "200":
+              description: Array of posts
+        post:
+          summary: Create a post
+          operationId: createPost
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    body:
+                      type: string
+                    userId:
+                      type: integer
+          responses:
+            "201":
+              description: Created post
+      /posts/{id}:
+        get:
+          summary: Get post by ID
+          operationId: getPost
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: Post details
+      /users:
+        get:
+          summary: List users
+          operationId: listUsers
+          responses:
+            "200":
+              description: Array of users
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: cat-facts-api
+  title: Cat Facts (Public)
+  description: Random cat facts API — open CORS, no auth
+  tags:
+    - openapi
+    - public
+    - demo
+  links:
+    - url: https://catfact.ninja
+      title: Live API
+      icon: web
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-engineering
+  system: public-api-demos
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Cat Facts API
+      version: 1.0.0
+      description: Returns random cat facts
+    servers:
+      - url: https://catfact.ninja
+    paths:
+      /fact:
+        get:
+          summary: Get a random cat fact
+          operationId: getRandomFact
+          parameters:
+            - name: max_length
+              in: query
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: A cat fact
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      fact:
+                        type: string
+                      length:
+                        type: integer
+      /facts:
+        get:
+          summary: Get multiple cat facts
+          operationId: getFacts
+          parameters:
+            - name: limit
+              in: query
+              schema:
+                type: integer
+          responses:
+            "200":
+              description: List of cat facts

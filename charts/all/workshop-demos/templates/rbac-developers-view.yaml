@@ -1,0 +1,19 @@
+{{- $demoNs := list .Values.demos.camelCdc.namespace .Values.demos.apiProduct.namespace .Values.demos.networkPolicyDemo.namespace "cnv-workshop" "neuroface" "maas-workshop" }}
+{{- range $demoNs }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: workshop-developers-view
+  namespace: {{ . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: workshop-developers
+{{- end }}

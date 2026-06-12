@@ -1,0 +1,26 @@
+clusterDomain: ""
+clusters:
+  east:
+    domain: ""
+  west:
+    domain: ""
+gateway:
+  weights:
+    east: 50
+    west: 50
+  # Optional weights for /api (two clusters). Defaults to 100/0 (east only) so Socket.IO
+  # polling stays on one spoke; set both to load-balance API across clusters if your app allows.
+  apiWeights: {}
+  circuitBreaking:
+    enabled: true
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: DO_NOT_UPGRADE
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100

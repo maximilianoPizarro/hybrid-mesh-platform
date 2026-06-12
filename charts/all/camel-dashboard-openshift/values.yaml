@@ -1,0 +1,13 @@
+camel-dashboard-openshift-all:
+  camel-dashboard-operator:
+    enabled: true
+  camel-dashboard-console:
+    enabled: true
+  hawtio-online-console-plugin:
+    enabled: false
+    plugin:
+      service:
+        port: 8080
+    gateway:
+      service:
+        port: 8080

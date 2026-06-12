@@ -1,0 +1,5 @@
+apiVersion: v2
+name: quay-registry
+description: Minimal Red Hat Quay on-prem registry (no NooBaa, no Clair — uses existing MinIO for storage)
+type: application
+version: 0.1.0

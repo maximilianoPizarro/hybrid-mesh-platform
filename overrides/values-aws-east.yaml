@@ -1,0 +1,11 @@
+clusterRole: spoke
+clusterName: east
+userCount: 50
+
+clusters:
+  hub:
+    domain: ""
+
+deployer:
+  domain: ""
+  apiUrl: ""

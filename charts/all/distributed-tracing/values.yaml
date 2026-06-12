@@ -1,0 +1,14 @@
+clusterDomain: ""
+
+minio:
+  endpoint: http://minio.industrial-edge-ml-workspace.svc.cluster.local:9000
+  bucket: tempo-traces
+  accessKey: minio
+  secretKey: minio123
+  region: us-east-1
+
+tempo:
+  name: simplest
+  tenantName: platform
+  # Fixed UUID — must remain stable for object storage tenant prefix.
+  tenantId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"

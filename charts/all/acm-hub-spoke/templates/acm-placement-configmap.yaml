@@ -1,0 +1,15 @@
+# Required by ApplicationSet clusterDecisionResource generator (see applicationset.yaml).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: acm-placement
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  apiVersion: cluster.open-cluster-management.io/v1beta1
+  kind: placementdecisions
+  matchKey: clusterName
+  statusListKey: decisions

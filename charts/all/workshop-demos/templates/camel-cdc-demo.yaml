@@ -1,0 +1,30 @@
+{{- if .Values.demos.camelCdc.enabled }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.demos.camelCdc.namespace }}
+  labels:
+    workshop.demo/maximilianopizarro: hybrid-mesh-shared-demos
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: camel.apache.org/v1
+kind: Integration
+metadata:
+  name: workshop-cdc-demo
+  namespace: {{ .Values.demos.camelCdc.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  flows:
+    - from:
+        uri: timer:tick?period=60000
+      steps:
+        - log:
+            message: "Workshop CDC Plan B placeholder — replace with live CDC Integration"
+  traits:
+    owner:
+      configuration:
+        resourceKind: Deployment
+{{- end }}

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: industrial-edge-data-science-cluster
+description: OpenShift AI DataScienceCluster for Industrial Edge ML
+type: application
+version: 0.1.0

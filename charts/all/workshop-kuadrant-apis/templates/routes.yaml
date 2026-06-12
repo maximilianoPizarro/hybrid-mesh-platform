@@ -1,0 +1,61 @@
+{{- $gwNs := .Values.gateway.namespace }}
+{{- $hostname := .Values.gateway.hostname | default (printf "workshop-apis.%s" .Values.clusterDomain) }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: workshop-apis
+  namespace: {{ $gwNs }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    haproxy.router.openshift.io/timeout: 3600s
+spec:
+  host: {{ $hostname }}
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: hub-gateway-istio
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- range $name, $api := .Values.apis }}
+{{- if and $api.enabled $api.host }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: workshop-{{ $name }}
+  namespace: {{ $gwNs }}
+  labels:
+    app: workshop-{{ $name }}
+    kuadrant.io/exposed: "true"
+    workshop.kuadrant.io/external-host: {{ $api.host | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parentRefs:
+    - name: {{ $.Values.gateway.name }}
+      namespace: {{ $gwNs }}
+  hostnames:
+    - {{ $hostname | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ $api.pathPrefix | quote }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            hostname: {{ $api.host | quote }}
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ $api.rewritePathPrefix | default "/" | quote }}
+      backendRefs:
+        - group: networking.istio.io
+          kind: Hostname
+          name: {{ $api.host | quote }}
+          port: {{ $api.port | default 443 }}
+{{- end }}
+{{- end }}

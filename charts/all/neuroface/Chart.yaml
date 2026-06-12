@@ -1,0 +1,10 @@
+apiVersion: v2
+name: neuroface-platform
+description: NeuroFace workshop demo (Helm wrapper for upstream neuroface chart)
+type: application
+version: 0.1.0
+appVersion: "1.2.0"
+dependencies:
+  - name: neuroface
+    version: 1.2.0
+    repository: https://maximilianopizarro.github.io/neuroface/

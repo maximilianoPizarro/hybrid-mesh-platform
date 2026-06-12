@@ -1,0 +1,44 @@
+{{- range $name, $cluster := .Values.managedClusters }}
+{{- if $cluster.apiUrl }}
+---
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: {{ $name }}
+  labels:
+    name: {{ $name }}
+    region: {{ $name }}
+    cloud: auto-detect
+    vendor: OpenShift
+    cluster.open-cluster-management.io/clusterset: global
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  hubAcceptsClient: true
+  leaseDurationSeconds: 60
+---
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: {{ $name }}
+  namespace: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterName: {{ $name }}
+  clusterNamespace: {{ $name }}
+  clusterLabels:
+    cloud: auto-detect
+    vendor: OpenShift
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  iamPolicyController:
+    enabled: true
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+{{- end }}
+{{- end }}

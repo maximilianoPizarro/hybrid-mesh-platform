@@ -1,0 +1,23 @@
+clusterDomain: ""
+clusterName: ""
+hubClusterDomain: ""
+
+mqtt:
+  host: messaging
+  port: 1883
+  topics:
+    vibration: "iot-sensor/sw/vibration"
+    temperature: "iot-sensor/sw/temperature"
+
+thresholds:
+  vibration: 15.0
+  temperature: 80.0
+
+mailpit:
+  # Override full URL; otherwise https://mailpit.<hubClusterDomain>/api/v1/send
+  url: ""
+  # When true and url empty, PostSync fails if clusters.hub.domain was not injected (RHDP spoke order).
+  requireHubDomain: true
+
+healthReport:
+  intervalSeconds: 300

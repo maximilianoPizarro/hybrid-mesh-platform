@@ -1,0 +1,24 @@
+{{- if .Values.demos.apiProduct.enabled }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.demos.apiProduct.namespace }}
+  labels:
+    kuadrant.io/managed: "true"
+    workshop.demo/maximilianopizarro: hybrid-mesh-shared-demos
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workshop-api-product-readme
+  namespace: {{ .Values.demos.apiProduct.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  README: |
+    Plan B API Product demo namespace.
+    Facilitators: apply Kuadrant APIProduct from Developer Hub template or oc apply -f examples/.
+{{- end }}

@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: industrial-edge-spoke
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+    cluster.open-cluster-management.io/placement: hub-spoke-placement
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    apps.open-cluster-management.io/source-repository: {{ .Values.gitops.repoUrl | quote }}
+spec:
+  generators:
+    - clusterDecisionResource:
+        configMapRef: acm-placement
+        labelSelector:
+          matchLabels:
+            cluster.open-cluster-management.io/placement: hub-spoke-placement
+        requeueAfterSeconds: 180
+  template:
+    metadata:
+      name: '{{`{{name}}-spoke-components`}}'
+      labels:
+        app.kubernetes.io/part-of: platform-hub-spoke
+        apps.open-cluster-management.io/cluster-set: global
+        apps.open-cluster-management.io/ocm-managed-cluster: '{{`{{name}}`}}'
+        cluster.open-cluster-management.io/placement: hub-spoke-placement
+      annotations:
+        apps.open-cluster-management.io/ocm-managed-cluster: '{{`{{name}}`}}'
+        apps.open-cluster-management.io/ocm-managed-cluster-app-namespace: openshift-gitops
+    spec:
+      project: default
+      source:
+        repoURL: {{ .Values.gitops.repoUrl }}
+        targetRevision: {{ .Values.gitops.revision | default "main" | quote }}
+        path: '{{`{{name}}`}}'
+      destination:
+        name: '{{`{{name}}`}}'
+        namespace: openshift-gitops
+      syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

@@ -1,0 +1,79 @@
+{{- $count := int (.Values.userCount | default 50) }}
+{{- $hub := .Values.clusterDomain | default "apps.cluster.example.com" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-openshift-ai
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    developer-hub.redhat.com/user-count: {{ $count | quote }}
+data:
+  openshift-ai-workshop.yaml: |
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: System
+    metadata:
+      name: openshift-ai-workshop
+      title: OpenShift AI Workshop
+      description: Pre-provisioned Data Science projects (ModelMesh + MaaS) — one per workshop user
+      tags:
+        - openshift-ai
+        - modelmesh
+        - workshop
+    spec:
+      owner: platform-engineering
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: maas-workshop-shared
+      title: OpenShift AI — MaaS playground (shared)
+      description: Shared hub project with MaaS InferenceService proxies — facilitator demo and Plan B
+      tags: [openshift-ai, maas, plan-b]
+      annotations:
+        openshift.ai/project: maas-workshop
+        backstage.io/kubernetes-namespace: maas-workshop
+        backstage.io/kubernetes-cluster: hub
+        maas.redhat.com/default-model: llama-scout-17b
+      links:
+        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
+          title: OpenShift AI Dashboard
+          icon: dashboard
+    spec:
+      type: ml-workspace
+      lifecycle: production
+      owner: platform-engineering
+      system: openshift-ai-workshop
+{{- range $i := until $count }}
+{{- $n := add $i 1 }}
+{{- $user := printf "user%d" $n }}
+{{- $project := printf "ai-%s" $user }}
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: {{ $project }}
+      title: OpenShift AI — {{ $user }}
+      description: Pre-provisioned Data Science project for {{ $user }} — ModelMesh + MaaS connection
+      tags: [openshift-ai, modelmesh, workshop]
+      annotations:
+        openshift.ai/project: {{ $project }}
+        backstage.io/kubernetes-namespace: {{ $project }}
+        backstage.io/kubernetes-cluster: hub
+        maas.redhat.com/default-model: llama-scout-17b
+      links:
+        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
+          title: OpenShift AI Dashboard
+          icon: dashboard
+        - url: https://developer-hub.{{ $hub }}/catalog/default/component/{{ $project }}
+          title: Developer Hub entity
+          icon: catalog
+    spec:
+      type: ml-workspace
+      lifecycle: production
+      owner: {{ $user }}
+      system: openshift-ai-workshop
+{{- end }}

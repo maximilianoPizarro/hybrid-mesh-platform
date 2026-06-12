@@ -1,0 +1,6 @@
+clusterDomain: ""
+clusterName: ""
+# HTTPRoute to KServe/ModelMesh (/inference). Disable until InferenceService is Ready
+# (otherwise Gateway health stays Degraded: modelmesh-serving backend not found).
+inferenceRoute:
+  enabled: false

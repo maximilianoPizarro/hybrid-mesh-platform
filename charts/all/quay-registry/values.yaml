@@ -1,0 +1,13 @@
+clusterDomain: ""
+workshopOrg: workshop
+workshopRobotName: push
+quayAdminUser: quayadmin
+quayAdminPassword: "Welcome123!"
+minio:
+  endpoint: "minio.industrial-edge-ml-workspace.svc.cluster.local:9000"
+  accessKey: "minio"
+  secretKey: "minio123"
+  bucket: "quay"
+readinessCheck:
+  enabled: true
+  image: registry.redhat.io/ubi9/ubi-minimal:latest

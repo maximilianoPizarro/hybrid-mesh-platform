@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: kairos-operator
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # SingleNamespace — avoids AllNamespaces CSV copies (66× "project failed" in console).
+  targetNamespaces:
+    - kairos-system
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: kairos-operator
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  channel: {{ .Values.operator.channel | quote }}
+  installPlanApproval: Automatic
+  name: kairos-operator
+  source: {{ .Values.operator.source | quote }}
+  sourceNamespace: {{ .Values.operator.sourceNamespace | quote }}

@@ -1,0 +1,16 @@
+{{- if .Values.console.enabled }}
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: KairosConsole
+metadata:
+  name: {{ .Values.console.name }}
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  image: {{ .Values.console.image | quote }}
+  replicas: 1
+  route:
+    enabled: true
+    host: "kairos-console-kairos-system.{{ .Values.clusterDomain }}"
+    tlsEnabled: true
+{{- end }}

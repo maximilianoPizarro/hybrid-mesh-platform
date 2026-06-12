@@ -1,0 +1,5 @@
+apiVersion: v2
+name: industrial-edge-minio
+description: MinIO S3-compatible storage for ML models and data lake
+type: application
+version: 0.1.0

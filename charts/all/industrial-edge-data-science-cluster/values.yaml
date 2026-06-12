@@ -1,0 +1,4 @@
+clusterDomain: ""
+global:
+  localClusterDomain: ""
+  hubClusterDomain: ""

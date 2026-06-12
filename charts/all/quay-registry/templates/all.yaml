@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quay-config-bundle
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+stringData:
+  config.yaml: |
+    FEATURE_MAILING: false
+    REGISTRY_TITLE: Platform Hub Quay
+    REGISTRY_TITLE_SHORT: Quay
+    SERVER_HOSTNAME: quay-registry.{{ .Values.clusterDomain }}
+    PREFERRED_URL_SCHEME: https
+    SUPER_USERS:
+      - quayadmin
+    FEATURE_USER_INITIALIZE: true
+    DISTRIBUTED_STORAGE_CONFIG:
+      default:
+        - RadosGWStorage
+        - access_key: {{ .Values.minio.accessKey }}
+          secret_key: {{ .Values.minio.secretKey }}
+          hostname: {{ .Values.minio.endpoint | replace ":9000" "" }}
+          port: 9000
+          is_secure: false
+          storage_path: /datastorage/registry
+          bucket_name: {{ .Values.minio.bucket }}
+    DISTRIBUTED_STORAGE_DEFAULT_LOCATIONS:
+      - default
+    DISTRIBUTED_STORAGE_PREFERENCE:
+      - default
+    DEFAULT_TAG_EXPIRATION: 2w
+    TAG_EXPIRATION_OPTIONS:
+      - 0s
+      - 1d
+      - 1w
+      - 2w
+      - 4w
+    FEATURE_SECURITY_SCANNER: false
+    FEATURE_BUILD_SUPPORT: false
+    FEATURE_PROXY_CACHE: true
+---
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
+metadata:
+  name: registry
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  configBundleSecret: quay-config-bundle
+  components:
+    - kind: clair
+      managed: false
+    - kind: horizontalpodautoscaler
+      managed: false
+    - kind: objectstorage
+      managed: false
+    - kind: mirror
+      managed: false
+    - kind: monitoring
+      managed: false
+    - kind: quay
+      managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 300m
+            memory: 4Gi
+          limits:
+            cpu: "2"
+            memory: 8Gi
+    - kind: postgres
+      managed: true
+    - kind: redis
+      managed: true
+    - kind: route
+      managed: true
+    - kind: tls
+      managed: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: quay-registry-anyuid
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: quay-registry
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid

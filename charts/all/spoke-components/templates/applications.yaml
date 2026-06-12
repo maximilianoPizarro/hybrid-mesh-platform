@@ -1,0 +1,131 @@
+{{- $clusterDomain := .Values.clusterDomain -}}
+{{- if not $clusterDomain -}}
+{{- if eq .Values.clusterName "east" -}}
+{{- $clusterDomain = .Values.eastDomain -}}
+{{- else if eq .Values.clusterName "west" -}}
+{{- $clusterDomain = .Values.westDomain -}}
+{{- end -}}
+{{- end -}}
+{{- range .Values.components }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .id }}-{{ $.Values.clusterName }}
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .syncWave | default "0" | quote }}
+    apps.open-cluster-management.io/ocm-managed-cluster: {{ $.Values.clusterName | quote }}
+    apps.open-cluster-management.io/ocm-managed-cluster-app-namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/part-of: platform-hub-spoke
+    apps.open-cluster-management.io/cluster-set: global
+spec:
+  project: default
+  source:
+    repoURL: {{ $.Values.gitops.repoUrl | quote }}
+    targetRevision: {{ $.Values.gitops.revision | default "main" | quote }}
+    path: {{ .path | quote }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $clusterDomain | quote }}
+        clusterName: {{ $.Values.clusterName | quote }}
+        clusterRole: {{ $.Values.clusterRole | quote }}
+        hubClusterDomain: {{ $.Values.hubClusterDomain | quote }}
+        subscriptions:
+{{- $.Values.subscriptions | toYaml | nindent 10 }}
+        global:
+          localClusterDomain: {{ $clusterDomain | quote }}
+          hubClusterDomain: {{ $.Values.hubClusterDomain | quote }}
+  destination:
+    name: {{ $.Values.clusterName | quote }}
+    namespace: {{ .namespace | quote }}
+  ignoreDifferences:
+    - group: route.openshift.io
+      kind: Route
+      jsonPointers:
+        - /status
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/metadata/annotations
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+        - /spec/clusterIPs
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+    - group: kafka.strimzi.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: platform.stackrox.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: grafana.integreatly.org
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: operators.coreos.com
+      kind: Subscription
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: operators.coreos.com
+      kind: OperatorGroup
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels
+        - /spec
+    - group: tekton.dev
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels
+        - /spec/tasks
+    - group: broker.amq.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: ""
+      kind: Namespace
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels
+    - group: skupper.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: gateway.networking.k8s.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: kiali.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: console.openshift.io
+      kind: ConsoleLink
+      jsonPointers:
+        - /metadata/annotations
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+      - SkipDryRunOnMissingResource=true
+{{- end }}

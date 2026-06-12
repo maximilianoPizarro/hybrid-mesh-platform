@@ -1,0 +1,6 @@
+apiVersion: v2
+name: workshop-demos
+description: Shared Plan B demos catalog, Gitea org bootstrap, and east spoke gap workloads
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

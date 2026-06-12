@@ -1,0 +1,198 @@
+apiVersion: sailoperator.io/v1
+kind: Istio
+metadata:
+  name: default
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  namespace: istio-system
+  profile: ambient
+  values:
+    pilot:
+      env:
+        PILOT_ENABLE_AMBIENT: "true"
+      trustedZtunnelNamespace: ztunnel
+    global:
+      platform: openshift
+      {{- if .Values.clusterName }}
+      multiCluster:
+        clusterName: {{ .Values.clusterName }}
+      {{- end }}
+    meshConfig:
+      extensionProviders:
+        - name: otel-tracing
+          opentelemetry:
+            service: cluster-collector-collector.openshift-opentelemetry.svc.cluster.local
+            port: 4317
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: sailoperator.io/v1
+kind: IstioCNI
+metadata:
+  name: default
+  namespace: istio-cni
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  namespace: istio-cni
+  profile: ambient
+  values:
+    cni:
+      ambient:
+        reconcileIptablesOnStartup: true
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-cni
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ztunnel
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: sailoperator.io/v1
+kind: ZTunnel
+metadata:
+  name: default
+  namespace: ztunnel
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  namespace: ztunnel
+  {{- if .Values.clusterName }}
+  values:
+    ztunnel:
+      multiCluster:
+        clusterName: {{ .Values.clusterName }}
+  {{- end }}
+---
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+  name: mesh-default
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  metrics:
+    - providers:
+        - name: prometheus
+  tracing:
+    - providers:
+        - name: otel-tracing
+      randomSamplingPercentage: 100
+{{- /*
+  Ambient labels are applied AFTER Istio, IstioCNI, and ZTunnel CRs (wave 1)
+  so the ztunnel can configure HBONE listeners before application pods start.
+*/ -}}
+{{- $ieAmbientNamespaces := list
+  "industrial-edge-tst-all"
+  "industrial-edge-stormshift-messaging"
+  "industrial-edge-ml-workspace"
+  "industrial-edge-ci"
+  "ml-development"
+}}
+{{- $ambientNamespaces := list
+  "hub-gateway-system"
+  "redhat-ods-operator"
+  "openshift-cluster-observability-operator"
+  "developer-hub"
+}}
+{{- if eq .Values.clusterRole "hub" }}
+{{- $ambientNamespaces = append $ambientNamespaces "devspaces" }}
+{{- end }}
+{{- if ne .Values.clusterRole "hub" }}
+{{- $ambientNamespaces = concat $ambientNamespaces $ieAmbientNamespaces }}
+{{- $ambientNamespaces = append $ambientNamespaces "spoke-gateway-system" }}
+{{- end }}
+{{- range $ambientNamespaces }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ . }}
+  labels:
+    istio.io/dataplane-mode: ambient
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+{{- end }}
+{{- $waypointNamespaces := list "hub-gateway-system" }}
+{{- if ne .Values.clusterRole "hub" }}
+{{- $waypointNamespaces = append $waypointNamespaces "industrial-edge-tst-all" }}
+{{- $waypointNamespaces = append $waypointNamespaces "industrial-edge-stormshift-messaging" }}
+{{- $waypointNamespaces = append $waypointNamespaces "industrial-edge-data-lake" }}
+{{- end }}
+{{- range $waypointNamespaces }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ . }}-waypoint
+  namespace: {{ . }}
+  labels:
+    istio.io/waypoint-for: service
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  gatewayClassName: istio-waypoint
+  listeners:
+    - name: mesh
+      port: 15008
+      protocol: HBONE
+{{- end }}
+{{- if ne .Values.clusterRole "hub" }}
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: kafka-strimzi-bypass
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: dev-cluster
+      strimzi.io/kind: Kafka
+      strimzi.io/broker-role: "true"
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9091:
+      mode: DISABLE
+    9092:
+      mode: PERMISSIVE
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: kafka-strimzi-bypass-stormshift
+  namespace: industrial-edge-stormshift-messaging
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: factory-cluster
+      strimzi.io/kind: Kafka
+      strimzi.io/broker-role: "true"
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    9091:
+      mode: DISABLE
+    9092:
+      mode: PERMISSIVE
+{{- end }}

@@ -1,0 +1,76 @@
+{{- $ai := .Values.aiModel }}
+{{- $cred := .Values.aiCredentials }}
+{{- if .Values.clusterAgent.enabled }}
+---
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: KairosAgent
+metadata:
+  name: {{ .Values.clusterName }}-agent
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  mode: {{ .Values.clusterAgent.mode | quote }}
+  aiModel:
+    apiURL: {{ $ai.apiURL | quote }}
+    model: {{ $ai.model | quote }}
+    apiKeySecret:
+      name: {{ $cred.secretName | quote }}
+      key: {{ $cred.secretKey | quote }}
+    timeoutSeconds: {{ $ai.timeoutSeconds }}
+    temperature: {{ $ai.temperature | quote }}
+  {{- if .Values.clusterAgent.hubReporting.enabled }}
+  hubReporting:
+    enabled: true
+    clusterName: {{ .Values.clusterName | quote }}
+    endpoint: "https://kairos-console-kairos-system.{{ .Values.clusterDomain }}"
+  {{- end }}
+  correctionPolicy:
+    dryRun: {{ .Values.clusterAgent.dryRun }}
+    maxActionsPerHour: 10
+  reporting:
+    interval: 30s
+  watch:
+    namespaces:
+      - kairos-system
+      - default
+    resourceTypes:
+      - Deployment
+      - StatefulSet
+{{- end }}
+{{- range $env, $cfg := .Values.environmentAgents }}
+{{- if $cfg.enabled }}
+---
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: KairosAgent
+metadata:
+  name: agent-{{ $env }}-environments
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  mode: {{ $cfg.mode | quote }}
+  aiModel:
+    apiURL: {{ $ai.apiURL | quote }}
+    model: {{ $ai.model | quote }}
+    apiKeySecret:
+      name: {{ $cred.secretName | quote }}
+      key: {{ $cred.secretKey | quote }}
+    timeoutSeconds: {{ $ai.timeoutSeconds }}
+    temperature: {{ $ai.temperature | quote }}
+  correctionPolicy:
+    dryRun: {{ $cfg.dryRun }}
+    maxActionsPerHour: {{ $cfg.maxActionsPerHour }}
+    rollbackOnFailure: true
+  reporting:
+    interval: 30s
+    otelExport: true
+  watch:
+    namespaces: []
+    namespaceSuffix: {{ $cfg.namespaceSuffix | quote }}
+    resourceTypes:
+      - Deployment
+      - StatefulSet
+    labelSelector: kairos.io/managed=true
+{{- end }}
+{{- end }}

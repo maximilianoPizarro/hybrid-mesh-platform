@@ -1,0 +1,79 @@
+clusterDomain: ""
+# Ephemeral PVC for install-dynamic-plugins (default chart size 2Gi is too small for ArgoCD + Kuadrant + email + MCP OCI overlays).
+dynamicPluginsStorage: 10Gi
+userCount: 50
+defaultPassword: "Welcome123!"
+# OIDC client secret for developer-hub + Keycloak backstage realm (set via --set, never commit real values)
+keycloakOidcClientSecret: ""
+# Gitea personal access token for gitea_admin (create via Gitea UI or API, never commit real values)
+giteaToken: ""
+sessionSecret: ""
+# Quay.io dockerconfigjson for pipeline push (set via --set, never commit credentials)
+quayDockerConfigJson: ""
+# ACS API token for /rhacs proxy and Security Insights plugin (runtime — never commit)
+rhacsApiToken: ""
+# Sync ManagedServiceAccount tokens from east/west into developer-hub-spoke-tokens Secret
+pluginReadiness:
+  enabled: true
+  image: registry.redhat.io/ubi9/ubi-minimal:latest
+spokeTokenSync:
+  enabled: true
+  clusters: "east,west"
+  schedule: "0 */6 * * *"
+  image: registry.redhat.io/ubi9/python-311:latest
+# Enable after developer-hub-spoke-tokens Secret exists (PostSync job). URLs required; tokens from env.
+kubernetesSpokes:
+  enabled: true
+  east:
+    apiUrl: ""
+  west:
+    apiUrl: ""
+# RHDP injects spoke ingress domains for IE catalog links (component-applications.yaml).
+spokeDomains:
+  east: ""
+  west: ""
+# Dynamic plugins — disable if package missing in RHDH image (oc exec ... ls dynamic-plugins/dist)
+plugins:
+  rbac:
+    enabled: true
+    policyAdminUser: platformadmin
+  techdocs:
+    enabled: true
+  techRadar:
+    enabled: true
+  mcp:
+    enabled: true
+    pluginTag: "bs_1.45.3__0.1.5"
+    catalogToolTag: "bs_1.45.3__0.4.1"
+    techdocsToolTag: "bs_1.45.3__0.3.2"
+  # Not in RHDH 1.9 bundled image or ghcr.io export overlays — enable when OCI packages exist
+  kiali:
+    enabled: false
+  grafana:
+    enabled: false
+  techInsights:
+    enabled: false
+  quay:
+    enabled: true
+  acsSecurityInsights:
+    enabled: false
+  argocd:
+    enabled: true
+  kuadrant:
+    enabled: true
+  kafka:
+    enabled: false
+  notificationsEmail:
+    enabled: true
+  # Red Hat Developer Lightspeed (LCS + Llama Stack sidecars). Uses same vLLM as Kairos (granite-31-8b).
+  lightspeed:
+    enabled: true
+    pluginTag: "bs_1.45.3__1.2.3"
+    llamaStackImage: "quay.io/redhat-ai-dev/llama-stack:0.1.4"
+    lightspeedCoreImage: "quay.io/lightspeed-core/lightspeed-stack:0.4.0"
+    ragContentImage: "quay.io/redhat-ai-dev/rag-content:release-1.9-lcs"
+    syncApiKeyFromKairos: true
+    vllmTlsVerify: "false"
+    vllmMaxTokens: "4096"
+    # Filled from hub values.kairos via component-applications.yaml
+    aiModel: {}

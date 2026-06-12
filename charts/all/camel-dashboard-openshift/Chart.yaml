@@ -1,0 +1,10 @@
+apiVersion: v2
+name: camel-dashboard-openshift
+description: Vendored Camel Dashboard umbrella chart for spoke GitOps (offline-friendly)
+type: application
+version: 0.1.0
+appVersion: "4.20.2"
+dependencies:
+  - name: camel-dashboard-openshift-all
+    version: 4.20.2
+    repository: https://camel-tooling.github.io/camel-dashboard/charts

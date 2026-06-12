@@ -1,0 +1,5 @@
+apiVersion: v2
+name: spoke-dashboards
+description: Local Grafana dashboards for spoke clusters (Istio, Kafka, apps)
+type: application
+version: 0.1.0

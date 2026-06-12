@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mailpit-templates
+description: Mailpit email testing server for software template notifications
+type: application
+version: 0.1.0

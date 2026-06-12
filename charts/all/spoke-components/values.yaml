@@ -1,0 +1,118 @@
+clusterName: ""
+clusterDomain: ""
+hubClusterDomain: ""
+eastDomain: ""
+westDomain: ""
+clusterRole: spoke
+
+gitops:
+  repoUrl: ""
+  revision: main
+
+components:
+  - id: namespaces
+    path: components/namespaces
+    namespace: openshift-gitops
+    syncWave: "1"
+  - id: operators
+    path: components/operators
+    namespace: openshift-operators
+    syncWave: "2"
+  - id: servicemeshoperator3
+    path: components/servicemeshoperator3
+    namespace: openshift-operators
+    syncWave: "3"
+  - id: observability
+    path: components/observability
+    namespace: openshift-cluster-observability-operator
+    syncWave: "4"
+  - id: acs-secured-cluster
+    path: components/acs-secured-cluster
+    namespace: stackrox
+    syncWave: "4"
+  - id: spoke-dashboards
+    path: components/spoke-dashboards
+    namespace: openshift-cluster-observability-operator
+    syncWave: "4"
+  - id: istio-monitoring
+    path: components/istio-monitoring
+    namespace: istio-system
+    syncWave: "4"
+  - id: rhcl-operator
+    path: components/rhcl-operator
+    namespace: redhat-connectivity-link-operator
+    syncWave: "4"
+  - id: kiali
+    path: components/kiali
+    namespace: openshift-cluster-observability-operator
+    syncWave: "4"
+  - id: industrial-edge-tst
+    path: components/industrial-edge-tst
+    namespace: industrial-edge-tst-all
+    syncWave: "5"
+  - id: industrial-edge-stormshift
+    path: components/industrial-edge-stormshift
+    namespace: industrial-edge-stormshift-messaging
+    syncWave: "5"
+  - id: industrial-edge-pipelines
+    path: components/industrial-edge-pipelines
+    namespace: industrial-edge-ci
+    syncWave: "5"
+  - id: industrial-edge-data-science-cluster
+    path: components/industrial-edge-data-science-cluster
+    namespace: redhat-ods-applications
+    syncWave: "5"
+  - id: industrial-edge-data-lake
+    path: components/industrial-edge-data-lake
+    namespace: industrial-edge-data-lake
+    syncWave: "5"
+  - id: industrial-edge-data-science-project
+    path: components/industrial-edge-data-science-project
+    namespace: ml-development
+    syncWave: "5"
+  - id: ie-anomaly-alerter
+    path: components/ie-anomaly-alerter
+    namespace: industrial-edge-tst-all
+    syncWave: "6"
+  - id: console-links
+    path: components/console-links
+    namespace: openshift-gitops
+    syncWave: "6"
+  - id: spoke-gateway
+    path: components/spoke-gateway
+    namespace: spoke-gateway-system
+    syncWave: "6"
+  - id: spoke-interconnect
+    path: components/spoke-interconnect
+    namespace: service-interconnect
+    syncWave: "6"
+
+subscriptions:
+  - name: skupper-operator
+    namespace: openshift-operators
+    channel: stable-2
+    source: redhat-operators
+  - name: grafana-operator
+    namespace: openshift-operators
+    channel: v5
+    source: community-operators
+  - name: kiali-ossm
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: rhacs-operator
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: amq-streams
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: amq-broker-rhel8
+    namespace: openshift-operators
+    channel: 7.12.x
+    source: redhat-operators
+  - name: rhods-operator
+    namespace: redhat-ods-operator
+    channel: stable-2.25
+    source: redhat-operators

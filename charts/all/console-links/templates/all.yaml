@@ -1,0 +1,303 @@
+{{- $domain := .Values.clusterDomain -}}
+{{- $hubDomain := .Values.hubClusterDomain | default $domain -}}
+{{- $role := .Values.clusterRole | default "hub" -}}
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-industrial-edge
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "industrial-edge.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://industrial-edge.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Industrial Edge"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "grafana.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  {{- if eq $role "hub" }}
+  href: "https://grafana.{{ $hubDomain }}"
+  {{- else }}
+  href: "https://grafana.{{ $domain }}"
+  {{- end }}
+  location: ApplicationMenu
+  text: "Grafana Dashboards"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-kiali
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "kiali.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://kiali-openshift-cluster-observability-operator.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Kiali Service Mesh"
+{{- if eq $role "hub" }}
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-kairos-console
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "kairos.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://kairos-console-kairos-system.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Kairos Console"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-acm-clusters
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "acm.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://console-openshift-console.{{ $hubDomain }}/multicloud/infrastructure/clusters"
+  location: ApplicationMenu
+  text: "ACM Clusters"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-acs-central
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "acs.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://central-stackrox.{{ $domain }}"
+  location: ApplicationMenu
+  text: "ACS Central (Security)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "developer-hub.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://developer-hub.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Developer Hub"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "gitea.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://gitea-gitea.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Gitea (SCM)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-minio
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "minio.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://minio-console-industrial-edge-ml-workspace.{{ $domain }}"
+  location: ApplicationMenu
+  text: "MinIO Console"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-mailpit
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "mailpit.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://mailpit.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Mailpit (Email)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-mailpit-templates
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "mailpit.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://mailpit-templates.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Mailpit (Software Templates)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-kafka-console
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "kafka-console.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://kafka-console.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Kafka Console (All Clusters)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-kubecost
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "kubecost.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://kubecost.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Kubecost (Cost Management)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-kuadrant-keys
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    section: "Platform Hub-Spoke"
+  href: "https://developer-hub.{{ $hubDomain }}/kuadrant"
+  location: ApplicationMenu
+  text: "Kuadrant API Keys (Workshop)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-workshop-apis
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    section: "Platform Hub-Spoke"
+  href: "https://workshop-apis.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Workshop Public APIs (httpbin)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "quay.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://quay-registry.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Quay Registry"
+{{- if ne $role "hub" }}
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "developer-hub.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://devspaces.{{ $domain }}"
+  location: ApplicationMenu
+  text: "DevSpaces (Kaoto + Continue AI)"
+{{- end }}
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-openshift-ai
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://rhods-dashboard-redhat-ods-applications.{{ $domain }}"
+  location: ApplicationMenu
+  text: "OpenShift AI"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-skupper-console
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "skupper.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://field-content-skupper-network-observer-service-interconnect.{{ $domain }}"
+  location: ApplicationMenu
+  text: "Skupper Console (Network)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-hybrid-mesh-workshop
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "developer-hub.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://workshop-registration.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Hybrid Mesh AI Workshop"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://neuroface.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "NeuroFace (AI Demo)"
+{{- end }}

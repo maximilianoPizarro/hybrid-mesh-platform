@@ -1,0 +1,175 @@
+{{- /*
+  Creates shared workshop org and push robot; stores dockerconfigjson in quay-registry and developer-hub.
+*/ -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: quay-org-setup
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: quay-org-setup
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: quay-org-setup
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: quay-org-setup
+subjects:
+  - kind: ServiceAccount
+    name: quay-org-setup
+    namespace: quay-registry
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: quay-org-setup
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: quay-org-setup
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: quay-org-setup
+subjects:
+  - kind: ServiceAccount
+    name: quay-org-setup
+    namespace: quay-registry
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: quay-org-setup
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: quay-org-setup
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: quay-org-setup
+subjects:
+  - kind: ServiceAccount
+    name: quay-org-setup
+    namespace: quay-registry
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quay-org-setup-script
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  setup.py: |
+{{ .Files.Get "files/setup.py" | indent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: quay-workshop-org-setup
+  namespace: quay-registry
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  backoffLimit: 8
+  template:
+    spec:
+      serviceAccountName: quay-org-setup
+      restartPolicy: Never
+      containers:
+        - name: setup
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          env:
+            - name: QUAY_HOST
+              value: "quay-registry.{{ .Values.clusterDomain }}"
+            - name: QUAY_ORG
+              value: {{ .Values.workshopOrg | default "workshop" | quote }}
+            - name: ROBOT_NAME
+              value: {{ .Values.workshopRobotName | default "push" | quote }}
+            - name: QUAY_ADMIN_USER
+              value: {{ .Values.quayAdminUser | default "quayadmin" | quote }}
+            - name: QUAY_ADMIN_PASSWORD
+              value: {{ .Values.quayAdminPassword | default "Welcome123!" | quote }}
+            - name: QUAY_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: quay-admin-api-token
+                  key: token
+                  optional: true
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              DOCKERCFG=$(python3 /scripts/setup.py)
+              apply_secret() {
+                NS="$1"
+                oc create secret generic quay-workshop-push \
+                  --from-literal=.dockerconfigjson="$DOCKERCFG" \
+                  --type=kubernetes.io/dockerconfigjson \
+                  -n "$NS" --dry-run=client -o yaml | oc apply -f -
+                echo "Secret quay-workshop-push applied in ${NS}"
+              }
+              apply_secret quay-registry
+              apply_secret developer-hub
+              apply_secret openshift-gitops
+              for MC in east west; do
+                if oc get managedcluster "$MC" &>/dev/null; then
+                  echo "$DOCKERCFG" | oc create secret generic quay-workshop-push \
+                    --from-file=.dockerconfigjson=/dev/stdin \
+                    --type=kubernetes.io/dockerconfigjson \
+                    -n openshift-gitops --dry-run=client -o yaml | \
+                    oc apply --server="$(oc get managedcluster "$MC" -o jsonpath='{.spec.managedClusterClientConfig.url}')" -f - 2>/dev/null || \
+                    echo "Note: copy quay-workshop-push to spoke ${MC} openshift-gitops manually if multicluster apply failed"
+                fi
+              done
+      volumes:
+        - name: script
+          configMap:
+            name: quay-org-setup-script

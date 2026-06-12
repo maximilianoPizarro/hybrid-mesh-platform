@@ -1,0 +1,18 @@
+clusterDomain: ""
+gitops:
+  repoUrl: ""
+  revision: "main"
+clusters:
+  east:
+    domain: ""
+  west:
+    domain: ""
+managedClusters:
+  east:
+    apiUrl: ""
+    domain: ""
+    token: ""
+  west:
+    apiUrl: ""
+    domain: ""
+    token: ""

@@ -1,0 +1,11 @@
+clusterDomain: ""
+
+# Hub-only: push Skupper AccessTokens to spokes via ManagedClusterAction (sensitive
+# grant code/url/ca never committed — read from AccessGrant status at runtime).
+accessTokenSync:
+  enabled: true
+  grantName: spoke-link
+  tokenName: hub-link
+  clusters: "east,west"
+  schedule: "*/30 * * * *"
+  image: registry.redhat.io/ubi9/python-311:latest

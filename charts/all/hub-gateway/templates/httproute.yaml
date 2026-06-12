@@ -1,0 +1,66 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: industrial-edge-lb
+  namespace: hub-gateway-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  parentRefs:
+    - name: hub-gateway
+      namespace: hub-gateway-system
+  hostnames:
+    - industrial-edge.{{ .Values.clusterDomain }}
+  rules:
+    {{- $apiW := .Values.gateway.apiWeights | default dict }}
+    {{- if and .Values.clusters.east.domain .Values.clusters.west.domain }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: industrial-edge-east-api
+          port: 8080
+          weight: {{- if hasKey $apiW "east" }} {{ $apiW.east }}{{- else }} 100{{- end }}
+        - name: industrial-edge-west-api
+          port: 8080
+          weight: {{- if hasKey $apiW "west" }} {{ $apiW.west }}{{- else }} 0{{- end }}
+    - backendRefs:
+        - name: industrial-edge-east-front
+          port: 8080
+          weight: {{ .Values.gateway.weights.east }}
+        - name: industrial-edge-west-front
+          port: 8080
+          weight: {{ .Values.gateway.weights.west }}
+    {{- else if .Values.clusters.east.domain }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: industrial-edge-east-api
+          port: 8080
+          weight: 100
+    - backendRefs:
+        - name: industrial-edge-east-front
+          port: 8080
+          weight: 100
+    {{- else if .Values.clusters.west.domain }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: industrial-edge-west-api
+          port: 8080
+          weight: 100
+    - backendRefs:
+        - name: industrial-edge-west-front
+          port: 8080
+          weight: 100
+    {{- else }}
+    - backendRefs:
+        - name: hub-gateway-istio
+          port: 8080
+          weight: 100
+    {{- end }}

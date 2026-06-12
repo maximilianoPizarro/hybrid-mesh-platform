@@ -1,0 +1,53 @@
+{{- $ieNamespaces := list
+  "industrial-edge-tst-all"
+  "industrial-edge-stormshift-messaging"
+  "industrial-edge-ml-workspace"
+  "industrial-edge-ci"
+  "ml-development"
+  "industrial-edge-data-lake"
+}}
+{{- $platformNamespaces := list
+  "hub-gateway-system"
+  "redhat-ods-operator"
+  "openshift-cluster-observability-operator"
+  "developer-hub"
+  "devspaces"
+  "kairos-system"
+  "openshift-cnv"
+  "maas-workshop"
+}}
+{{- /* RHCL dns-operator: no ambient — CrashLoopBackOff on spokes when meshed */ -}}
+{{- $noMeshNamespaces := list
+  "gitea"
+  "stackrox"
+  "redhat-connectivity-link-operator"
+}}
+{{- $allNamespaces := $platformNamespaces }}
+{{- if ne .Values.clusterRole "hub" }}
+{{- $allNamespaces = concat $allNamespaces $ieNamespaces }}
+{{- end }}
+{{- /*
+  Namespaces are created WITHOUT the ambient label here.
+  The ambient label is applied by the servicemeshoperator3 component
+  AFTER the Istio control plane, IstioCNI, and ZTunnel are deployed.
+  This prevents pods from being created before the ztunnel can
+  configure HBONE (port 15008) in their network namespace.
+*/ -}}
+{{- range $allNamespaces }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+{{- end }}
+{{- range $noMeshNamespaces }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+{{- end }}

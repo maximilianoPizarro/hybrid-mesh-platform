@@ -1,0 +1,77 @@
+apiVersion: camel.apache.org/v1
+kind: IntegrationPlatform
+metadata:
+  name: camel-k
+  namespace: industrial-edge-data-lake
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  build:
+    registry:
+      address: image-registry.openshift-image-registry.svc:5000
+      organization: industrial-edge-data-lake
+  profile: Kubernetes
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: industrial-edge-archive
+  namespace: industrial-edge-data-lake
+  labels:
+    strimzi.io/cluster: prod-cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  partitions: 1
+  replicas: 1
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-s3-credentials
+  namespace: industrial-edge-data-lake
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: minio
+  AWS_SECRET_ACCESS_KEY: minio123
+---
+apiVersion: camel.apache.org/v1
+kind: Integration
+metadata:
+  name: kafka-to-s3
+  namespace: industrial-edge-data-lake
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  dependencies:
+    - camel:kafka
+    - camel:aws2-s3
+  configuration:
+    - type: property
+      value: |
+        camel.component.kafka.brokers=prod-cluster-kafka-bootstrap.industrial-edge-data-lake.svc:9092
+        camel.component.aws2-s3.access-key=minio
+        camel.component.aws2-s3.secret-key=minio123
+        camel.component.aws2-s3.override-endpoint=true
+        camel.component.aws2-s3.uri-endpoint-override=http://minio-hub.service-interconnect.svc:9000
+  flows:
+    - route:
+        id: kafka-temperature-to-s3
+        from:
+          uri: "kafka:temperature?brokers=prod-cluster-kafka-bootstrap.industrial-edge-data-lake.svc:9092&groupId=data-lake-archiver"
+        steps:
+          - marshal:
+              json: {}
+          - to:
+              uri: "aws2-s3:industrial-edge-data?autoCreateBucket=true"
+    - route:
+        id: kafka-vibration-to-s3
+        from:
+          uri: "kafka:vibration?brokers=prod-cluster-kafka-bootstrap.industrial-edge-data-lake.svc:9092&groupId=data-lake-archiver"
+        steps:
+          - marshal:
+              json: {}
+          - to:
+              uri: "aws2-s3:industrial-edge-data?autoCreateBucket=true"
