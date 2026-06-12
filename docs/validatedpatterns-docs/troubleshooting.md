@@ -11,6 +11,7 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 
 | Symptom | Likely cause | Fix |
 | ------- | ------------ | --- |
+| ArgoCD apps show **Unknown** sync status | ACM 2.16 CRD schema bug | Add resource exclusion for `clusterview.open-cluster-management.io`; see [below](#argocd-unknown-sync-status-acm-216) |
 | `upstream connect error` / 503 on mesh routes | HBONE port 15008 not configured (pod before ztunnel) | Restart pods in ambient namespaces; ensure ambient labels at sync-wave **2** after Istio/ZTunnel |
 | ApplicationSet Degraded: *both name and server* | Stale `destination.server` from older template (SSA) | Delete/recreate ApplicationSet or set `server: ""` in template |
 | ACM UI: *no Argo applications created* | ApplicationSet missing `cluster.open-cluster-management.io/placement` label | Label ApplicationSet + child Apps; verify with `oc get applications -n openshift-gitops \| grep spoke` |
@@ -18,11 +19,57 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | Kafka Console: `/api/kafkas` 404 | External route hits UI only; Next.js does not proxy `/api` | Enable `apiRoute` in `charts/all/kafka-console`; verify HTTP 200 on `/api/kafkas` |
 | Strimzi entity-operator CrashLoop | mTLS on 9091 conflicts with ztunnel | Exclude operator namespace from ambient or use documented Strimzi tuning |
 | Skupper listener not Ready | Site or token not synced | Check `oc get site,listener -n service-interconnect` on hub and spoke |
+| GitOpsCluster: *legacy secret not found* | ACM hasn't created cluster secret yet | Wait 5-10 min; check klusterlet on spoke; verify ManagedCluster is Joined |
 | Kuadrant `/kuadrant`: failed to fetch APIProducts | K8s plugin lacks `devportal.kuadrant.io` RBAC | Sync `developer-hub`; verify `oc auth can-i list apiproducts.devportal.kuadrant.io --as=system:serviceaccount:developer-hub:developer-hub -A` |
 | API Overview: Expected object at root, got string | Incomplete OpenAPI in catalog entity | Ensure API entities have valid `definition` with `paths`; fix `$text` file refs in `reading.allow` |
 | TechDocs tab 404 / builder not local | `techdocs.builder: external` or missing mkdocs | Set `builder: local` in app-config; scaffolded repos need `mkdocs.yml` + `backstage.io/techdocs-ref: dir:.` |
 | Quay org-setup Job failing | `/version` redirect, CSRF, or duplicate robot | Use GitOps `setup.py` with `/discovery` + bearer token; see [Quay](products/quay.md) |
 | DevSpaces link on hub 404 | DevSpaces is spoke-only | Open `https://devspaces.<east-or-west-domain>` from template output |
+
+---
+
+## ArgoCD Unknown sync status (ACM 2.16)
+
+**Symptom:** All ArgoCD applications show "Unknown" sync status in the UI, even though they are healthy and syncing correctly.
+
+**Error message:**
+
+```text
+SchemaError(github.com/stolostron/cluster-lifecycle-api/clusterview/v1alpha1.UserPermission.status): 
+unknown model in reference
+```
+
+**Cause:** ACM 2.16 introduces CRDs that ArgoCD's cluster cache cannot parse correctly. This affects the OpenAPI schema loading but does not impact actual sync operations.
+
+**Verification:** Applications still show `Healthy` health status and `operationState.phase: Succeeded`:
+
+```bash
+# Check actual operation state (should show "Succeeded")
+oc get application <app-name> -n openshift-gitops \
+  -o jsonpath='{.status.operationState.phase}'
+
+# All apps healthy?
+oc get applications -n openshift-gitops -o jsonpath='{range .items[*]}{.metadata.name}: {.status.health.status}{"\n"}{end}' | grep -v Healthy
+```
+
+**Workaround:** Add resource exclusion for the problematic API group:
+
+```bash
+# Patch ArgoCD with resource exclusion
+oc patch argocd openshift-gitops -n openshift-gitops --type merge -p '{
+  "spec": {
+    "resourceExclusions": "- apiGroups:\n  - clusterview.open-cluster-management.io\n  kinds:\n  - \"*\"\n  clusters:\n  - \"*\"\n"
+  }
+}'
+
+# Restart the application controller
+oc rollout restart statefulset openshift-gitops-application-controller -n openshift-gitops
+
+# Wait for restart
+oc rollout status statefulset openshift-gitops-application-controller -n openshift-gitops --timeout=120s
+```
+
+**Note:** This is a cosmetic issue. The actual GitOps synchronization continues to work correctly. Monitor `health.status` rather than `sync.status` when this bug is present.
 
 ---
 
