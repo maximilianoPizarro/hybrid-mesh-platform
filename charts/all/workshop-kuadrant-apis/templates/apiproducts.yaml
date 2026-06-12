@@ -1,6 +1,6 @@
 {{- $gwNs := .Values.gateway.namespace }}
 
-{{- $hostname := .Values.gateway.hostname | default (printf "workshop-apis.%s" include "workshop-kuadrant-apis.clusterDomain" .) }}
+{{- $hostname := .Values.gateway.hostname | default (printf "workshop-apis.%s" (include "workshop-kuadrant-apis.clusterDomain" .)) }}
 
 {{- $baseUrl := printf "https://%s" $hostname }}
 

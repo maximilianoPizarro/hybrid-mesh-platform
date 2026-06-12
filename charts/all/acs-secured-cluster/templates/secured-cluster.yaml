@@ -7,7 +7,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "6"
 spec:
   clusterName: {{ .Values.clusterName }}
-  centralEndpoint: {{ if eq .Values.clusterRole "hub" }}central.stackrox.svc:443{{ else }}central-stackrox.{{ .Values.hubClusterDomain | default .Values.global.hubClusterDomain | default "INVALID-HUB-DOMAIN" }}:443{{ end }}
+  centralEndpoint: {{ if eq .Values.clusterRole "hub" }}central.stackrox.svc:443{{ else }}central-stackrox.{{ include "acs-secured-cluster.hubClusterDomain" . }}:443{{ end }}
   admissionControl:
     listenOnCreates: true
     listenOnUpdates: true
