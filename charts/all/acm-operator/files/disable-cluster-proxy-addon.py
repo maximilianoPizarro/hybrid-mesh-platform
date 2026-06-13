@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Ensure MultiClusterEngine cluster-proxy-addon component is disabled."""
+
 from __future__ import annotations
 
 import json
