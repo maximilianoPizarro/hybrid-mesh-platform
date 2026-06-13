@@ -4,6 +4,7 @@
 {{- else if and .Values.clusterGroup .Values.clusterGroup.name -}}
 {{- .Values.clusterGroup.name -}}
 {{- else -}}
-{{- .Values.global.localClusterName | default "" -}}
+{{- $g := .Values.global | default dict -}}
+{{- $g.localClusterName | default "" -}}
 {{- end -}}
 {{- end -}}
