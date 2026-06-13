@@ -4,4 +4,6 @@ AVD-KSV-0021 # Container 'apache' of Deployment 'hello-world' should set 'securi
 AVD-KSV-0014 # Readonly root filesystem does not work with httpd ubi images
 AVD-KSV-0125 # Container apache in deployment hello-world (namespace: default) uses an image from an untrusted registry. registry.access.redhat.com is trusted
 
-
+# Backstage software template skeletons - run on OpenShift with SCC
+AVD-KSV-0113 # Role accessing secrets - needed for pipeline ServiceAccount to sync Quay credentials
+AVD-KSV-0118 # Default security context - OpenShift SCC handles security context assignment
