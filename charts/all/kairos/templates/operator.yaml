@@ -13,7 +13,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  # SingleNamespace — avoids AllNamespaces CSV copies (66× "project failed" in console).
   targetNamespaces:
     - kairos-system
 ---

@@ -25,10 +25,10 @@ userProjects:
 dashboardExtensions:
   enabled: true
 modelServing:
-  # Workshop hub: ModelMesh multi-model + Knative (Serverless operator) for KServe serving.
-  modelMeshEnabled: true
-  serverlessEnabled: true
-  defaultDeploymentMode: ModelMesh
+  # Workshop hub: dashboard + workbenches; KServe RawDeployment for MaaS proxies.
+  modelMeshEnabled: false
+  serverlessEnabled: false
+  defaultDeploymentMode: RawDeployment
 maas:
   endpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io"
   # Injected at runtime from litemaas.apiKey (RHDP); never commit to Git.

@@ -14,6 +14,6 @@ spec:
     insecureEdgeTerminationPolicy: Redirect
   to:
     kind: Service
-    name: field-content-gitea-chart-http
+    name: gitea-http
     weight: 100
   wildcardPolicy: None

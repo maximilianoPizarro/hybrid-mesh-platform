@@ -31,9 +31,7 @@ clusterGroup:
     distributed-tracing: {}
     istio-system: {}
     kairos-system: {}
-    redhat-ods-operator:
-      operatorGroup: true
-      targetNamespaces: []
+    redhat-ods-operator: {}
     redhat-ods-applications: {}
     external-secrets-operator:
       operatorGroup: true
@@ -312,9 +310,7 @@ clusterGroup:
       name: skupper-network-observer
       namespace: service-interconnect
       argoProject: mesh
-      repoURL: oci://quay.io/skupper/helm/network-observer
-      chart: network-observer
-      targetRevision: 2.1.3
+      path: charts/all/skupper-network-observer
       syncWave: '4'
     quay-registry:
       name: quay-registry

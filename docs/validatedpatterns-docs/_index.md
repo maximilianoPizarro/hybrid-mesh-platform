@@ -39,6 +39,7 @@ charts/
 ### Getting started
 - [Architecture](architecture.md)
 - [Getting started](getting-started.md)
+- [RHDP install playbook](install-improvements.md)
 - [Region strategy](region-strategy.md)
 - [RHDP field content](rhdp-field-content.md)
 

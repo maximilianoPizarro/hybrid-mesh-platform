@@ -7,6 +7,22 @@
 {{- $serverless := $ms.serverlessEnabled | default false -}}
 {{- $deployMode := $ms.defaultDeploymentMode | default "RawDeployment" -}}
 ---
+apiVersion: dscinitialization.opendatahub.io/v1
+kind: DSCInitialization
+metadata:
+  name: default-dsci
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  applicationsNamespace: redhat-ods-applications
+  monitoring:
+    namespace: redhat-ods-monitoring
+    managementState: Managed
+  trustedCABundle:
+    managementState: Managed
+  devFlags:
+    logLevel: INFO
+---
 apiVersion: datasciencecluster.opendatahub.io/v1
 kind: DataScienceCluster
 metadata:

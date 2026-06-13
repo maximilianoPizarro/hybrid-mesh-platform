@@ -1,14 +1,8 @@
 {{- range $name, $cluster := .Values.managedClusters }}
 {{- if $cluster.apiUrl }}
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ $name }}
-  labels:
-    cluster.open-cluster-management.io/managedCluster: {{ $name }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
+{{- /* ManagedCluster first — ACM creates the cluster namespace. Do NOT pre-create a
+     Namespace with cluster.open-cluster-management.io/managedCluster label or OCP
+     terminates it before the ManagedCluster exists. */ -}}
 ---
 apiVersion: cluster.open-cluster-management.io/v1
 kind: ManagedCluster
@@ -22,7 +16,7 @@ metadata:
     cluster.open-cluster-management.io/clusterset: global
     hybrid-mesh.io/region: {{ $name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   hubAcceptsClient: true
   leaseDurationSeconds: 60
@@ -34,7 +28,7 @@ metadata:
   name: auto-import-secret
   namespace: {{ $name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "1"
 stringData:
   autoImportRetry: "5"
   server: {{ $cluster.apiUrl }}
@@ -48,7 +42,7 @@ metadata:
   name: {{ $name }}
   namespace: {{ $name }}
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   clusterName: {{ $name }}
   clusterNamespace: {{ $name }}

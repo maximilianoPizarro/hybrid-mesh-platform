@@ -10,7 +10,7 @@ metadata:
 data:
   mkdocs.yml: |
 {{ .Files.Get "files/techdocs/industrial-edge/mkdocs.yml" | indent 4 }}
-  docs/index.md: |
+  docs_index.md: |
 {{ .Files.Get "files/techdocs/industrial-edge/docs/index.md" | indent 4 }}
-  docs/data-flow.md: |
+  docs_data-flow.md: |
 {{ .Files.Get "files/techdocs/industrial-edge/docs/data-flow.md" | indent 4 }}

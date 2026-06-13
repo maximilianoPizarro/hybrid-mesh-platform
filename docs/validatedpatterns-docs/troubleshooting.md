@@ -7,10 +7,16 @@ weight: 14
 
 Production lessons from fleet GitOps, ambient mesh, and centralized observability. See also ebook Ch.15 matrix (adapted below).
 
+**RHDP fleets:** Start with the [RHDP install playbook](install-improvements.md) for install order, spoke token anti-patterns, console-link 503s during the first hour, and operator bootstrap blockers.
+
 ## Symptom matrix
 
 | Symptom | Likely cause | Fix |
 | ------- | ------------ | --- |
+| Hub console links **503** (Developer Hub, Gitea, ODS, Skupper) | Backends still syncing or missing deps (catalog CM, SCC, Site) | Wait 60–90 min; see [install playbook](install-improvements.md) sections per product |
+| East/west namespaces **Terminating** / recreating | Spoke tokens in auto-syncing `field-content` while import fails | Remove tokens from GitOps values; import once via ACM; `fleet-values-sync` = domains only |
+| `acm-operator` stuck, no MCH | CRD not ready before PostSync | `helm template acm charts/all/acm-operator \| oc apply -f -` |
+| RHODS / COO CSV *multiple operatorgroups* | Duplicate OG from subscription + `operatorGroup: true` | Remove duplicate OG flag in hub values |
 | ArgoCD apps show **Unknown** sync status | ACM 2.16 CRD schema bug | Add resource exclusion for `clusterview.open-cluster-management.io`; see [below](#argocd-unknown-sync-status-acm-216) |
 | `upstream connect error` / 503 on mesh routes | HBONE port 15008 not configured (pod before ztunnel) | Restart pods in ambient namespaces; ensure ambient labels at sync-wave **2** after Istio/ZTunnel |
 | ApplicationSet Degraded: *both name and server* | Stale `destination.server` from older template (SSA) | Delete/recreate ApplicationSet or set `server: ""` in template |

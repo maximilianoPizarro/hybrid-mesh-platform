@@ -8,7 +8,7 @@ metadata:
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: kubecost
+  name: kubecost-operator-group
   namespace: kubecost
   annotations:
     argocd.argoproj.io/sync-wave: "1"

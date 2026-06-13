@@ -13,6 +13,7 @@ This guide bootstraps the **hub** with one Helm install, registers **east** and 
 - [ ] **Argo CD** — `east-spoke-components` / `west-spoke-components` from ApplicationSet
 - [ ] **Industrial Edge** — sensors, MQTT, Kafka, line-dashboard on each spoke
 - [ ] **Skupper** — hub `sitesInNetwork: 3`; listeners Ready in `service-interconnect`
+- [ ] **Console links** — `bash scripts/verify-console-links.sh` on hub (fleet menu surfaces)
 - [ ] **Grafana / Kiali / Kafka Console** — hub fleet views
 - [ ] **Developer Hub** — catalog + software templates
 - [ ] **Dev Spaces** — CheCluster on east and west spokes (not hub)
@@ -61,6 +62,8 @@ helm template test-west charts/region/west -f values-global.yaml \
 
 **RHDP (recommended):** catalog order with `gitops_repo_revision=main`, `gitops_repo_path=charts/region/hub`, `existing_gitops=true`.
 
+You may order east/west in parallel with the hub; for the quickest **fleet observability and ACM ApplicationSet**, wait until `multiclusterhub` is **Running** before importing spokes. See [RHDP install playbook](install-improvements.md).
+
 **Local / manual:**
 
 ```bash
@@ -74,7 +77,7 @@ This creates Application `hybrid-mesh-platform-hub`, which syncs hub workloads f
 
 ## Phase 3: Register spokes (ACM + tokens)
 
-1. Import **east** and **west** in ACM (UI or `ManagedCluster` + `auto-import-secret`).
+1. Import **east** and **west** in ACM (UI or `ManagedCluster` + `auto-import-secret`) **after** hub MCH is **Running**.
 2. Label clusters for placement:
 
 ```yaml
@@ -84,7 +87,7 @@ metadata:
     region: east   # or west
 ```
 
-3. Inject spoke API tokens on the hub (never commit) — RHDP/ACM auto-import usually suffices; **`fleet-values-sync`** can patch `field-content` when needed.
+3. Inject spoke API tokens on the hub (never commit) — prefer ACM UI or one-time secrets; **avoid** putting tokens in auto-syncing `field-content` while import is failing (causes east/west namespace churn). **`fleet-values-sync`** patches **domains only**.
 
 4. **ApplicationSet** `fleet-spoke-push` generates **`east-spoke-components`** and **`west-spoke-components`** on the **hub** only. PUSH apps deploy via `charts/all/spoke-meta-push`; each spoke's local Argo CD syncs PULL apps from **`charts/region/east|west/values.yaml`** — **no Helm install on spokes**. See **[GitOps deployment chain](gitops-deployment-chain.md)**.
 
@@ -159,14 +162,17 @@ oc annotate applicationset fleet-spoke-push -n openshift-gitops argocd.argoproj.
 
 ## Phase 4: Verify fleet
 
-| Check | Command / UI |
-| ----- | -------------- |
-| ACM clusters | Console → **Infrastructure → Clusters** |
-| Spoke app tree | ACM **Applications** or hub Argo CD |
-| Skupper | `oc get listeners,connectors -n service-interconnect` (hub: `sitesInNetwork: 3`) |
-| Industrial Edge | Route `industrial-edge.apps.<spoke-domain>` |
-| Sync order | Spoke apps: wave 1 namespaces → 2 operators → **3 Camel Dashboard + mesh** → 5 edge → 6 interconnect |
-| Camel Dashboard (spokes) | `oc get application camel-dashboard-openshift-all-east -n openshift-gitops` → Synced/Healthy; `oc get deploy -n camel-dashboard` |
+Confirm the **product surfaces** you installed are reachable — not only that Argo apps exist.
+
+| Check | Command / UI | Product value |
+| ----- | -------------- | --------------- |
+| Console links (hub) | `bash scripts/verify-console-links.sh` | One-click access to GitOps, Grafana, Developer Hub, ACS, Kafka Console, IE gateway |
+| ACM clusters | Console → **Infrastructure → Clusters** | Fleet inventory |
+| Spoke app tree | ACM **Applications** or hub Argo CD | Dual GitOps (PUSH + PULL) |
+| Skupper | `oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'` | Private hub↔spoke connectivity (`3`) |
+| Industrial Edge | `https://industrial-edge.apps.<hub-domain>` | Unified edge ingress via hub-gateway |
+| Sync order | Spoke apps: wave 1 namespaces → 2 operators → **3 Camel Dashboard + mesh** → 5 edge → 6 interconnect | Predictable edge rollout |
+| Camel Dashboard (spokes) | `oc get application camel-dashboard-openshift -n openshift-gitops` | Kaoto / route editing on spokes |
 
 ---
 
@@ -232,6 +238,7 @@ Detail: [Workshop docs](workshop/index.md) · Cursor skill **hybrid-mesh-ai-work
 
 ## Phase 6: Day-two
 
+- [RHDP install playbook](install-improvements.md) — parallel orders, console links, token anti-patterns
 - [Troubleshooting](troubleshooting.md) — ApplicationSet SSA, HBONE, Kiali tokens, Kafka Console API route
 - [Architecture](architecture.md) — sync-wave reference
 - [Deploy with ACM and GitOps](deploy-acm-gitops.md) — placement and GitOpsCluster detail

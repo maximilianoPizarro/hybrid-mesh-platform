@@ -6,7 +6,21 @@ layout: default
 
 # Pattern Validation Guide
 
-This guide describes how to validate the Hybrid Mesh Platform pattern is working correctly, with or without the optional Showroom workshop components.
+This guide describes how to validate the Hybrid Mesh Platform pattern is working correctly — **from the user's perspective**, not only from Argo CD sync status. A healthy GitOps tree should unlock fleet observability, security, developer experience, and edge ingress.
+
+For RHDP-specific install order, token handling, and first-hour 503s, see the [RHDP install playbook](validatedpatterns-docs/install-improvements.md).
+
+## Product outcomes (what to prove)
+
+| Outcome | Validation |
+| ------- | ---------- |
+| Fleet inventory | `oc get managedclusters` — east/west **Available** |
+| One-click platform access | `bash scripts/verify-console-links.sh` on hub — HTTP 200 on GitOps, Grafana, ACS, Kafka Console, etc. |
+| Private hub↔spoke mesh | Skupper `sitesInNetwork: 3` on hub site |
+| Edge through hub | `https://industrial-edge.apps.<hub-domain>` after spokes imported |
+| Dual GitOps | Hub ApplicationSet + spoke `field-content` apps **Healthy** |
+
+Allow **60–90 minutes** after hub sync for all console links to converge; **503** usually means the route exists but backends are still starting (see playbook).
 
 ## Quick Validation Checklist
 
@@ -104,33 +118,27 @@ oc get pods -n industrial-edge-ml-workspace
 oc get kafkatopics -n industrial-edge-stormshift-messaging
 ```
 
-### Console Links Verification
+### Console Links Verification (primary smoke test)
 
-The pattern creates Console Links for easy access:
+The pattern creates Console Links so operators reach GitOps, observability, security, and developer surfaces from the OpenShift console menu — the main **day-one product check** on the hub.
 
 ```bash
 # List all platform links
 oc get consolelink -o custom-columns='NAME:.metadata.name,URL:.spec.href'
-```
 
-Expected links include:
-- `argocd` - Cluster ArgoCD
-- `platform-grafana` - Grafana dashboards
-- `platform-kiali` - Service mesh visualization
-- `platform-developer-hub` - Developer portal (hub only)
-
-Verify HTTP reachability (accepts 200–399; reports 503 when route exists but pods are down):
-
-```bash
+# HTTP reachability (200–399 = OK; 503 = route up, backend still syncing)
 bash scripts/verify-console-links.sh
 ```
+
+Expected hub links include (among others): `argocd`, `platform-grafana`, `platform-kiali`, `platform-developer-hub`, `platform-kafka-console`, `platform-acs-central`, `platform-industrial-edge`, `platform-skupper-console`.
 
 Cross-check ConsoleLink hostnames against cluster Routes:
 
 ```bash
-oc get consolelink -o custom-columns='NAME:.metadata.name,URL:.spec.href'
-oc get routes -A -o custom-columns='NS:.metadata.namespace,HOST:.spec.host' | grep -E 'grafana|developer-hub|kafka-console|neuroface|skupper'
+oc get routes -A -o custom-columns='NS:.metadata.namespace,HOST:.spec.host' | grep -E 'grafana|developer-hub|kafka-console|neuroface|skupper|central-stackrox'
 ```
+
+Strict CI gate (fail on 503): `MIN_OK_CODE=200 bash scripts/verify-console-links.sh`
 
 ## Automated Validation Script
 
@@ -164,6 +172,8 @@ python scripts/verify-gitops-strategies.py
 | Kiali | `https://kiali-openshift-cluster-observability-operator.<domain>` | Service mesh UI |
 
 ## Troubleshooting
+
+See the full [Troubleshooting guide](validatedpatterns-docs/troubleshooting.md) and [RHDP install playbook](validatedpatterns-docs/install-improvements.md) for production lessons (ACM 2.16, tokens, Gitea SCC, Developer Hub catalog).
 
 ### Common Issues
 

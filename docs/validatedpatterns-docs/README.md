@@ -14,6 +14,7 @@ Hub-spoke multi-cluster GitOps on OpenShift. **Sandbox tier** Validated Pattern.
 |-------|------|
 | Architecture overview | [architecture.md](architecture.md) |
 | Install (ACM-first) | [getting-started.md](getting-started.md) |
+| **RHDP install playbook** | [install-improvements.md](install-improvements.md) |
 | RHDP catalog (3 cluster orders) | [rhdp-field-content.md](rhdp-field-content.md) |
 | Region paths (hub / east / west) | [region-strategy.md](region-strategy.md) |
 | Deploy with ACM + GitOps | [deploy-acm-gitops.md](deploy-acm-gitops.md) |

@@ -5,7 +5,7 @@ weight: 6
 
 # RHDP Field Content — 3 cluster orders (hub / east / west)
 
-Use **three separate catalog orders**, one per OpenShift cluster.
+Use **three separate catalog orders**, one per OpenShift cluster. Goal: a connected fleet where hub console links, ACM inventory, Skupper mesh, and Industrial Edge ingress all work — see [RHDP install playbook](install-improvements.md) for order, tokens, and validation.
 
 ## How RHDP injects cluster domain (`existing_gitops: true`)
 
@@ -54,16 +54,31 @@ python scripts/sync-fleet-values.py
 
 ## Recommended order
 
-1. **Hub** — revision `main`, path `charts/region/hub`
-2. **East** / **West** — revision `main`, path `charts/region/east` / `charts/region/west`
-3. **Hub** — after ACM import, optional manual upgrade if `fleet-values-sync` has not run yet (domains + tokens):
+You can order **all three clusters in parallel** from the RHDP catalog; each path bootstraps independently. For the **fastest path to fleet value** (ACM ApplicationSet, hub-gateway, cross-cluster console links), prefer **hub first**, then east/west once MCH is **Running**.
+
+| Order | Cluster | Path | Unlocks |
+| ----- | ------- | ---- | ------- |
+| 1 | **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, fleet observability, Skupper hub site |
+| 2 | **East / West** | `charts/region/east`, `charts/region/west` | Industrial Edge, ACS Secured, spoke mesh, PULL GitOps |
+| 3 | **Hub (day-two)** | `fleet-values-sync` job | Cross-cluster domains on spokes; Mailpit + ACS Central endpoints |
+
+Allow **60–90 minutes** for full fleet sync. See [RHDP install playbook](install-improvements.md) for token handling, console links, and common RHDP pitfalls.
+
+### Steps
+
+1. **Hub** — revision `main`, path `charts/region/hub`; wait for `multiclusterhub` **Running**.
+2. **East / West** — revision `main`, paths `charts/region/east` / `charts/region/west` (parallel OK).
+3. **Import spokes in ACM** — prefer UI or one-time `auto-import-secret`; avoid token churn in auto-syncing `field-content` (see playbook).
+4. **Sync domains** — trigger `fleet-values-sync` once after clusters are **Available**:
 
 ```bash
-# Prefer waiting for fleet-values-sync CronJob, or trigger once:
 oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops
 ```
 
-Legacy manual patch (tokens still required if not auto-imported):
+**Domains only** — `fleet-values-sync` does not manage spoke API tokens. Inject tokens via RHDP or manual ACM import, not repeated `field-content` patches during failed auto-import.
+
+<details>
+<summary>Legacy manual patch (domains + tokens — fallback only)</summary>
 
 ```bash
 helm upgrade field-content . -f values.yaml \
@@ -79,6 +94,8 @@ helm upgrade field-content . -f values.yaml \
 ```
 
 Or patch the Argo CD `Application` `field-content` `helm.values` with the same keys.
+
+</details>
 
 ## Spoke orders — `clusters.hub.domain` (automated)
 
@@ -120,10 +137,17 @@ Legacy path `.` still works if you set `main.clusterGroupName` in RHDP helm valu
 
 ```bash
 oc get application field-content -n openshift-gitops
-oc get applications -n openshift-gitops -l app.kubernetes.io/part-of=platform-hub-spoke
+oc get applications -n openshift-gitops -l validatedpatterns.io/pattern=hybrid-mesh-platform
 ```
 
-Expect **`hybrid-mesh-platform-hub`** then many child apps (`platform-users`, `acm-hub-spoke`, …) after `field-content` syncs. If sync is `Unknown`, check:
+Expect **`hybrid-mesh-platform-hub`** then child apps (`acm-hub-spoke`, `developer-hub`, `console-links`, …). Prove platform surfaces are reachable:
+
+```bash
+bash scripts/verify-console-links.sh   # hub — fleet menu links
+bash scripts/verify-fleet.sh
+```
+
+If sync is `Unknown`, check:
 
 ```bash
 oc get application field-content -n openshift-gitops -o jsonpath='{.status.conditions[*].message}{"\n"}'

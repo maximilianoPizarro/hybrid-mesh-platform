@@ -43,7 +43,7 @@ Technical detail: 50+ Helm charts, decoupled Argo AppProjects (`operators-platfo
 - OpenShift **4.14+** (hub + two spokes recommended; see [Cluster sizing](#cluster-sizing))
 - **`oc`** logged in as **cluster-admin** on the hub
 - **Helm 3** and Git
-- **RHDP workshop:** three separate catalog orders (hub, east, west) — see [RHDP field content](docs/validatedpatterns-docs/rhdp-field-content.md). Allow **60–90 minutes** for full fleet sync.
+- **RHDP workshop:** three separate catalog orders (hub, east, west) — see [RHDP field content](docs/validatedpatterns-docs/rhdp-field-content.md) and the [RHDP install playbook](docs/validatedpatterns-docs/install-improvements.md). Allow **60–90 minutes** for full fleet sync and console links to converge.
 - **Standalone:** fork this repo, copy secrets template, run install below on the hub only; import spokes via ACM
 
 ```bash
@@ -95,14 +95,21 @@ See [Region Strategy](docs/validatedpatterns-docs/region-strategy.md) for detail
 
 ## Verification
 
+Prove the **product surfaces** — not only that Argo CD apps exist:
+
 ```bash
-# Offline validation
+# Hub: console menu links (GitOps, Grafana, Developer Hub, ACS, Kafka Console, …)
+bash scripts/verify-console-links.sh
+
+# Fleet inventory + Skupper + ApplicationSet
+bash scripts/verify-fleet.sh
+
+# Offline GitOps checks
 bash scripts/argocd-preflight.sh
 python scripts/verify-gitops-strategies.py
-
-# Live cluster validation
-bash scripts/verify-fleet.sh
 ```
+
+See [Validation Guide](docs/validation-guide.md) for the full component matrix.
 
 ## Documentation
 
@@ -110,6 +117,7 @@ bash scripts/verify-fleet.sh
 |-------|------|
 | **Architecture** | [docs/validatedpatterns-docs/architecture.md](docs/validatedpatterns-docs/architecture.md) |
 | **Getting Started** | [docs/validatedpatterns-docs/getting-started.md](docs/validatedpatterns-docs/getting-started.md) |
+| **RHDP install playbook** | [docs/validatedpatterns-docs/install-improvements.md](docs/validatedpatterns-docs/install-improvements.md) |
 | **Bill of Materials** | [docs/bill-of-materials.md](docs/bill-of-materials.md) |
 | **Validation Guide** | [docs/validation-guide.md](docs/validation-guide.md) |
 | **GitOps Strategy** | [docs/validatedpatterns-docs/gitops-push-vs-pull.md](docs/validatedpatterns-docs/gitops-push-vs-pull.md) |
