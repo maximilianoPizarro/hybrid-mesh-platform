@@ -1,9 +1,13 @@
 # Defaults for RHDP field-content. RHDP injects deployer.*, gitops.*, litemaas.*
 # Per-cluster profile: set main.clusterGroupName (hub|east|west) or use path charts/region/<region>.
+#
+# IMPORTANT: This file is the primary values file for helm template/lint.
+# values-global.yaml contains subset of these for VP framework integration.
 global:
   pattern: hybrid-mesh-platform
   singleArgoCD: true
-  vpArgoNamespace: openshift-gitops
+  # VP framework standard key (replaces legacy vpArgoNamespace)
+  argoNamespace: openshift-gitops
   options:
     useCSV: false
     syncPolicy: Automatic
@@ -20,6 +24,8 @@ gitops:
   repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
   revision: main
 
+# Local chart dependencies (disabled by default, used only for helm lint/template)
+# The pattern uses charts/region/{hub,east,west} via ArgoCD path, not these deps.
 all:
   enabled: false
 region:

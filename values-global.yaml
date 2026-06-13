@@ -1,12 +1,20 @@
 ---
+# Global values shared across all cluster roles (hub, east, west).
+# These values are merged with charts/region/{role}/values.yaml during deployment.
+# See values.yaml for full schema and defaults.
 global:
   pattern: hybrid-mesh-platform
   singleArgoCD: true
+  # VP framework standard key for ArgoCD namespace
+  argoNamespace: openshift-gitops
   options:
     useCSV: false
     syncPolicy: Automatic
     installPlanApproval: Automatic
+
 main:
+  # clusterGroupName is set per-region in charts/region/{hub,east,west}/values.yaml
   multiSourceConfig:
     enabled: true
     clusterGroupChartVersion: "0.9.*"
+    helmRepoUrl: https://charts.validatedpatterns.io

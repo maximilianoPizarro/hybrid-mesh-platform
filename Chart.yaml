@@ -2,15 +2,20 @@ apiVersion: v2
 name: hybrid-mesh-platform
 description: RHDP field-content bootstrap — renders clustergroup Argo CD Application
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "1.0.0"
+# NOTE: Dependencies use file:// for local charts. These are NOT published charts.
+# The pattern bootstrap uses charts/region/{hub,east,west} directly via ArgoCD path.
+# These dependencies are only used for local helm template/lint validation.
 dependencies:
   - name: all
-    version: "0.0.0"
-    condition: all.enabled
+    version: ">=0.0.0"
+    repository: "file://./charts/all"
+    condition: all.enabled  # Default: false (see values.yaml)
   - name: region
-    version: "0.0.0"
-    condition: region.enabled
+    version: ">=0.0.0"
+    repository: "file://./charts/region"
+    condition: region.enabled  # Default: false (see values.yaml)
 maintainers:
   - name: Maximiliano Pizarro
     email: developer@redhat.com
