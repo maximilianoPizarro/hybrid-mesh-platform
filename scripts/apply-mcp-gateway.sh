@@ -25,7 +25,9 @@ for _ in $(seq 1 20); do
   sleep 10
 done
 
-CODE=$(curl -sk -o /dev/null -w '%{http_code}' "https://mcp-gateway.$HUB_DOMAIN/mcp" 2>/dev/null || echo "000")
+CODE=$(curl -sk -o /dev/null -w '%{http_code}' "https://mcp-gateway.$HUB_DOMAIN/mcp" 2>/dev/null || true)
+CODE="${CODE:-000}"
+CODE="${CODE//$'\r'/}"
 echo "mcp-gateway/mcp HTTP: $CODE"
 [[ "$CODE" == "200" ]] || { echo "ERROR: MCP gateway not HTTP 200" >&2; exit 1; }
 echo "OK: MCP gateway reachable"

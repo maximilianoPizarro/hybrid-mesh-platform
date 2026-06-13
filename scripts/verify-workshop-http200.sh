@@ -22,10 +22,12 @@ check() {
   local code
   if [[ "$auth" == token ]]; then
     code=$(curl -sk -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" \
-      --connect-timeout "${CURL_TIMEOUT:-10}" "$url" 2>/dev/null || echo "000")
+      --connect-timeout "${CURL_TIMEOUT:-10}" "$url" 2>/dev/null || true)
   else
-    code=$(curl -sk -o /dev/null -w '%{http_code}' --connect-timeout "${CURL_TIMEOUT:-10}" "$url" 2>/dev/null || echo "000")
+    code=$(curl -sk -o /dev/null -w '%{http_code}' --connect-timeout "${CURL_TIMEOUT:-10}" "$url" 2>/dev/null || true)
   fi
+  code="${code:-000}"
+  code="${code//$'\r'/}"
   if [[ "$code" == "200" ]]; then
     printf 'OK  200  %s\n' "$label"
   else
