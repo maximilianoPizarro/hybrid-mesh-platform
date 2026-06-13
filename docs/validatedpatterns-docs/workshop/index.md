@@ -29,34 +29,24 @@ Charts: `charts/all/showroom`, `charts/all/workshop-registration`, `charts/all/w
 
 AI track order: **30** (facilitator) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **27** NeuroFace → **28** End-user apps.
 
-## Hero screenshots (live cluster only)
+## Hero screenshots (Gemini + manual overrides)
 
-Hero PNGs are **real product captures** from the hub UI — not generated diagrams. Sources live in this repo under `docs/assets/images/workshop/` and architecture PNGs under `docs/assets/images/`.
+Workshop heroes are **Gemini-generated diagrams** (Red Hat branding) under `docs/assets/images/workshop/`. Architecture PNGs under `docs/assets/images/arch-*.png` use the same style. Baseline commit: **`8d41c0d`**.
 
 | Step | Command / file |
 | ---- | -------------- |
-| Manifest (URL per hero) | `scripts/workshop-screenshot-manifest.yaml` |
-| Batch capture (Playwright) | `node scripts/capture-workshop-screenshots.mjs` |
-| Normalize width 960px | `bash scripts/normalize-workshop-screenshots.sh` (ImageMagick on Linux/macOS) |
-| Sync → showroom repo | `SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh` |
+| Restore Gemini heroes | `git checkout 8d41c0d -- docs/assets/images/workshop/ docs/assets/images/arch-*.png` |
+| Keep manual edits | `18`, `20`, `23`, `24`, `30` — re-copy after restore; also keep `19-openshift-virtualization`, `22-openshift-ia-stack`, `26-text-ai-predictive` from `HEAD` |
+| Optional live capture | `npm install && npm run capture:workshop` (`package.json`; `node_modules/` gitignored) |
+| Manifest (live URLs) | `scripts/workshop-screenshot-manifest.yaml` |
+| Sync → showroom | `SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh` |
 | Rollout in cluster | `oc rollout restart deployment/showroom -n showroom` |
 
 ### Preserve rules
 
-- **`03-security-scale-hybrid.png`** and **`20-acs-kuadrant.png`** — keep existing ACS Central captures (`preserve: true` in manifest). Do not overwrite during batch runs.
-- **CNV module 19** — if KubeVirt CRD is missing on the hub, hero = Developer Hub Self-service → *OpenShift Virtualization: Workshop VM* template.
-
-### Narrative-aligned heroes (maintainer checklist)
-
-| Module | Hero should show |
-| ------ | ---------------- |
-| 05 Cases & roadmap | Kafka Console multicluster (`dev/factory/prod × east/west`) — IoT journey milestone |
-| 13 Industrial Edge | ManuELA Realtime Data — `pump-1` temperature/vibration charts |
-| 26 Predictive AI | Mailpit IE vibration anomaly inbox |
-| 29 Verification (facilitator) | Argo CD Applications Healthy/Synced |
-| 20 ACS + Kuadrant | ACS hero preserved; add inline Kuadrant/Dev Hub image in `.adoc` if dual story needed |
-
-Run `md5sum docs/assets/images/workshop/*.png | sort` and dedupe module heroes before sync — only **03 = 20** (ACS) should duplicate among Part B heroes.
+- **Manual overrides** — never overwrite from Gemini without intent: `18-scalability`, `20-acs-kuadrant`, `23-ai-gateway`, `24-mcp-gateway`, `30-ai-show-and-tell`.
+- **`03-security-scale-hybrid.png`** — ACS Central (may match `20` unless manually edited).
+- **CNV module 19** — live Dev Hub template capture when KubeVirt CR is unavailable.
 
 ## Publish content changes
 
