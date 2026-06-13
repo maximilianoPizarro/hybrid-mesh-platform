@@ -50,6 +50,8 @@ jobs:
           VALIDATE_CSS: false
           VALIDATE_CSS_PRETTIER: false
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
+          # Trivy Kubernetes security scanning disabled - OpenShift SCC handles pod security
+          VALIDATE_TRIVY: false
           # VP docs (Hugo front matter + legacy markdown) are not linted like README
           FILTER_REGEX_EXCLUDE: (docs/validatedpatterns-docs/.*|docs/index\.md|charts/all/developer-hub/files/)
           # VALIDATE_DOCKERFILE_HADOLINT: false
