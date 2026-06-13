@@ -5,6 +5,12 @@ weight: 16
 
 # Advanced Cluster Security
 
+## What problem does it solve?
+
+A three-cluster fleet multiplies attack surface: container images on spokes, runtime behavior in Industrial Edge namespaces, and admission decisions at deploy time. **ACS** centralizes vulnerability management, compliance policies, and runtime detection on the **hub**, while **SecuredCluster** sensors on hub + spokes feed telemetry back to **Central** (`central.stackrox`).
+
+Without ACS, operators rely on per-cluster `oc adm` checks and disconnected scanning tools. This pattern registers **`hub`**, **`east`**, and **`west`** with Central via init bundles — automated on new installs by `charts/all/acs-init-bundle-sync`.
+
 Red Hat **Advanced Cluster Security for Kubernetes (ACS)** centralizes Kubernetes-native security: build-time image scanning, deployment-time policy, and runtime detection.
 
 **Git path:** `charts/all/acs-operator/` (hub), `charts/all/acs-secured-cluster/` (hub + spokes), `charts/all/acs-init-bundle-sync/` (hub automation)

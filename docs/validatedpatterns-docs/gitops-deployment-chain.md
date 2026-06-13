@@ -24,7 +24,6 @@ flowchart TB
   end
 
   subgraph hubCluster [Hub cluster Argo CD openshift-gitops]
-    rootApp[field-content RHDP bootstrap]
     cgApp[hybrid-mesh-platform-hub Application]
     acmApp[acm-hub-spoke Application]
     appSet[fleet-spoke-push ApplicationSet]
@@ -38,9 +37,8 @@ flowchart TB
     eastWorkloads[Pods Routes Integrations]
   end
 
-  root --> rootApp
-  rootApp --> acmApp
-  rootApp --> hubApps
+  cgApp --> acmApp
+  cgApp --> hubApps
   acmApp --> appSet
   appSet --> eastParent
   appSet --> westParent
@@ -50,57 +48,62 @@ flowchart TB
   components --> eastChild
 ```
 
-## Layer 1 — Hub bootstrap (root chart)
+## Layer 1 — Hub bootstrap (region chart)
 
-**What you run once on the hub:**
+**What you run once on the hub** (standalone or via RHDP field-content):
 
 ```bash
-./pattern.sh install \
-  -f values.yaml \
-  --set deployer.domain=apps.<hub-domain>
+# Standalone — requires oc logged in as cluster-admin
+./pattern.sh make install
+
+# RHDP — three catalog orders; hub path charts/region/hub
+# deployer.domain injected by Argo CD helm values (see rhdp-field-content.md)
 ```
 
-**What it renders:** one Argo CD `Application` per entry in `connectivityLink.apps[]` in [`values.yaml`](../values.yaml).
+**What it renders:** the `charts/region/hub` chart creates a **multi-source** Argo CD `Application` that pulls the VP **`clustergroup`** chart plus `charts/region/hub/values.yaml`:
 
-Fragment from [`templates/component-applications.yaml`](../templates/component-applications.yaml):
+[`charts/region/hub/templates/clustergroup-application.yaml`](../../charts/region/hub/templates/clustergroup-application.yaml):
 
 ```yaml
-{{- range .Values.connectivityLink.apps }}
-{{- if and . .enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ $.Release.Name }}-{{ .id }}    # e.g. field-content-acm-hub-spoke
+  name: hybrid-mesh-platform-hub    # {{ pattern }}-{{ clusterGroupName }}
   namespace: openshift-gitops
 spec:
-  source:
-    repoURL: {{ $.Values.gitops.repoUrl }}
-    path: components/{{ .path }}          # e.g. acm-hub-spoke
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: {{ .destinationNamespace }}
-{{- end }}
+  sources:
+    - repoURL: https://github.com/.../hybrid-mesh-platform
+      ref: patternref
+    - repoURL: https://charts.validatedpatterns.io
+      chart: clustergroup
+      helm:
+        valueFiles:
+          - $patternref/values-global.yaml
+          - $patternref/charts/region/hub/values.yaml
 ```
 
-Entry for ACM in [`values.yaml`](../values.yaml):
+The **clustergroup** chart loops `clusterGroup.applications` in [`charts/region/hub/values.yaml`](../../charts/region/hub/values.yaml) and creates one child `Application` per entry — including **`acm-hub-spoke`**, **`developer-hub`**, **`service-interconnect`**, etc.
+
+Entry for ACM:
 
 ```yaml
-connectivityLink:
-  apps:
-    - id: acm-hub-spoke
-      enabled: true
-      path: acm-hub-spoke
-      destinationNamespace: openshift-gitops
-      syncWave: "0"
+clusterGroup:
+  applications:
+    acm-hub-spoke:
+      name: acm-hub-spoke
+      namespace: openshift-gitops
+      argoProject: fleet
+      path: charts/all/acm-hub-spoke
+      syncWave: '6'
 ```
 
-**ACM UI:** `field-content-acm-hub-spoke` on **local-cluster** — this is the **parent of the fleet ApplicationSet**, not the ApplicationSet itself.
+**ACM UI / Argo CD:** `acm-hub-spoke` on **local-cluster** — parent of the fleet **ApplicationSet**, not the ApplicationSet itself.
 
 ---
 
 ## Layer 2 — ACM + ApplicationSet (`charts/all/acm-hub-spoke`)
 
-When `field-content-acm-hub-spoke` syncs, it applies **Placement**, **GitOpsCluster**, **ConfigMap `acm-placement`**, and the **ApplicationSet** (sync waves 1–4).
+When `acm-hub-spoke` syncs, it applies **Placement**, **GitOpsCluster**, **ConfigMap `acm-placement`**, and the **ApplicationSet** (sync waves 1–4).
 
 ### 2a — Placement selects east and west
 
@@ -218,6 +221,7 @@ Each child `Application` points at a Helm chart under `charts/all/<name>/` (Kafk
 
 | Name you see | Kind | Where it runs | Created by |
 | ------------ | ---- | ------------- | ---------- |
+| `hybrid-mesh-platform-hub` | Application (clustergroup root) | Hub | `charts/region/hub` bootstrap |
 | `acm-hub-spoke` | Application | Hub | `charts/region/hub/values.yaml` |
 | `fleet-spoke-push` | **ApplicationSet** | Hub | `charts/all/acm-hub-spoke` |
 | `east-spoke-components` | Application | Hub → deploys to east | ApplicationSet template (PUSH) |
@@ -257,7 +261,7 @@ oc get applications -n openshift-gitops | grep -E 'east$|east '
 After changing `charts/all/acm-hub-spoke`:
 
 ```bash
-oc annotate application field-content-acm-hub-spoke -n openshift-gitops \
+oc annotate application acm-hub-spoke -n openshift-gitops \
   argocd.argoproj.io/refresh=hard --overwrite
 ```
 

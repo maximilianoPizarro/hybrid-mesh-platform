@@ -8,6 +8,12 @@ weight: 21
 **Git path:** `charts/all/developer-hub/`
 {: .fs-3 .text-grey-dk-000 }
 
+## What problem does it solve?
+
+Operators juggling ACM, Argo CD, three OpenShift consoles, and scattered README files lack a **single entry point** for developers and workshop participants. **Developer Hub (RHDH)** is Backstage with Red Hat plugins: catalog entities for every workload, **software templates** that scaffold Camel routes and AI workspaces, **Topology** across hub/east/west, and **Tekton** pipeline visibility.
+
+In this pattern RHDH lives on the **hub** (`developer-hub` namespace, AppProject `workshop`). Templates under `docs/assets/backstage/software-templates/` create Industrial Edge integrations, OpenShift AI workspaces, and CNV VMs — each wired to the correct spoke via catalog annotations (`backstage.io/kubernetes-cluster`).
+
 Red Hat **Developer Hub** (RHDH) is the enterprise distribution of [Backstage](https://backstage.io/). On this platform it is the **single pane of glass** for Industrial Edge: catalog, scaffolding, multi-cluster topology, Tekton CI, and OCM fleet overview.
 
 ## Plugins enabled on this platform

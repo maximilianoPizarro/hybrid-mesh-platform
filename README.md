@@ -8,25 +8,56 @@ Validated Patterns implementation of the Hybrid Mesh hub-spoke platform (forked 
 **Documentation:** [maximilianopizarro.github.io/hybrid-mesh-platform](https://maximilianopizarro.github.io/hybrid-mesh-platform/)  
 **Workshop Showroom:** [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai)
 
+## Why this pattern?
+
+Enterprise teams need **secure multi-cluster connectivity**, **centralized GitOps**, and **edge + AI workloads** on OpenShift — without maintaining three independent control planes or site-to-site VPNs for every demo.
+
+Hybrid Mesh Platform combines:
+
+- **Hub-spoke fleet management** (ACM) with dual GitOps (PUSH ApplicationSet + PULL clustergroup per spoke)
+- **Cross-cluster service connectivity** (Skupper VAN) so the hub reaches spoke Kafka, metrics, and gateways privately
+- **Industrial Edge** factory telemetry (MQTT → Kafka → ML → dashboards) on east/west spokes
+- **Centralized security and observability** (ACS Central, Grafana, Kafka Console on the hub)
+- **Developer experience** (Developer Hub templates, OpenShift AI / MaaS, Gateway API ingress via RHCL/Kuadrant)
+
+See the [architecture overview](docs/validatedpatterns-docs/architecture.md) for hub→spoke diagrams and a end-to-end sensor trace.
+
 ## What's included
 
-- **Dual GitOps:** PUSH (`fleet-spoke-push` ApplicationSet) + PULL (ACM `managedClusterGroups`)
-- **ACM fleet management** with auto-import via `charts/all/acm-hub-spoke`
-- **50+ Helm charts** for hub and spoke components
-- Decoupled Argo AppProjects: `operators-platform`, `industrial-edge`, `mesh`, `workshop`, `security`, …
-- Ambient Service Mesh, Skupper, RHCL/Kuadrant, Industrial Edge, OpenShift AI, ACS, Developer Hub
+| Component | What it does for you |
+| --------- | -------------------- |
+| **ACM + dual GitOps** | Fleet inventory, placement, PUSH operators + PULL IE/mesh per spoke |
+| **Skupper** | Private TCP bridge hub ↔ spokes (Kafka Console, Grafana, hub-gateway) |
+| **RHCL / Kuadrant** | Gateway API ingress with optional rate limits and API keys |
+| **Industrial Edge** | MQTT, Camel K, Kafka, Tekton CI, anomaly ML at the edge |
+| **OpenShift AI + MaaS** | Hub workbenches, model serving, external LLM via RHDP LiteMaaS |
+| **ACS** | Central vulnerability and runtime policy across hub + spokes |
+| **Developer Hub** | Catalog, scaffolding, multi-cluster topology, Tekton visibility |
+
+Technical detail: 50+ Helm charts, decoupled Argo AppProjects (`operators-platform`, `industrial-edge`, `mesh`, `workshop`, `security`, …), ambient Service Mesh.
 
 ## Quick start
+
+**Prerequisites**
+
+- OpenShift **4.14+** (hub + two spokes recommended; see [Cluster sizing](#cluster-sizing))
+- **`oc`** logged in as **cluster-admin** on the hub
+- **Helm 3** and Git
+- **RHDP workshop:** three separate catalog orders (hub, east, west) — see [RHDP field content](docs/validatedpatterns-docs/rhdp-field-content.md). Allow **60–90 minutes** for full fleet sync.
+- **Standalone:** fork this repo, copy secrets template, run install below on the hub only; import spokes via ACM
 
 ```bash
 # Clone and configure
 git clone https://github.com/maximilianoPizarro/hybrid-mesh-platform.git
 cd hybrid-mesh-platform
 cp values-secret.yaml.template values-secret.yaml
+# Edit values-secret.yaml if using external secrets / MaaS keys
 
-# Install on hub cluster
+# Install on hub cluster (bootstraps clustergroup + ACM ApplicationSet)
 ./pattern.sh make install
 ```
+
+After install: register east/west in ACM, verify ApplicationSet `fleet-spoke-push`, then follow [Getting Started](docs/validatedpatterns-docs/getting-started.md).
 
 ## Repository structure
 
@@ -82,6 +113,7 @@ bash scripts/verify-fleet.sh
 | **Bill of Materials** | [docs/bill-of-materials.md](docs/bill-of-materials.md) |
 | **Validation Guide** | [docs/validation-guide.md](docs/validation-guide.md) |
 | **GitOps Strategy** | [docs/validatedpatterns-docs/gitops-push-vs-pull.md](docs/validatedpatterns-docs/gitops-push-vs-pull.md) |
+| **Deployment chain** | [docs/validatedpatterns-docs/gitops-deployment-chain.md](docs/validatedpatterns-docs/gitops-deployment-chain.md) |
 | **Products Index** | [docs/validatedpatterns-docs/products/index.md](docs/validatedpatterns-docs/products/index.md) |
 | **Troubleshooting** | [docs/validatedpatterns-docs/troubleshooting.md](docs/validatedpatterns-docs/troubleshooting.md) |
 

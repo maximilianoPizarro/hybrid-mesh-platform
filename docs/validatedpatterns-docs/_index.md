@@ -8,6 +8,10 @@ layout: default
 
 Hub-spoke multi-cluster GitOps on OpenShift — **Validated Patterns** implementation (Sandbox tier).
 
+## Why this pattern
+
+Secure **multi-cluster connectivity** (Skupper), **centralized fleet GitOps** (ACM + dual PUSH/PULL), **Industrial Edge** factory telemetry, and **hub-resident AI/security/observability** — one `main` branch, three region paths (`hub`, `east`, `west`).
+
 | Resource | URL |
 |----------|-----|
 | Pattern repo | [github.com/maximilianoPizarro/hybrid-mesh-platform](https://github.com/maximilianoPizarro/hybrid-mesh-platform) |

@@ -358,6 +358,9 @@ clusterGroup:
       argoProject: ai
       path: charts/all/neuroface
       syncWave: '7'
+      overrides:
+        - name: neuroface.route.host
+          value: neuroface.{{ $.Values.global.localClusterDomain }}
     cnv-example:
       name: cnv-example
       namespace: cnv-workshop

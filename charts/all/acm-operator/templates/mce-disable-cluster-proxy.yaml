@@ -1,0 +1,126 @@
+{{- if .Values.mceDisableClusterProxyAddon | default true }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: acm-mce-disable-cluster-proxy
+  namespace: open-cluster-management
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: acm-mce-disable-cluster-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+rules:
+  - apiGroups: ["multicluster.openshift.io"]
+    resources: ["multiclusterengines"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: acm-mce-disable-cluster-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: acm-mce-disable-cluster-proxy
+subjects:
+  - kind: ServiceAccount
+    name: acm-mce-disable-cluster-proxy
+    namespace: open-cluster-management
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: acm-mce-disable-cluster-proxy-script
+  namespace: open-cluster-management
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+data:
+  disable-cluster-proxy-addon.py: |
+{{ .Files.Get "files/disable-cluster-proxy-addon.py" | nindent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: acm-mce-disable-cluster-proxy-hook
+  namespace: open-cluster-management
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: acm-mce-disable-cluster-proxy
+      restartPolicy: OnFailure
+      containers:
+        - name: disable-cluster-proxy
+          image: {{ .Values.mceDisableClusterProxyImage | default "registry.redhat.io/openshift4/ose-cli:latest" | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - python3 /scripts/disable-cluster-proxy-addon.py
+          env:
+            - name: MCE_NAME
+              value: {{ .Values.mceName | default "multiclusterengine" | quote }}
+            - name: MCE_WAIT_ITERATIONS
+              value: {{ .Values.mceWaitIterations | default "60" | quote }}
+            - name: MCE_WAIT_SECONDS
+              value: {{ .Values.mceWaitSeconds | default "30" | quote }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: acm-mce-disable-cluster-proxy-script
+            defaultMode: 0555
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: acm-mce-disable-cluster-proxy
+  namespace: open-cluster-management
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  schedule: {{ .Values.mceDisableClusterProxySchedule | default "0 */6 * * *" | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: acm-mce-disable-cluster-proxy
+          restartPolicy: OnFailure
+          containers:
+            - name: disable-cluster-proxy
+              image: {{ .Values.mceDisableClusterProxyImage | default "registry.redhat.io/openshift4/ose-cli:latest" | quote }}
+              command:
+                - /bin/bash
+                - -ec
+                - python3 /scripts/disable-cluster-proxy-addon.py
+              env:
+                - name: MCE_NAME
+                  value: {{ .Values.mceName | default "multiclusterengine" | quote }}
+                - name: MCE_WAIT_ITERATIONS
+                  value: "3"
+                - name: MCE_WAIT_SECONDS
+                  value: "10"
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: acm-mce-disable-cluster-proxy-script
+                defaultMode: 0555
+{{- end }}

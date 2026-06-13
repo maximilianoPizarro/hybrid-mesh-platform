@@ -71,7 +71,36 @@ oc rollout restart statefulset openshift-gitops-application-controller -n opensh
 oc rollout status statefulset openshift-gitops-application-controller -n openshift-gitops --timeout=120s
 ```
 
-**Note:** This is a cosmetic issue on the sync status display. The actual GitOps synchronization continues to work correctly. Monitor `health.status` rather than `sync.status` when this bug is present.
+**Note:** On **new** hubs, `acm-operator` disables MCE `cluster-proxy-addon` via PostSync/CronJob. On **existing** hubs stuck in Unknown, sync may remain blocked until reinstall — resource exclusions alone may not suffice. Monitor `health.status`, Routes, and pod counts — not only `sync.status`.
+
+---
+
+## MCE cluster-proxy-addon (ACM 2.16+)
+
+**Symptom:** Argo CD spoke apps use `destination.server` = cluster-proxy URL; proxy add-on conflicts with hub cluster-wide proxy or complicates GitOps debugging.
+
+**Default in ACM/MCE 2.16:** `cluster-proxy-addon` component is **enabled**.
+
+**Automated fix (new installations):** Chart `charts/all/acm-operator` runs PostSync Job + CronJob (`acm-mce-disable-cluster-proxy`) that sets `MultiClusterEngine/spec.overrides.components[name=cluster-proxy-addon].enabled: false`.
+
+**Verify:**
+
+```bash
+oc get mce multiclusterengine -o jsonpath='{range .spec.overrides.components[*]}{.name}={.enabled}{"\n"}{end}' | grep cluster-proxy
+# expect: cluster-proxy-addon=false
+```
+
+**Disable automation:** set `mceDisableClusterProxyAddon: false` in `acm-operator` values (hub clustergroup override if needed).
+
+**Limitation:** Disabling the add-on does **not** always remove `ocm-proxyserver` in `multicluster-engine` — that deployment is a separate MCE component. Spoke `ManagedClusterAddon/cluster-proxy` on local-cluster may also need manual review if pod-log-via-proxy features are required.
+
+**Manual one-shot:**
+
+```bash
+oc patch mce multiclusterengine --type=merge -p '{"spec":{"overrides":{"components":[{"name":"cluster-proxy-addon","enabled":false}]}}}'
+```
+
+For a full component list merge without dropping other overrides, use the Job script in `charts/all/acm-operator/files/disable-cluster-proxy-addon.py`.
 
 ---
 

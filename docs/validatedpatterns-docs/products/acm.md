@@ -8,6 +8,24 @@ weight: 15
 **Git path:** `charts/all/acm-hub-spoke/`
 {: .fs-3 .text-grey-dk-000 }
 
+## What problem does it solve?
+
+Running GitOps on three clusters with Argo CD alone means three independent control planes, manual cluster registration, and no fleet-wide policy. **ACM** gives you a single inventory of hub + spokes, dynamic **Placement** (which clusters get which workloads), and **ManifestWork** for hub-initiated changes — without opening VPNs or sharing kubeconfigs in Git.
+
+In this pattern ACM is not optional decoration: it drives **PULL** GitOps via VP `managedClusterGroups`, creates **PlacementDecisions** that feed the **`fleet-spoke-push`** ApplicationSet, and runs **ManagedClusterAction** jobs (Skupper token sync, ACS init bundles, fleet domain patching).
+
+## Why ACM and not only Argo ApplicationSet?
+
+| Capability | Argo ApplicationSet alone | ACM + ApplicationSet (this pattern) |
+| ---------- | ------------------------- | ------------------------------------- |
+| Cluster inventory | Manual `Secret` per cluster | **`ManagedCluster`** auto-import |
+| Dynamic cluster selection | Static list or cluster generator | **`Placement`** + **`PlacementDecision`** (label `region: east\|west`) |
+| Policy / compliance | Not built-in | **`Policy`** + **`PolicyReport`** across fleet |
+| Hub → spoke actions | Limited to Git-synced apps | **`ManifestWork`**, **`ManagedClusterAction`**, addons |
+| Spoke-local GitOps | Separate bootstrap per cluster | VP **clustergroup** on each spoke via **managedClusterGroups** |
+
+**ApplicationSet** (`fleet-spoke-push`) handles **PUSH** — a narrow set of operator charts pushed from the hub. **managedClusterGroups** handle **PULL** — Industrial Edge, mesh, observability — where each spoke's local Argo CD reconciles its own `charts/region/east|west/values.yaml`. ACM is the glue that knows which clusters exist and which strategy applies where.
+
 Red Hat **Advanced Cluster Management for Kubernetes (ACM)** provides fleet-wide visibility and lifecycle for OpenShift and Kubernetes clusters. In this repository it anchors **hub-spoke registration**, **policy placement**, and integration with **OpenShift GitOps** via `GitOpsCluster` and related APIs.
 
 ![ACM Fleet Management]({{ site.baseurl }}/assets/images/ACM.png)

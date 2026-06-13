@@ -7,6 +7,26 @@ weight: 20
 
 **Red Hat Connectivity Link (RHCL)** is an Application Foundation bundle that brings multi-cluster ingress and API policy using **Kubernetes Gateway API** with **Kuadrant** controllers (installed via `charts/all/rhcl-operator/`). Kuadrant CRDs such as **APIProduct**, **AuthPolicy**, **PlanPolicy**, and **TokenRateLimitPolicy** are part of RHCL — not a separate product alongside it.
 
+## What problem does it solve?
+
+Industrial Edge and workshop APIs need **consistent north-south ingress** with optional **rate limits**, **API keys**, and **tiered plans** — the same problems F5 or Apigee solve, but native to Kubernetes Gateway API. RHCL + Kuadrant attach policy to **`HTTPRoute`** objects instead of bolting on a separate API gateway VM.
+
+| Gateway | Namespace | Role |
+| ------- | --------- | ---- |
+| **Hub gateway** | `hub-gateway-system` | Central VIP-style routing to hub and spoke backends ([Hub Gateway](../hub-gateway.md)) |
+| **Spoke gateway** | per spoke | Aggregates IE services behind one entry (`charts/all/spoke-gateway`) |
+| **Workshop APIs** | `workshop-kuadrant-apis` | Demo **AuthPolicy** + **TokenRateLimitPolicy** on MaaS and httpbin routes |
+
+### Example policies in this repo
+
+Workshop chart `charts/all/workshop-kuadrant-apis` deploys Kuadrant policies on hub gateway routes:
+
+- **`AuthPolicy`** — API key authentication (`Authorization: APIKEY …`) on `workshop-httpbin` and `workshop-restcountries` HTTPRoutes
+- **`PlanPolicy`** — tiered limits (`free` / `gold`) keyed off `secret.kuadrant.io/plan-id` annotation
+- **`TokenRateLimitPolicy`** — token-bucket limits on `/llm/v1/chat/completions` (MaaS proxy); counts `usage.total_tokens` from OpenAI-compatible responses
+
+Policies target **`spec.targetRef`** → `HTTPRoute` in `hub-gateway-system`. Enable or tune tiers in `charts/all/workshop-kuadrant-apis/values.yaml`. Production RHCL deployments often start with routes only and enable Kuadrant policies incrementally.
+
 ![Connectivity Link – Policy Topology]({{ site.baseurl }}/assets/images/connectivity-link-hub.png)
 {: .mb-4 }
 *Gateway API policy topology — hub-gateway, HTTPRoute, and route rules in OpenShift Console.*

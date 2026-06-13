@@ -1,6 +1,6 @@
 ---
 title: RHDP Field Content — 3 cluster orders (hub / east / west)
-weight: 5
+weight: 6
 ---
 
 # RHDP Field Content — 3 cluster orders (hub / east / west)
@@ -14,9 +14,9 @@ RHDP does **not** template `values.yaml` in Git. It creates an Argo CD `Applicat
 - `deployer.domain` ← `openshift_cluster_ingress_domain`
 - `deployer.apiUrl` ← `openshift_api_url`
 - `litemaas.apiKey` / `litemaas.apiUrl` (MaaS — never commit `sk-*` keys to Git)
-- `litemaas.model` — default `llama-scout-17b` (workshop); also `deepseek-r1-distill-qwen-14b`, `codellama-7b-instruct`
+- `litemaas.model` — default `llama-scout-17b` (workshop alias on RHDP MaaS; upstream model is `meta-llama/Llama-Scout-17B-16E-Instruct`); also `deepseek-r1-distill-qwen-14b`, `codellama-7b-instruct`
 
-**Never put `{{ openshift_cluster_ingress_domain }}` in Git-tracked YAML** — Helm interprees `{{ }}` as Helm template syntax and Argo CD fails with `invalid map key`.
+**Never put `{{ openshift_cluster_ingress_domain }}` in Git-tracked YAML** — Helm interprets `{{ }}` as Helm template syntax and Argo CD fails with `invalid map key`.
 
 Hub templates use `deployer.domain` with fallback `apps.cluster.example.com`; RHDP overrides via Argo CD values.
 

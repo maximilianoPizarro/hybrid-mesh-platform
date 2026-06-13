@@ -119,6 +119,19 @@ Expected links include:
 - `platform-kiali` - Service mesh visualization
 - `platform-developer-hub` - Developer portal (hub only)
 
+Verify HTTP reachability (accepts 200–399; reports 503 when route exists but pods are down):
+
+```bash
+bash scripts/verify-console-links.sh
+```
+
+Cross-check ConsoleLink hostnames against cluster Routes:
+
+```bash
+oc get consolelink -o custom-columns='NAME:.metadata.name,URL:.spec.href'
+oc get routes -A -o custom-columns='NS:.metadata.namespace,HOST:.spec.host' | grep -E 'grafana|developer-hub|kafka-console|neuroface|skupper'
+```
+
 ## Automated Validation Script
 
 Run the included validation script:

@@ -8,6 +8,21 @@ weight: 12
 **Git path:** `charts/all/service-interconnect/`
 {: .fs-3 .text-grey-dk-000 }
 
+## What problem does it solve?
+
+East and west spokes run Kafka, Prometheus, and Industrial Edge gateways on private cluster networks. The hub needs to reach those services for **Grafana**, **Kafka Console**, and **hub-gateway** routing — without exposing public endpoints, configuring site-to-site VPNs, or punching firewall holes.
+
+**Red Hat Service Interconnect (Skupper)** builds a **Virtual Application Network (VAN)** over TLS between clusters. Spoke **Connectors** publish local services; hub **Listeners** expose them as in-cluster DNS names (`kafka-east-tst.service-interconnect.svc.cluster.local`). Operators get cross-cluster connectivity with mTLS between Skupper routers, not workload-level VPN tunnels.
+
+| Alternative | Limitation in this pattern |
+| ----------- | -------------------------- |
+| Public Routes per service | Too many endpoints; security exposure |
+| Site-to-site VPN | Network team dependency; brittle for demos |
+| Service Mesh multi-cluster | Requires shared trust domain + east-west gateways |
+| **Skupper VAN** | Application-layer TCP bridge; works with existing mesh |
+
+**Namespace:** `service-interconnect` on hub and spokes. Hub chart: `charts/all/service-interconnect`. Spoke chart: `charts/all/spoke-interconnect` (sync wave 6).
+
 **Red Hat Service Interconnect** creates a Virtual Application Network (VAN) that connects services across clusters without requiring VPN tunnels, direct network routes, or firewall changes. In this platform, Skupper bridges spoke Industrial Edge services and Prometheus metrics to the hub for centralized observability.
 
 The diagram below shows **listeners and connectors** only. For Kafka Console screenshots and broker DNS details, see **[AMQ Streams](products/amq-streams.md)** and **[Observability — Kafka Console](observability.md#kafka-console-hub)** (same topic, split so Skupper stays focused on VAN mechanics).

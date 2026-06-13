@@ -5,7 +5,7 @@ weight: 24
 
 # Red Hat Products
 
-This platform composes multiple Red Hat operators and patterns. Each child page answers three questions for operators who arrived via **[Getting Started](../getting-started.md)**: what ships here, **what signals tell an operator it has reconciled**, and **how workloads join inventory** (CRDs vs annotations vs explicit registrations).
+This platform composes multiple Red Hat operators and patterns. Each child page answers **what problem it solves**, what ships here, **what signals tell an operator it has reconciled**, and **how workloads join inventory** (CRDs vs annotations vs explicit registrations).
 
 Keep **[Discover workloads consistently](../architecture.md#components-on-the-hub-vs-spokes)** in mind as context — namespaces rarely manage ACM fleets directly; charts declare APIs operators reconcile against Git.
 

@@ -1,3 +1,13 @@
 clusterDomain: ""
 channel: release-2.16
 source: redhat-operators
+
+# Disable MCE cluster-proxy-addon (enabled by default in ACM 2.16+).
+# Reduces cluster-proxy / apiserver-network-proxy conflicts with direct spoke API access.
+# Note: ocm-proxyserver may still run — separate from cluster-proxy-addon component.
+mceDisableClusterProxyAddon: true
+mceName: multiclusterengine
+mceWaitIterations: "60"
+mceWaitSeconds: "30"
+mceDisableClusterProxySchedule: "0 */6 * * *"
+mceDisableClusterProxyImage: registry.redhat.io/openshift4/ose-cli:latest

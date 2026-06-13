@@ -5,6 +5,12 @@ weight: 10
 
 # Industrial Edge
 
+## What problem does it solve?
+
+Manufacturing and OT environments generate sensor telemetry (temperature, vibration, pressure) that must flow from **shop floor MQTT brokers** into **Kafka pipelines**, through **ML anomaly scoring**, and into **operations dashboards** — often at the edge where latency and connectivity are constrained. Running that stack on Kubernetes at each factory site, while keeping GitOps alignment with a central hub, is the core Industrial Edge problem.
+
+This pattern deploys a **repeatable factory stack** on east and west spokes: AMQ Broker → Camel K → Kafka → optional KServe → line-dashboard, plus Tekton CI for edge software updates. The hub aggregates metrics (Skupper + Grafana) and exposes unified gateway access without duplicating brokers on the hub.
+
 The **Industrial Edge** pattern models discrete manufacturing and operational technology (OT) connectivity to Kubernetes: sensors, MQTT, Kafka-centric pipelines, CI/CD for edge software, ML-assisted anomaly detection, and centralized data lakes.
 
 After operators discover Kafka clusters (see **[AMQ Streams](products/amq-streams.md#operator-discovery)**) and mesh namespaces receive ambient labels (**[Service Mesh](products/service-mesh.md#operator-discovery)**), use this page as the **business narrative** tying workloads together. If you haven't yet installed, start with **[Getting Started](getting-started.md)** and scaffold new instances via **[Scaffolding](scaffolding.md)**.

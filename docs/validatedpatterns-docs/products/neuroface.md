@@ -5,6 +5,10 @@ weight: 26
 
 # NeuroFace
 
+## What problem does it solve?
+
+Workshop participants need a **multimodal AI demo** (webcam + LLM chat) without deploying a full custom vision pipeline. **NeuroFace** combines face/object detection in the browser with **MaaS** (`llama-scout-17b`) for contextual responses — one Route on the hub, integrated into Developer Hub and the Hybrid Mesh AI Workshop.
+
 Shared **Hybrid Mesh AI Workshop** demo for webcam face/object detection and contextual chat via MaaS (OpenAI-compatible API).
 
 | Item | Location |

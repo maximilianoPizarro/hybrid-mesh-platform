@@ -5,6 +5,12 @@ weight: 27
 
 # OpenShift AI
 
+## What problem does it solve?
+
+Workshop and Industrial Edge teams need **model serving**, **notebooks/workbenches**, and **external LLM access** without standing up inference infrastructure per user. On the **hub**, OpenShift AI (RHODS) provisions **DataScienceCluster**, per-user namespaces (`ai-user1`…), and **MaaS proxies** to RHDP LiteMaaS. On **spokes**, a lighter **RawDeployment** KServe stack scores anomaly models against Kafka telemetry.
+
+**Kairos** (`charts/all/kairos`, hub `kairos-system`) adds AI-assisted scaling and security scanning for Industrial Edge workloads. **NeuroFace** and **Developer Hub Lightspeed** consume the same MaaS models (`llama-scout-17b`).
+
 Red Hat **OpenShift AI** on the **hub** provides dashboard, workbenches, **ModelMesh** (multi-model), **Knative/Serverless** (via `serverless-operator`), KServe, and MaaS-backed external models for the workshop.
 
 ## Hub component
@@ -41,7 +47,7 @@ Models are proxied from `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` — 
 
 | Model | Use case |
 |-------|----------|
-| `llama-scout-17b` | Default workshop / Lightspeed / userN |
+| `llama-scout-17b` | Default workshop / Lightspeed / userN (RHDP MaaS alias; upstream: `meta-llama/Llama-Scout-17B-16E-Instruct`) |
 | `deepseek-r1-distill-qwen-14b` | Admin reasoning / GitOps reconciliation |
 | `codellama-7b-instruct` | Code / scaffolder / templates |
 

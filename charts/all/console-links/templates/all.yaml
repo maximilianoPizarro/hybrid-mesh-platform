@@ -221,7 +221,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "skupper.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://field-content-skupper-network-observer-service-interconnect.{{ $domain }}"
+  href: "https://skupper-network-observer-service-interconnect.{{ $domain }}"
   location: ApplicationMenu
   text: "Skupper Console (Network)"
 ---
