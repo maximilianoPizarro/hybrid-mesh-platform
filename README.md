@@ -38,7 +38,7 @@ Technical detail: 50+ Helm charts, decoupled Argo AppProjects (`operators-platfo
 
 ## Quick start
 
-**Prerequisites**
+### Prerequisites
 
 - OpenShift **4.14+** (hub + two spokes recommended; see [Cluster sizing](#cluster-sizing))
 - **`oc`** logged in as **cluster-admin** on the hub

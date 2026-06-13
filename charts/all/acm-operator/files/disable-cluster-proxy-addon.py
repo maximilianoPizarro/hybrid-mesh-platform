@@ -49,9 +49,7 @@ def main() -> int:
         break
 
     if not found:
-        components.append(
-            {"name": COMPONENT, "enabled": False, "configOverrides": {}}
-        )
+        components.append({"name": COMPONENT, "enabled": False, "configOverrides": {}})
         changed = True
 
     if not changed:
@@ -59,9 +57,7 @@ def main() -> int:
         return 0
 
     patch = json.dumps({"spec": {"overrides": {"components": components}}})
-    patch_result = run(
-        ["oc", "patch", "mce", MCE_NAME, "--type=merge", "-p", patch]
-    )
+    patch_result = run(["oc", "patch", "mce", MCE_NAME, "--type=merge", "-p", patch])
     if patch_result.returncode != 0:
         print(patch_result.stderr or patch_result.stdout, file=sys.stderr)
         return patch_result.returncode
