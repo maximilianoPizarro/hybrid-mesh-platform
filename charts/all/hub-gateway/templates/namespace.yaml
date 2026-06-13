@@ -4,5 +4,6 @@ metadata:
   name: hub-gateway-system
   labels:
     istio.io/dataplane-mode: ambient
+    istio.io/use-waypoint: hub-gateway-system-waypoint
   annotations:
     argocd.argoproj.io/sync-wave: "0"

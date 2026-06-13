@@ -156,8 +156,13 @@ def cluster_available(mc: dict) -> bool:
 
 
 def cluster_api_url(mc: dict) -> str:
-    for claim in mc.get("status", {}).get("clusterClaims", []):
-        if claim.get("resource") == "kube-apiserver":
+    claims = mc.get("status", {}).get("clusterClaims", [])
+    for claim in claims:
+        # ACM 2.16+ exposes apiserverurl.openshift.io; older clusters used kube-apiserver.
+        if claim.get("resource") == "kube-apiserver" or claim.get("name") in (
+            "kube-apiserver",
+            "apiserverurl.openshift.io",
+        ):
             return claim.get("value", "")
     return ""
 
@@ -208,7 +213,7 @@ def patch_field_content_values(patch: dict) -> bool:
         print("field-content helm values already up to date")
         return True
     updated = save_helm_values(app, merged)
-    api_patch_strategic(
+    api_patch_merge(
         f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{FIELD_CONTENT_APP}",
         {"spec": updated["spec"]},
     )

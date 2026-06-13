@@ -32,17 +32,22 @@ data:
         backstage.io/kubernetes-namespace: hub-gateway-system
         backstage.io/kubernetes-cluster: hub
       links:
-        - url: https://workshop-apis.{{ $hub }}/llm/v1/chat/completions
+        - url: https://ai-gateway.{{ $hub }}/v1/chat/completions
           title: MaaS LLM route (API key)
           icon: api
+        - url: https://workshop-apis.{{ $hub }}/httpbin/get
+          title: Workshop APIs gateway
+          icon: web
         - url: https://developer-hub.{{ $hub }}/kuadrant
-          title: Kuadrant API keys
+          title: Kuadrant API keys & plans
           icon: catalog
     spec:
       type: api
       lifecycle: production
       owner: platform-engineering
       system: hybrid-mesh-ai-platform
+      dependsOn:
+        - component:ai-gateway-maas
     ---
     apiVersion: backstage.io/v1alpha1
     kind: Component

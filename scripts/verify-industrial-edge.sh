@@ -31,6 +31,14 @@ echo ""
 echo "=== Hub gateway ==="
 oc get gateway hub-gateway -n hub-gateway-system 2>/dev/null || echo "WARN: Gateway hub-gateway missing"
 oc get svc hub-gateway-istio -n hub-gateway-system 2>/dev/null || echo "WARN: Service hub-gateway-istio missing (Istio not reconciled?)"
+GW_EP="$(oc get endpoints hub-gateway-istio -n hub-gateway-system -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null || true)"
+if [[ -z "$GW_EP" ]]; then
+  echo "WARN: hub-gateway-istio has no endpoints (stale nginx Service selector? re-run apply-fleet-mesh.sh)"
+  fail=1
+else
+  echo "hub-gateway-istio endpoint: ${GW_EP}"
+fi
+oc get gateway hub-gateway-system-waypoint -n hub-gateway-system -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}{"\n"}' 2>/dev/null | grep -qx True && echo "hub-gateway waypoint: Programmed" || echo "WARN: hub-gateway-system-waypoint not Programmed"
 
 echo ""
 echo "=== HTTP checks ==="

@@ -291,6 +291,32 @@ oc get integration mqtt-to-kafka -n industrial-edge-tst-all \
 
 **Enable ML inference later:** upload model to MinIO, set `anomalyDetection.enabled: true` in spoke app values, sync `industrial-edge-data-science-cluster` then `industrial-edge-tst`.
 
+---
+
+## Industrial Edge alerts not in Mailpit
+
+**Symptom:** `ie-anomaly-alerter` logs show `Failed to send mail: HTTP Error 503` or Mailpit UI is empty while MQTT anomalies appear in pod logs.
+
+**Causes:**
+
+1. **Wrong hub domain on spokes** — `MAILPIT_URL` must be `https://mailpit.<hub-apps-domain>/api/v1/send`, not the spoke's own domain. Check:
+   ```bash
+   oc get deploy ie-anomaly-alerter -n industrial-edge-tst-all \
+     -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="MAILPIT_URL")].value}{"\n"}'
+   ```
+2. **`ie-anomaly-alerter` not deployed** — Argo CD app **Missing** on east/west; apply with correct `hubClusterDomain`:
+   ```bash
+   helm template ie charts/all/ie-anomaly-alerter \
+     --set hubClusterDomain=apps.cluster-<hub-id>.dynamic2.redhatworkshops.io \
+     --set clusterName=east | oc apply -f -
+   ```
+3. **`fleet-values-sync` stale on ACM 2.16** — spoke domains were not derived when the job looked for `kube-apiserver` instead of `apiserverurl.openshift.io`. Re-run after chart fix:
+   ```bash
+   oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops
+   ```
+
+**Verify:** Mailpit route returns 200 on POST `/api/v1/send`; alerter logs `Mail sent [...] -> 200`.
+
 **Camel K `401 Unauthorized` / `ImagePullBackOff` on internal registry:** The PostSync Job `camel-k-registry-bootstrap` creates `camel-k-registry-docker` from the `builder` SA token and patches `IntegrationPlatform` + `pull-secret` trait. If the integration kit is stuck in Error, delete the Integration and IntegrationKit, then re-sync the app.
 
 **Camel K + Istio ambient (MQTT → Kafka silent failure):** With `istio.io/dataplane-mode: ambient` on `industrial-edge-tst-all`, ztunnel intercepts Kafka broker TCP and Camel cannot complete metadata fetch. Git fix: `deployment` trait (not `pod`) sets `istio.io/dataplane-mode: none` on the integration Deployment.

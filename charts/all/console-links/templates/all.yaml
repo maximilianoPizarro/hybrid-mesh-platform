@@ -266,4 +266,18 @@ spec:
   href: "https://workshop-apis.{{ $hubDomain }}"
   location: ApplicationMenu
   text: "Workshop APIs (Kuadrant)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-ai-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://ai-gateway.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "AI Gateway (MaaS + Kuadrant)"
 {{- end }}

@@ -103,7 +103,14 @@ wait_istiod hub || true
 echo "== hub: servicemeshoperator3 =="
 helm template sm "$ROOT/charts/all/servicemeshoperator3" --set clusterRole=hub | oc apply -f -
 wait_istiod hub || true
-echo "== hub: hub-gateway (Istio Gateway API) =="
+echo "== hub: remove legacy nginx hub-gateway (use Istio Gateway API + waypoint) =="
+if [[ "${SKIP_NGINX_CLEANUP:-}" != "1" ]]; then
+  oc delete deployment hub-gateway-istio -n hub-gateway-system --ignore-not-found
+  oc delete configmap hub-gateway-proxy-config -n hub-gateway-system --ignore-not-found
+  # Legacy nginx Service used app=hub-gateway-istio; Istio gateway pods use gateway.networking.k8s.io/gateway-name.
+  oc delete svc hub-gateway-istio -n hub-gateway-system --ignore-not-found
+fi
+echo "== hub: hub-gateway (Istio Gateway API + waypoint) =="
 helm template hg "$ROOT/charts/all/hub-gateway" \
   --set clusterDomain="$HUB_DOMAIN" \
   --set clusters.east.domain="${EAST_DOMAIN:-}" \

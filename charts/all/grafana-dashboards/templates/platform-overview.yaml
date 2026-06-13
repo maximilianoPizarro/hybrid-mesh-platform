@@ -77,34 +77,32 @@ spec:
           "title": "Error rates per cluster (5xx / 4xx / TCP close ratio)",
           "type": "timeseries"
         },
-        {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15}, "id": 200, "title": "Hub Gateway — Traffic Split & Latency (L4 ztunnel)", "type": "row"},
+        {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15}, "id": 200, "title": "Hub Gateway — Traffic Split & Latency", "type": "row"},
         {
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
-          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1, "showPoints": "never", "spanNulls": false, "stacking": {"mode": "normal"}, "thresholdsStyle": {"mode": "off"}}, "unit": "Bps"}, "overrides": []},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1, "showPoints": "never", "spanNulls": false, "stacking": {"mode": "normal"}, "thresholdsStyle": {"mode": "off"}}, "unit": "reqps"}, "overrides": []},
           "gridPos": {"h": 8, "w": 14, "x": 0, "y": 16},
           "id": 5,
           "options": {"legend": {"calcs": ["mean"], "displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
           "targets": [
-            {"expr": "sum(rate(istio_tcp_sent_bytes_total{job=\"ztunnel/ztunnel-metrics\",source_workload=\"hub-gateway-istio\",destination_service_name=~\"ie-gateway-east.*\"}[5m]))", "legendFormat": "east backends", "refId": "A"},
-            {"expr": "sum(rate(istio_tcp_sent_bytes_total{job=\"ztunnel/ztunnel-metrics\",source_workload=\"hub-gateway-istio\",destination_service_name=~\"ie-gateway-west.*\"}[5m]))", "legendFormat": "west backends", "refId": "B"},
-            {"expr": "sum(rate(istio_tcp_sent_bytes_total{job=\"ztunnel/ztunnel-metrics\",source_workload=\"hub-gateway-istio\"}[5m])) by (destination_service_name)", "legendFormat": "{{ "{{destination_service_name}}" }}", "refId": "C"}
+            {"expr": "sum(rate(istio_requests_total{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\", destination_service_name=~\"ie-gateway-east.*\"}[5m]))", "legendFormat": "east backends", "refId": "A"},
+            {"expr": "sum(rate(istio_requests_total{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\", destination_service_name=~\"ie-gateway-west.*\"}[5m]))", "legendFormat": "west backends", "refId": "B"},
+            {"expr": "sum(rate(istio_requests_total{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\"}[5m])) by (destination_service_name)", "legendFormat": "{{ "{{destination_service_name}}" }}", "refId": "C"}
           ],
           "title": "Hub gateway weighted backends & downstream",
           "type": "timeseries"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "-- Mixed --"},
-          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 0, "lineInterpolation": "smooth", "lineWidth": 2, "showPoints": "never", "spanNulls": false, "stacking": {"mode": "none"}, "thresholdsStyle": {"mode": "off"}}, "unit": "cps"}, "overrides": []},
+          "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 0, "lineInterpolation": "smooth", "lineWidth": 2, "showPoints": "never", "spanNulls": false, "stacking": {"mode": "none"}, "thresholdsStyle": {"mode": "off"}}, "unit": "ms"}, "overrides": []},
           "gridPos": {"h": 8, "w": 10, "x": 14, "y": 16},
           "id": 6,
           "options": {"legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
           "targets": [
-            {"datasource": {"type": "prometheus", "uid": "${ds_hub}"}, "expr": "sum(rate(istio_tcp_connections_opened_total{job=\"ztunnel/ztunnel-metrics\",source_workload=\"hub-gateway-istio\",destination_service_name=~\"ie-gateway-east.*\"}[5m]))", "legendFormat": "Hub → east", "refId": "A"},
-            {"datasource": {"type": "prometheus", "uid": "${ds_hub}"}, "expr": "sum(rate(istio_tcp_connections_opened_total{job=\"ztunnel/ztunnel-metrics\",source_workload=\"hub-gateway-istio\",destination_service_name=~\"ie-gateway-west.*\"}[5m]))", "legendFormat": "Hub → west", "refId": "B"},
-            {"datasource": {"type": "prometheus", "uid": "${ds_east}"}, "expr": "sum(rate(istio_tcp_connections_opened_total{job=\"ztunnel/ztunnel-metrics\"}[5m]))", "legendFormat": "East ztunnel", "refId": "C"},
-            {"datasource": {"type": "prometheus", "uid": "${ds_west}"}, "expr": "sum(rate(istio_tcp_connections_opened_total{job=\"ztunnel/ztunnel-metrics\"}[5m]))", "legendFormat": "West ztunnel", "refId": "D"}
+            {"expr": "histogram_quantile(0.50, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\"}[5m])) by (le)) or histogram_quantile(0.50, sum(rate(istio_request_duration_seconds_bucket{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\"}[5m])) by (le)) * 1000", "legendFormat": "Hub p50", "refId": "A"},
+            {"expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\"}[5m])) by (le)) or histogram_quantile(0.95, sum(rate(istio_request_duration_seconds_bucket{reporter=\"source\", source_workload_namespace=\"hub-gateway-system\"}[5m])) by (le)) * 1000", "legendFormat": "Hub p95", "refId": "B"}
           ],
-          "title": "Gateway L4 connection rate per cluster",
+          "title": "Request latency (hub gateway waypoint, p50 / p95)",
           "type": "timeseries"
         },
         {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24}, "id": 300, "title": "Kafka — Broker Health", "type": "row"},

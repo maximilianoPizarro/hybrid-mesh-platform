@@ -1,54 +1,77 @@
-clusterDomain: ""
-gateway:
-  namespace: hub-gateway-system
-  name: hub-gateway
-  hostname: "" # default workshop-apis.<clusterDomain>
-# Public web APIs — Istio ServiceEntry + Hostname backendRef (no in-cluster images)
-apis:
-  httpbin:
-    enabled: true
-    host: httpbin.org
-    port: 443
-    pathPrefix: /httpbin
-    rewritePathPrefix: /
-    displayName: Workshop httpbin (httpbin.org)
-  restcountries:
-    enabled: true
-    host: restcountries.com
-    port: 443
-    pathPrefix: /countries
-    rewritePathPrefix: /
-    displayName: Workshop REST Countries (restcountries.com)
-  maas:
-    enabled: true
-    host: maas-rhdp.apps.maas.redhatworkshops.io
-    port: 443
-    pathPrefix: /llm
-    rewritePathPrefix: ""
-    apiKey: "" # inject via root litemaas.apiKey at deploy time (never commit)
-    displayName: Workshop LLM API — MaaS (TokenRateLimit demo)
-plans:
-  tiers:
-    - bronze
-    - silver
-    - gold
-  limits:
-    bronze:
-      custom:
-        - limit: 5
-          window: 1m
-    silver:
-      custom:
-        - limit: 15
-          window: 1m
-    gold:
-      custom:
-        - limit: 60
-          window: 1m
-tokenRateLimit:
-  free:
-    limit: 50
-    window: 1m
-  gold:
-    limit: 200
-    window: 1m
+clusterDomain: ""
+
+workshopGateway:
+  namespace: workshop-kuadrant-apis
+  name: workshop-apis-gateway
+  hostname: "" # default workshop-apis.<clusterDomain>
+
+aiGateway:
+  namespace: ai-gateway-system
+  name: ai-gateway
+  hostname: "" # default ai-gateway.<clusterDomain>
+
+# Public web APIs — ExternalName + ServiceEntry + Kuadrant APIProduct
+apis:
+  httpbin:
+    enabled: true
+    host: httpbin.org
+    port: 443
+    pathPrefix: /httpbin
+    rewritePathPrefix: /
+    displayName: Workshop httpbin (httpbin.org)
+  restcountries:
+    enabled: true
+    host: restcountries.com
+    port: 443
+    pathPrefix: /countries
+    rewritePathPrefix: /
+    displayName: Workshop REST Countries (restcountries.com)
+  mcp:
+    enabled: true
+    # In-cluster MCP gateway (Kuadrant MCP CRDs); exposed via workshop-apis with API key
+    serviceName: mcp-gateway-istio
+    serviceNamespace: mcp-system
+    port: 8080
+    pathPrefix: /mcp
+    rewritePathPrefix: /mcp
+    displayName: Workshop MCP Gateway (ArgoCD + k8s tools)
+  maas:
+    enabled: true
+    host: maas-rhdp.apps.maas.redhatworkshops.io
+    port: 443
+    pathPrefix: /v1
+    rewritePathPrefix: /v1
+    apiKey: "" # inject via litemaas.apiKey at deploy (never commit)
+    displayName: AI Gateway — MaaS LLM (TokenRateLimit)
+
+plans:
+  tiers:
+    - bronze
+    - silver
+    - gold
+  limits:
+    bronze:
+      custom:
+        - limit: 5
+          window: 1m
+    silver:
+      custom:
+        - limit: 15
+          window: 1m
+    gold:
+      custom:
+        - limit: 60
+          window: 1m
+
+tokenRateLimit:
+  free:
+    limit: 50
+    window: 1m
+  gold:
+    limit: 200
+    window: 1m
+
+vault:
+  # KV paths documented for workshop API credentials (see templates/vault-paths.yaml)
+  maasSecretPath: secret/workshop/maas
+  kuadrantKeysPathPrefix: secret/workshop/kuadrant

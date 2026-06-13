@@ -1,0 +1,20 @@
+# Istio Gateway API creates the hub-gateway-istio Deployment; this Service must match
+# gateway pod labels (not legacy nginx app=hub-gateway-istio).
+apiVersion: v1
+kind: Service
+metadata:
+  name: hub-gateway-istio
+  namespace: hub-gateway-system
+  labels:
+    gateway.networking.k8s.io/gateway-name: hub-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  type: ClusterIP
+  selector:
+    gateway.networking.k8s.io/gateway-name: hub-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

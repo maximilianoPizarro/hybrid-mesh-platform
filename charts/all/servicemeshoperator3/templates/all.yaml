@@ -128,7 +128,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 {{- end }}
-{{- $waypointNamespaces := list "hub-gateway-system" }}
+{{- $waypointNamespaces := list }}
 {{- if ne .Values.clusterRole "hub" }}
 {{- $waypointNamespaces = append $waypointNamespaces "industrial-edge-tst-all" }}
 {{- $waypointNamespaces = append $waypointNamespaces "industrial-edge-stormshift-messaging" }}

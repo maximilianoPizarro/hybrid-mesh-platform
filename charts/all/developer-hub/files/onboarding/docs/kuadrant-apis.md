@@ -1,63 +1,59 @@
 # Kuadrant API keys (userN)
 
-Use **Developer Hub → Kuadrant** to request API keys for workshop APIs. Kuadrant is delivered by the **Red Hat Connectivity Link (RHCL)** bundle (`rhcl-operator`). Backends are **public web APIs** registered via Istio **ExternalName** + **ServiceEntry** and exposed through **hub Gateway API** + RHCL/Kuadrant policies.
+Dedicated **workshop-apis** and **ai-gateway** Gateways expose ExternalName backends with Kuadrant API Products, PlanPolicy, and TokenRateLimit.
 
-## API Products
+## Gateways
 
-| Product | Path | External host | Policy |
-|---------|------|---------------|--------|
-| httpbin | `/httpbin/*` | httpbin.org | PlanPolicy (bronze / silver / gold) |
-| REST Countries | `/countries/*` | restcountries.com | PlanPolicy |
-| LLM (MaaS) | `/llm/v1/chat/completions` | MaaS RHDP | **TokenRateLimitPolicy** (free / gold) |
+| Gateway | Host | APIs |
+|---------|------|------|
+| **workshop-apis** | `https://workshop-apis.<hub-domain>/` | httpbin, REST Countries, MCP |
+| **ai-gateway** | `https://ai-gateway.<hub-domain>/` | MaaS LLM `/v1/chat/completions` |
 
-Base URL: `https://workshop-apis.<hub-domain>/`
+Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** and **AI Gateway (MaaS + Kuadrant)**.
 
-Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** (route exists; calls need API key).
+## API Products (Developer Hub → Kuadrant)
+
+| Product | Gateway | External backend |
+|---------|---------|------------------|
+| httpbin | workshop-apis | `httpbin.org` (ExternalName) |
+| REST Countries | workshop-apis | `restcountries.com` |
+| MCP Gateway | workshop-apis | `mcp-gateway-istio` (ExternalName → in-cluster) |
+| MaaS LLM | ai-gateway | MaaS RHDP (ExternalName) |
 
 ## Flow (Developer Hub)
 
 1. Log in as `userN` / `Welcome123!`
-2. Open **Kuadrant** in the sidebar (or Catalog → **workshop-api-consumer**)
-3. **API Products** → pick httpbin, REST Countries, or MaaS LLM
-4. **Request API key** → choose plan tier (auto-approved)
-5. **My API Keys** → copy key
-6. Call APIs with header: `Authorization: APIKEY <your-key>`
+2. **Kuadrant** sidebar → **API Products** → pick product
+3. **Request API key** → choose plan (bronze/silver/gold or free/gold for LLM)
+4. **My API Keys** → copy key
+5. **Catalog** → API entities → **View API** (Swagger) for httpbin / MaaS
+6. Call with: `Authorization: APIKEY <your-key>`
 
-## OpenShift Console (optional)
+## Vault (optional)
 
-- **Administration → Custom resources → APIProduct** in namespace `hub-gateway-system`
-- Namespace **view** for `userN` on `workshop-kuadrant-apis`, `kuadrant-system`
+| Path | Purpose |
+|------|---------|
+| `secret/workshop/maas` | Upstream MaaS Bearer (platform) |
+| `secret/workshop/kuadrant/<user>/<product>` | Mirror consumer API keys for CI |
 
-Primary UX for keys remains **Developer Hub `/kuadrant`**.
+Kuadrant keys live as K8s Secrets (`kuadrant.io/api-key`); Vault mirror is optional.
 
 ## Examples
 
 ```bash
 export KEY="<api-key-from-developer-hub>"
-export BASE="https://workshop-apis.<hub-domain>"
+export WORKSHOP="https://workshop-apis.<hub-domain>"
+export AI="https://ai-gateway.<hub-domain>"
 
-curl -H "Authorization: APIKEY $KEY" "$BASE/httpbin/get"
-curl -H "Authorization: APIKEY $KEY" "$BASE/countries/name/chile"
-```
-
-## TokenRateLimit demo (LLM / MaaS)
-
-```bash
+curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/httpbin/get"
+curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/countries/name/chile"
 curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
-  -X POST "$BASE/llm/v1/chat/completions" \
-  -d '{
-    "model": "llama-scout-17b",
-    "messages": [{"role": "user", "content": "What is OpenShift?"}],
-    "max_tokens": 80,
-    "stream": false
-  }'
+  -X POST "$AI/v1/chat/completions" \
+  -d '{"model":"llama-scout-17b","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
 ```
 
-Repeat until HTTP **429** — Kuadrant counts `usage.total_tokens` from the MaaS response.
+## GitOps
 
-## Tips
-
-- Without `Authorization: APIKEY …` you get **401** (expected — gateway is protected)
-- Exceeding plan limits returns **429**
-- GitOps: `charts/all/workshop-kuadrant-apis/`; day-2: `bash scripts/apply-workshop-kuadrant-apis.sh`
-- Catalog entities: System **workshop-kuadrant-apis** (Components + OpenAPI API entities)
+- Chart: `charts/all/workshop-kuadrant-apis/`
+- Day-2: `bash scripts/apply-workshop-kuadrant-apis.sh`
+- Catalog: System **workshop-kuadrant-apis** (Components + OpenAPI for Swagger)
