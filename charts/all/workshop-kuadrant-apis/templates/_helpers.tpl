@@ -10,3 +10,12 @@
 {{- $g := .Values.global | default dict -}}
 {{- .Values.hubClusterDomain | default $g.hubClusterDomain | default (include "workshop-kuadrant-apis.clusterDomain" .) -}}
 {{- end -}}
+
+{{- define "workshop-kuadrant-apis.maasApiKey" -}}
+{{- $key := .Values.apis.maas.apiKey | default "" -}}
+{{- if not $key -}}
+{{- $lm := .Values.litemaas | default dict -}}
+{{- $key = $lm.apiKey | default "" -}}
+{{- end -}}
+{{- $key -}}
+{{- end -}}

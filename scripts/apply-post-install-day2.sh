@@ -24,6 +24,14 @@ fi
 
 bash "$ROOT/scripts/apply-workshop-showroom.sh"
 bash "$ROOT/scripts/apply-mcp-gateway.sh"
+bash "$ROOT/scripts/apply-istio-monitoring.sh"
+bash "$ROOT/scripts/apply-workshop-kuadrant-apis.sh"
+
+if [[ -n "${MAAS_KEY_LLAMA:-}${MAAS_KEY_GRANITE:-}${MAAS_KEY_DEEPSEEK:-}" ]]; then
+  bash "$ROOT/scripts/apply-maas-secrets.sh"
+else
+  echo "SKIP apply-maas-secrets.sh (export MAAS_KEY_LLAMA / GRANITE / DEEPSEEK to inject keys)"
+fi
 
 echo ""
 echo "== Argo CD application summary =="

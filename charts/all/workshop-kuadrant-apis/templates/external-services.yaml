@@ -1,0 +1,23 @@
+{{- $gwNs := .Values.gateway.namespace }}
+{{- range $name, $api := .Values.apis }}
+{{- if and $api.enabled $api.host }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workshop-ext-{{ $name }}
+  namespace: {{ $gwNs }}
+  labels:
+    app.kubernetes.io/part-of: workshop-kuadrant-apis
+    workshop.kuadrant.io/api: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  type: ExternalName
+  externalName: {{ $api.host | quote }}
+  ports:
+    - name: https
+      port: {{ $api.port | default 443 }}
+      protocol: TCP
+{{- end }}
+{{- end }}

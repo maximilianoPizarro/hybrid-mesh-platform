@@ -13,8 +13,21 @@ RHDP does **not** template `values.yaml` in Git. It creates an Argo CD `Applicat
 
 - `deployer.domain` ← `openshift_cluster_ingress_domain`
 - `deployer.apiUrl` ← `openshift_api_url`
-- `litemaas.apiKey` / `litemaas.apiUrl` (MaaS — never commit `sk-*` keys to Git)
-- `litemaas.model` — default `llama-scout-17b` (workshop alias on RHDP MaaS; upstream model is `meta-llama/Llama-Scout-17B-16E-Instruct`); also `deepseek-r1-distill-qwen-14b`, `codellama-7b-instruct`
+- `litemaas.apiKey` ← `litellm_virtual_key` (when `enable_litemaas_keys: true`)
+- `litemaas.apiUrl` ← `litellm_api_base_url`
+- `litemaas.model` ← catalog param `litemaas_model` (e.g. `deepseek-r1-distill-qwen-14b`)
+- `litemaas.duration` ← `litemaas_duration` (e.g. `7d`, informational)
+
+**Catalog → Helm mapping (your demo order):**
+
+| Babylon / demo parameter | RHDP output (info template) | Helm `values` key |
+|--------------------------|----------------------------|-------------------|
+| `enable_litemaas_keys: true` | `litellm_virtual_key` | `litemaas.apiKey` |
+| `litemaas_duration: 7d` | `litellm_key_duration` | `litemaas.duration` |
+| `litemaas_model: deepseek-r1-distill-qwen-14b` | in `litellm_available_models_list` | `litemaas.model` |
+| (implicit) | `litellm_api_base_url` | `litemaas.apiUrl` |
+
+When `litemaas.model` is set, clustergroup `extraParametersNested` propagates it to `neuroface`, `kairos`, `devspaces.continueAi`, `developer-hub` Lightspeed, and ODS notebooks (via chart helpers). Chart defaults (`llama-scout-17b`, `granite-3-2-8b-instruct`) apply only when RHDP does not inject a model.
 
 **Never put `{{ openshift_cluster_ingress_domain }}` in Git-tracked YAML** — Helm interprets `{{ }}` as Helm template syntax and Argo CD fails with `invalid map key`.
 
@@ -156,10 +169,19 @@ oc get application field-content -n openshift-gitops -o jsonpath='{.status.condi
 
 ## MaaS API keys (hub — after sync)
 
-Inject via RHDP `litemaas.apiKey` in `field-content` helm.values, or create secrets manually:
+Inject via RHDP `litemaas.apiKey` in `field-content` helm.values (propagates to `workshop-kuadrant-apis`, `openshift-ai-hub`, `neuroface`), or create secrets manually:
 
 ```bash
-# Kairos + Developer Hub Lightspeed
+export MAAS_KEY_LLAMA='sk-...'
+export MAAS_KEY_GRANITE='sk-...'
+export MAAS_KEY_DEEPSEEK='sk-...'
+bash scripts/apply-maas-secrets.sh
+```
+
+Manual equivalent:
+
+```bash
+# Kairos + Developer Hub Lightspeed (llama key)
 oc create secret generic kairos-ai-credentials -n kairos-system \
   --from-literal=api-key='sk-...' --dry-run=client -o yaml | oc apply -f -
 
@@ -168,9 +190,22 @@ oc create secret generic openshift-ai-maas-credentials -n maas-workshop \
   --from-literal=api-key='sk-...' \
   --from-literal=OPENAI_API_BASE='https://maas-rhdp.apps.maas.redhatworkshops.io/v1' \
   --dry-run=client -o yaml | oc apply -f -
+
+# NeuroFace chat (secret name must match chart)
+oc create secret generic neuroface-maas-api-key -n neuroface \
+  --from-literal=api-key='sk-...' --dry-run=client -o yaml | oc apply -f -
+
+oc rollout restart deployment/neuroface -n neuroface
+oc rollout restart deployment/developer-hub -n developer-hub
 ```
 
-Use separate MaaS keys per model if your workshop provides them; `llama-scout-17b` is the default for userN Lightspeed chat.
+| Model (RHDP MaaS alias) | Typical use |
+|-------------------------|-------------|
+| `llama-scout-17b` | Default userN / NeuroFace chat / Kairos |
+| `granite-3-2-8b-instruct` | Developer Hub Lightspeed default |
+| `deepseek-r1-distill-qwen-14b` | Optional ODS connection |
+
+Use **separate** MaaS keys per model when your workshop provides them; never commit keys to Git.
 
 ## Local validation
 

@@ -75,5 +75,9 @@ plugins:
     syncApiKeyFromKairos: true
     vllmTlsVerify: "false"
     vllmMaxTokens: "4096"
-    # Filled from hub values.kairos via component-applications.yaml
-    aiModel: {}
+    aiModel:
+      apiURL: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1/chat/completions"
+      model: "granite-3-2-8b-instruct"
+      credentialsSecretName: kairos-ai-credentials
+      credentialsSecretNamespace: kairos-system
+      credentialsSecretKey: api-key

@@ -38,6 +38,8 @@ maas:
   models:
     - id: llama-scout-17b
       displayName: Llama Scout 17B (workshop default)
+    - id: granite-3-2-8b-instruct
+      displayName: Granite 3.2 8B Instruct (Lightspeed default)
     - id: deepseek-r1-distill-qwen-14b
       displayName: DeepSeek R1 Distill Qwen 14B
     - id: codellama-7b-instruct

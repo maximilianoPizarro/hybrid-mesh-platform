@@ -73,8 +73,9 @@ metadata:
     openshift.io/display-name: MaaS RHDP API Key
 type: Opaque
 stringData:
-  {{- if $maas.apiKey }}
-  {{ $secretKey }}: {{ $maas.apiKey | quote }}
+  {{- $maasKey := include "openshift-ai-hub.maasApiKey" . -}}
+  {{- if $maasKey }}
+  {{ $secretKey }}: {{ $maasKey | quote }}
   {{- else }}
   {{ $secretKey }}: "CHANGEME-inject-via-RHDP-or-oc-create-secret"
   {{- end }}

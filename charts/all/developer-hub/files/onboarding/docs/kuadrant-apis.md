@@ -1,6 +1,6 @@
 # Kuadrant API keys (userN)
 
-Use **Developer Hub → Kuadrant** to request API keys for workshop APIs. Kuadrant is delivered by the **Red Hat Connectivity Link (RHCL)** bundle (`rhcl-operator`). Backends are **public web APIs** (no in-cluster Docker images) registered as Istio external services and exposed through **hub Gateway API** + RHCL/Kuadrant policies.
+Use **Developer Hub → Kuadrant** to request API keys for workshop APIs. Kuadrant is delivered by the **Red Hat Connectivity Link (RHCL)** bundle (`rhcl-operator`). Backends are **public web APIs** registered via Istio **ExternalName** + **ServiceEntry** and exposed through **hub Gateway API** + RHCL/Kuadrant policies.
 
 ## API Products
 
@@ -12,15 +12,25 @@ Use **Developer Hub → Kuadrant** to request API keys for workshop APIs. Kuadra
 
 Base URL: `https://workshop-apis.<hub-domain>/`
 
-Architecture: `ServiceEntry` + `DestinationRule` (TLS origination) → `HTTPRoute` (`Hostname` backendRef) → Kuadrant `AuthPolicy` / `PlanPolicy` / `TokenRateLimitPolicy`.
+Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** (route exists; calls need API key).
 
-## Flow
+## Flow (Developer Hub)
 
 1. Log in as `userN` / `Welcome123!`
-2. Open **Kuadrant** in the sidebar
-3. Pick an API Product → **Request API key**
-4. Choose a plan tier (auto-approved)
-5. Copy the key and call the API:
+2. Open **Kuadrant** in the sidebar (or Catalog → **workshop-api-consumer**)
+3. **API Products** → pick httpbin, REST Countries, or MaaS LLM
+4. **Request API key** → choose plan tier (auto-approved)
+5. **My API Keys** → copy key
+6. Call APIs with header: `Authorization: APIKEY <your-key>`
+
+## OpenShift Console (optional)
+
+- **Administration → Custom resources → APIProduct** in namespace `hub-gateway-system`
+- Namespace **view** for `userN` on `workshop-kuadrant-apis`, `kuadrant-system`
+
+Primary UX for keys remains **Developer Hub `/kuadrant`**.
+
+## Examples
 
 ```bash
 export KEY="<api-key-from-developer-hub>"
@@ -31,8 +41,6 @@ curl -H "Authorization: APIKEY $KEY" "$BASE/countries/name/chile"
 ```
 
 ## TokenRateLimit demo (LLM / MaaS)
-
-Request a **free** or **gold** key on **Workshop LLM API**. The gateway validates your Kuadrant API key and forwards to external MaaS:
 
 ```bash
 curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
@@ -49,6 +57,7 @@ Repeat until HTTP **429** — Kuadrant counts `usage.total_tokens` from the MaaS
 
 ## Tips
 
-- Without `Authorization: APIKEY …` you get **401**
+- Without `Authorization: APIKEY …` you get **401** (expected — gateway is protected)
 - Exceeding plan limits returns **429**
-- GitOps manifests: `components/workshop-kuadrant-apis/` (external backends only)
+- GitOps: `charts/all/workshop-kuadrant-apis/`; day-2: `bash scripts/apply-workshop-kuadrant-apis.sh`
+- Catalog entities: System **workshop-kuadrant-apis** (Components + OpenAPI API entities)

@@ -24,6 +24,13 @@ gitops:
   repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
   revision: main
 
+# RHDP injects at deploy (never commit apiKey to Git):
+# litemaas:
+#   apiKey: ""     # litellm_virtual_key when enable_litemaas_keys=true
+#   apiUrl: ""     # litellm_api_base_url
+#   model: ""      # litemaas_model catalog param (e.g. deepseek-r1-distill-qwen-14b)
+#   duration: ""   # litemaas_duration (e.g. 7d)
+
 # Local chart dependencies (disabled by default, used only for helm lint/template)
 # The pattern uses charts/region/{hub,east,west} via ArgoCD path, not these deps.
 all:

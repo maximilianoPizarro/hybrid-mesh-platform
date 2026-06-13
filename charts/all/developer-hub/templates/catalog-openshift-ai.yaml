@@ -68,6 +68,9 @@ data:
         - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
           title: OpenShift AI Dashboard
           icon: dashboard
+        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}/projects/{{ $project }}
+          title: Data Science Project ({{ $user }})
+          icon: dashboard
         - url: https://developer-hub.{{ $hub }}/catalog/default/component/{{ $project }}
           title: Developer Hub entity
           icon: catalog

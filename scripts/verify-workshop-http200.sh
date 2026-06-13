@@ -36,6 +36,20 @@ check() {
   fi
 }
 
+check_expect() {
+  local label=$1 url=$2 expect=$3
+  local code
+  code=$(curl -sk -o /dev/null -w '%{http_code}' --connect-timeout "${CURL_TIMEOUT:-10}" "$url" 2>/dev/null || true)
+  code="${code:-000}"
+  code="${code//$'\r'/}"
+  if [[ "$code" == "$expect" ]]; then
+    printf 'OK  %-3s %s\n' "$code" "$label"
+  else
+    printf 'FAIL %-3s (want %s) %s\n' "$code" "$expect" "$label"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 HUB="${HUB_DOMAIN:-$(hub_domain)}"
 if [[ -z "$HUB" ]]; then
   echo "ERROR: log in to hub or set HUB_DOMAIN" >&2
@@ -60,6 +74,8 @@ check neuroface "https://neuroface.$HUB/"
 check industrial-edge "https://industrial-edge.$HUB/"
 check skupper-observer "https://skupper-network-observer-service-interconnect.$HUB/"
 check mcp-gateway "https://mcp-gateway.$HUB/mcp"
+check_expect workshop-apis-no-key "https://workshop-apis.$HUB/httpbin/get" "401"
+check vault-ui "https://vault-vault.$HUB/ui/"
 check grafana "https://grafana.$HUB/"
 check ods-dashboard "https://rhods-dashboard-redhat-ods-applications.$HUB/" token
 

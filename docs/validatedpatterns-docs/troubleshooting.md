@@ -33,6 +33,10 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | Quay org-setup Job failing | `/version` redirect, CSRF, or duplicate robot | Use GitOps `setup.py` with `/discovery` + bearer token; see [Quay](products/quay.md) |
 | DevSpaces link on hub 404 | DevSpaces is spoke-only | Open `https://devspaces.<east-or-west-domain>` from template output |
 | MCP Gateway **503** / `/mcp` 404 | Argo Unknown — CRDs never applied | `bash scripts/apply-mcp-gateway.sh` |
+| Developer Hub **/lightspeed** chat 401 | Missing MaaS key or wrong vLLM URL | `bash scripts/apply-maas-secrets.sh`; default model `granite-3-2-8b-instruct` via MaaS |
+| NeuroFace **/api/chat** 401 | Secret `neuroface-maas-api-key` placeholder | `apply-maas-secrets.sh` + rollout `neuroface` |
+| workshop-apis **401** without key | Expected (Kuadrant AuthPolicy) | Request key at Developer Hub `/kuadrant` |
+| Vault console link **307** | href points to route root | Use `/ui/` — see [install playbook](install-improvements.md#hashicorp-vault-hub) |
 | Camel `mqtt-to-kafka` Error, Kafka metadata timeout | Missing advertised EndpointSlice or ambient ztunnel on Kafka TCP | EndpointSlice + `deployment` trait `istio.io/dataplane-mode: none`; see [below](#kafka-advertised-dns-endpointslice) |
 | Stormshift MirrorMaker2 CrashLoop | Empty `clusterName` → `broker-0-.` | Set `clusterName: east|west` in spoke app values |
 
@@ -345,6 +349,37 @@ curl -sk -o /dev/null -w '%{http_code}\n' https://mcp-gateway.<hub-domain>/mcp
 **Cause:** Optional KServe/ModelMesh route points at a backend that is not Ready yet (or ML stack not installed).
 
 **Fix (GitOps):** `charts/all/spoke-gateway/values.yaml` sets `inferenceRoute.enabled: false` by default. Enable only after `InferenceService` is Ready and set backend namespace to `redhat-ods-applications` when using cluster-scoped ModelMesh.
+
+---
+
+---
+
+## MaaS / Lightspeed / NeuroFace 401
+
+**Symptom:** Developer Hub `/lightspeed` loads but chat fails with **401** or empty response; NeuroFace `/api/chat` returns **401**.
+
+**Cause:** MaaS API keys not injected — secrets contain `CHANGEME-inject-via-RHDP` or Lightspeed sync Job skipped.
+
+**Fix:**
+
+```bash
+export MAAS_KEY_LLAMA='sk-...'
+export MAAS_KEY_GRANITE='sk-...'
+bash scripts/apply-maas-secrets.sh
+oc rollout restart deployment/developer-hub -n developer-hub
+oc rollout restart deployment/neuroface -n neuroface
+```
+
+Verify:
+
+```bash
+oc get secret kairos-ai-credentials -n kairos-system -o jsonpath='{.data.api-key}' | base64 -d | wc -c
+curl -sk -X POST https://neuroface.<hub-domain>/api/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"hi"}]}'
+```
+
+**Lightspeed model:** defaults to **MaaS** `granite-3-2-8b-instruct` (`plugins.lightspeed.aiModel` in `developer-hub` chart). Requires valid key in `llama-stack-secrets` / Kairos sync.
 
 ---
 

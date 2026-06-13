@@ -6,10 +6,28 @@
 {{- $ai = mergeOverwrite (dict) $rootAi $ai -}}
 {{- end -}}
 {{- if not $ai.apiURL -}}
+{{- $lm := .Values.litemaas | default dict -}}
+{{- if $lm.apiUrl -}}
+{{- $url := $lm.apiUrl -}}
+{{- if not (regexMatch "/v1" $url) -}}
+{{- $url = printf "%s/v1/chat/completions" (trimSuffix "/" $url) -}}
+{{- else if not (regexMatch "chat/completions" $url) -}}
+{{- $url = printf "%s/chat/completions" (trimSuffix "/" $url) -}}
+{{- end -}}
+{{- $ai = mergeOverwrite $ai (dict "apiURL" $url) -}}
+{{- end -}}
+{{- end -}}
+{{- if not $ai.apiURL -}}
 {{- $ai = mergeOverwrite $ai (dict "apiURL" "https://isvc-granite-31-8b-fp8-predictor.sandbox-shared-models.svc.cluster.local:8443/v1/chat/completions" "model" "granite-31-8b") -}}
 {{- end -}}
+{{- if not $ai.model -}}
+{{- $lm := .Values.litemaas | default dict -}}
+{{- if $lm.model -}}
+{{- $ai = mergeOverwrite $ai (dict "model" $lm.model) -}}
+{{- end -}}
+{{- end -}}
 {{- $vllmURL := include "developer-hub.vllmBaseUrl" (dict "apiURL" $ai.apiURL) -}}
-{{- $model := $ai.model | default "granite-31-8b" -}}
+{{- $model := $ai.model | default "granite-3-2-8b-instruct" -}}
 {{- $tag := $ls.pluginTag | default "bs_1.45.3__1.2.3" -}}
 ---
 apiVersion: v1
@@ -229,16 +247,14 @@ spec:
               KEY="{{ $ai.credentialsSecretKey | default "api-key" }}"
 
               if ! oc get secret "$SRC" -n "$SRC_NS" >/dev/null 2>&1; then
-                echo "WARNING: Secret ${SRC_NS}/${SRC} not found — skipping API key sync."
-                echo "Developer Hub will start without Lightspeed vLLM credentials."
-                echo "Re-run this Job after Kairos deploys the credentials secret."
-                exit 0
+                echo "ERROR: Secret ${SRC_NS}/${SRC} not found — run scripts/apply-maas-secrets.sh first."
+                exit 1
               fi
 
               API_KEY="$(oc get secret "$SRC" -n "$SRC_NS" -o json | python3 -c "import sys,json,base64; d=json.load(sys.stdin)['data']; print(base64.b64decode(d['${KEY}']).decode())")"
-              if [ -z "$API_KEY" ]; then
-                echo "WARNING: Empty api key from ${SRC_NS}/${SRC} — skipping sync."
-                exit 0
+              if [ -z "$API_KEY" ] || [ "$API_KEY" = "CHANGEME-inject-via-RHDP" ]; then
+                echo "ERROR: Empty or placeholder api key in ${SRC_NS}/${SRC}."
+                exit 1
               fi
               oc patch secret llama-stack-secrets -n developer-hub --type merge \
                 -p "{\"stringData\":{\"VLLM_API_KEY\":\"${API_KEY}\"}}"

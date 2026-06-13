@@ -134,11 +134,12 @@ spec:
                   selector: auth.identity.metadata.annotations.kuadrant\.io/groups
                 userid:
                   selector: auth.identity.metadata.annotations.secret\.kuadrant\.io/user-id
-        {{- if .Values.apis.maas.apiKey }}
+        {{- $maasKey := include "workshop-kuadrant-apis.maasApiKey" . -}}
+        {{- if $maasKey }}
         headers:
           authorization:
             plain:
-              value: {{ printf "Bearer %s" .Values.apis.maas.apiKey | quote }}
+              value: {{ printf "Bearer %s" $maasKey | quote }}
         {{- end }}
     authorization:
       allow-groups:

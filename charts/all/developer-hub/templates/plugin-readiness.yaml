@@ -44,6 +44,19 @@ spec:
               if ! grep -q kubernetes.clusters.read /opt/app-root/src/rbac-policy.csv 2>/dev/null; then
                 echo "WARNING: kubernetes.clusters.read missing from RBAC CSV"
               fi
+              {{- if include "developer-hub.lightspeedEnabled" . | trim }}
+              if curl -sk -o /dev/null -w "%{http_code}" "$BASE/lightspeed" | grep -qE '200|302'; then
+                echo "Lightspeed route reachable"
+              else
+                echo "WARNING: /lightspeed not reachable (check plugin + MaaS key sync)"
+              fi
+              KEY="$(oc get secret llama-stack-secrets -n developer-hub -o jsonpath='{.data.VLLM_API_KEY}' 2>/dev/null | base64 -d 2>/dev/null || true)"
+              if [ -z "$KEY" ] || [ "$KEY" = "CHANGEME-inject-via-RHDP" ]; then
+                echo "WARNING: llama-stack-secrets missing valid VLLM_API_KEY — run scripts/apply-maas-secrets.sh"
+              else
+                echo "Lightspeed MaaS key present in llama-stack-secrets"
+              fi
+              {{- end }}
               echo "Plugin readiness checks complete"
           volumeMounts:
             - name: rhdh-rbac-policy

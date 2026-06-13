@@ -181,7 +181,7 @@ Continue AI for DevSpaces is provisioned on **spokes** via `charts/all/devspaces
 
 With `plugins.rbac.enabled: true`, Backstage uses **deny-by-default**. The platform mounts `rbac-policy.csv` for all authenticated users (catalog, scaffolder, kubernetes, ocm, argocd, adoption-insights, techdocs, lightspeed). Admin policy user: `platformadmin`.
 
-**Lightspeed** (`plugins.lightspeed.enabled`): OCI plugins `bs_1.45.3__1.2.3`, sidecars for Llama Stack + LCS, vLLM model aligned with Kairos (`granite-31-8b`). API key can sync from `kairos-system/kairos-ai-credentials` when `syncApiKeyFromKairos: true`.
+**Lightspeed** (`plugins.lightspeed.enabled`): OCI plugins `bs_1.45.3__1.2.3`, sidecars for Llama Stack + LCS. Default backend: **RHDP MaaS** `granite-3-2-8b-instruct` at `plugins.lightspeed.aiModel.apiURL`. API key syncs from `kairos-system/kairos-ai-credentials` (PostSync Job) or `scripts/apply-maas-secrets.sh`.
 
 **TechDocs:** `techdocs.builder: local` builds from entity repos (Gitea) on demand. Onboarding mkdocs lives under `files/onboarding/`; scaffolded entities include `mkdocs.yml` and `backstage.io/techdocs-ref: dir:.` in skeletons.
 
@@ -199,7 +199,8 @@ Rollout DevHub after Git merge: sync Argo app `field-content-developer-hub` on t
 | K8s plugin TLS errors | Self-signed API certs | `skipTLSVerify` + `NODE_TLS_REJECT_UNAUTHORIZED=0` |
 | CI tab empty | Wrong Tekton annotation | `janus-idp.io/tekton: <namespace>` not `"true"` |
 | IoT dashboard 503 from hub | Mesh on IE namespaces | Keep `industrial-edge-tst-all` and `spoke-gateway-system` **off** ambient mesh |
-| Kuadrant API Products empty | K8s RBAC or CRD group | ClusterRole needs `devportal.kuadrant.io`; API Product template uses `devportal.kuadrant.io/v1` |
+| Kuadrant API Products empty | K8s RBAC or CRD group | ClusterRole needs `devportal.kuadrant.io`; sync `workshop-kuadrant-apis` |
+| Lightspeed chat 401 | Missing MaaS key | `bash scripts/apply-maas-secrets.sh` |
 | TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to Gitea repo |
 
 See also [Backstage assets README]({{ site.baseurl }}/assets/backstage/README.html) and the **developer-hub-scaffolder** Cursor skill.

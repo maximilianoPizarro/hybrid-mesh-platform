@@ -1,8 +1,21 @@
 {{- $credNs := .Values.continueAi.credentialsSecretNamespace | default "kairos-system" -}}
 {{- $credName := .Values.continueAi.credentialsSecretName | default "kairos-ai-credentials" -}}
 {{- $credKey := .Values.continueAi.credentialsSecretKey | default "api-key" -}}
-{{- $apiBase := .Values.continueAi.apiBase | default "https://litellm-prod.apps.maas.redhatworkshops.io/v1" -}}
-{{- $model := .Values.continueAi.model | default "deepseek-r1-distill-qwen-14b" -}}
+{{- $apiBase := .Values.continueAi.apiBase | default "" -}}
+{{- if not $apiBase -}}
+{{- $lm := .Values.litemaas | default dict -}}
+{{- $apiBase = $lm.apiUrl | default "" -}}
+{{- end -}}
+{{- if not $apiBase -}}
+{{- $apiBase = "https://litellm-prod.apps.maas.redhatworkshops.io/v1" -}}
+{{- else if not (hasSuffix "/v1" $apiBase) -}}
+{{- $apiBase = printf "%s/v1" (trimSuffix "/" $apiBase) -}}
+{{- end -}}
+{{- $model := .Values.continueAi.model | default "" -}}
+{{- if not $model -}}
+{{- $lm := .Values.litemaas | default dict -}}
+{{- $model = $lm.model | default "deepseek-r1-distill-qwen-14b" -}}
+{{- end -}}
 {{- $count := int (.Values.userCount | default 50) -}}
 apiVersion: v1
 kind: ServiceAccount

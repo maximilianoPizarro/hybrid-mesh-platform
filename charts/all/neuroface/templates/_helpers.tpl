@@ -10,3 +10,12 @@
 {{- $g := .Values.global | default dict -}}
 {{- .Values.hubClusterDomain | default $g.hubClusterDomain | default (include "neuroface.clusterDomain" .) -}}
 {{- end -}}
+
+{{- define "neuroface.maasApiKey" -}}
+{{- $key := .Values.neuroface.chat.apiKey | default "" -}}
+{{- if not $key -}}
+{{- $lm := .Values.litemaas | default dict -}}
+{{- $key = $lm.apiKey | default "" -}}
+{{- end -}}
+{{- $key -}}
+{{- end -}}

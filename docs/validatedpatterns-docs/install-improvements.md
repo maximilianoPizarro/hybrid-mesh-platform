@@ -361,9 +361,77 @@ bash scripts/apply-post-install-day2.sh
 | Fleet mesh + Skupper | `apply-fleet-mesh.sh` | OSSM 3.2, spoke-interconnect, IE listeners, `sitesInNetwork=3` |
 | Workshop showroom | `apply-workshop-showroom.sh` | Registration + Antora pod when `showroom` app never synced |
 | MCP Gateway | `apply-mcp-gateway.sh` | CRDs + MCPServerRegistration when `/mcp` returns 503 |
+| Istio/Kafka monitoring | `apply-istio-monitoring.sh` | PodMonitors + UWM on hub/spokes (Grafana panels) |
+| Kuadrant public APIs | `apply-workshop-kuadrant-apis.sh` | workshop-apis gateway + APIProducts |
+| MaaS secrets | `apply-maas-secrets.sh` | Lightspeed / NeuroFace / ODS keys (env vars, optional) |
 | HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
 
 Skip mesh if already healthy: `SKIP_MESH=1 bash scripts/apply-post-install-day2.sh`.
+
+---
+
+## HashiCorp Vault (hub)
+
+**Console:** Platform Hub-Spoke menu → **Vault** → `https://vault-vault.<hub-domain>/ui/` (use `/ui/` — route root returns HTTP 307).
+
+**Workshop users:** `userN` has **view** on namespace `vault` (see `platform-users` chart).
+
+**Facilitator init:** Vault chart is external VP `hashicorp-vault`. Create local `values-secret.yaml` (gitignored) for init/unseal — never commit tokens. External Secrets Operator (`openshift-external-secrets`) connects ESO to Vault when configured.
+
+```bash
+oc get route -n vault
+oc get pods -n vault
+```
+
+Future: model keys via Vault paths + `ExternalSecret` (today: `scripts/apply-maas-secrets.sh`).
+
+---
+
+## MaaS API keys (Lightspeed, NeuroFace, OpenShift AI)
+
+Never commit `sk-*` keys. Inject after hub sync:
+
+```bash
+export MAAS_KEY_LLAMA='sk-...'
+export MAAS_KEY_GRANITE='sk-...'   # optional — Lightspeed default model
+export MAAS_KEY_DEEPSEEK='sk-...'  # optional
+bash scripts/apply-maas-secrets.sh
+```
+
+| Secret | Namespace | Consumers |
+|--------|-----------|-----------|
+| `kairos-ai-credentials` | `kairos-system` | Kairos, Lightspeed sync |
+| `openshift-ai-maas-credentials` | `maas-workshop` | ODS playground, MaaS proxies |
+| `neuroface-maas-api-key` | `neuroface` | NeuroFace `/api/chat` |
+| `maas-granite-credentials` | `maas-workshop` | ODS connection (optional) |
+
+**Symptom:** Developer Hub `/lightspeed` or NeuroFace chat **401** — run `apply-maas-secrets.sh` and restart `developer-hub` / `neuroface`.
+
+RHDP can inject `litemaas.apiKey` into clustergroup values (wired to `workshop-kuadrant-apis`, `openshift-ai-hub`, `neuroface` charts).
+
+---
+
+## Workshop APIs (Kuadrant / Connectivity Link)
+
+Public APIs via **ExternalName** + Istio **ServiceEntry** → hub **Gateway API** → Kuadrant **APIProduct** (auto-approval).
+
+| URL | Purpose |
+|-----|---------|
+| `https://workshop-apis.<hub-domain>/httpbin/*` | httpbin (PlanPolicy) |
+| `https://workshop-apis.<hub-domain>/countries/*` | REST Countries |
+| `https://workshop-apis.<hub-domain>/llm/v1/chat/completions` | MaaS (TokenRateLimit) |
+
+**Developer Hub:** `/kuadrant` → API Products → Request key → **My API Keys** → `Authorization: APIKEY …`
+
+**OpenShift Console:** Custom resources `APIProduct` in `hub-gateway-system`; ConsoleLink **Workshop APIs (Kuadrant)**.
+
+```bash
+bash scripts/apply-workshop-kuadrant-apis.sh
+curl -sk -o /dev/null -w '%{http_code}\n' https://workshop-apis.<hub-domain>/httpbin/get
+# Expect 401 without key
+```
+
+Catalog: System **workshop-kuadrant-apis** — Components + API entities for userN onboarding.
 
 ---
 

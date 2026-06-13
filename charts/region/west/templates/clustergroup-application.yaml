@@ -103,6 +103,24 @@ spec:
             clusters.{{ $name }}.apiUrl: {{ $cfg.apiUrl | quote }}
             {{- end }}
             {{- end }}
+            {{- with .Values.litemaas }}
+            {{- if .apiKey }}
+            litemaas.apiKey: {{ .apiKey | quote }}
+            {{- end }}
+            {{- if .apiUrl }}
+            litemaas.apiUrl: {{ .apiUrl | quote }}
+            {{- end }}
+            {{- if .model }}
+            litemaas.model: {{ .model | quote }}
+            neuroface.chat.modelName: {{ .model | quote }}
+            kairos.aiModel.model: {{ .model | quote }}
+            devspaces.continueAi.model: {{ .model | quote }}
+            developer-hub.plugins.lightspeed.aiModel.model: {{ .model | quote }}
+            {{- end }}
+            {{- if .duration }}
+            litemaas.duration: {{ .duration | quote }}
+            {{- end }}
+            {{- end }}
         parameters:
           - name: global.repoURL
             value: {{ $repo | quote }}

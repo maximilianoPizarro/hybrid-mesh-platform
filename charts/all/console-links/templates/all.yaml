@@ -252,4 +252,18 @@ spec:
   href: "https://neuroface.{{ $hubDomain }}"
   location: ApplicationMenu
   text: "NeuroFace (AI Demo)"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: platform-workshop-apis
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "developer-hub.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://workshop-apis.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "Workshop APIs (Kuadrant)"
 {{- end }}
