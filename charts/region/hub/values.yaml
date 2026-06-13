@@ -265,7 +265,7 @@ clusterGroup:
       namespace: openshift-gitops
       argoProject: workshop
       path: charts/all/console-links
-      syncWave: '0'
+      syncWave: '10'
     grafana-dashboards:
       name: grafana-dashboards
       namespace: openshift-cluster-observability-operator

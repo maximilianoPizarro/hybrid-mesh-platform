@@ -52,13 +52,15 @@ oc get application <app-name> -n openshift-gitops \
 oc get applications -n openshift-gitops -o jsonpath='{range .items[*]}{.metadata.name}: {.status.health.status}{"\n"}{end}' | grep -v Healthy
 ```
 
-**Workaround:** Add resource exclusion for the problematic API group:
+**Automated fix (new installations):** The `openshift-gitops` chart now includes `resourceExclusions` for `clusterview.open-cluster-management.io` and `internal.open-cluster-management.io` by default. New installations are not affected.
+
+**Manual workaround (existing installations):**
 
 ```bash
 # Patch ArgoCD with resource exclusion
 oc patch argocd openshift-gitops -n openshift-gitops --type merge -p '{
   "spec": {
-    "resourceExclusions": "- apiGroups:\n  - clusterview.open-cluster-management.io\n  kinds:\n  - \"*\"\n  clusters:\n  - \"*\"\n"
+    "resourceExclusions": "- apiGroups:\n  - clusterview.open-cluster-management.io\n  kinds:\n  - \"*\"\n  clusters:\n  - \"*\"\n- apiGroups:\n  - internal.open-cluster-management.io\n  kinds:\n  - \"*\"\n  clusters:\n  - \"*\"\n"
   }
 }'
 
@@ -69,7 +71,7 @@ oc rollout restart statefulset openshift-gitops-application-controller -n opensh
 oc rollout status statefulset openshift-gitops-application-controller -n openshift-gitops --timeout=120s
 ```
 
-**Note:** This is a cosmetic issue. The actual GitOps synchronization continues to work correctly. Monitor `health.status` rather than `sync.status` when this bug is present.
+**Note:** This is a cosmetic issue on the sync status display. The actual GitOps synchronization continues to work correctly. Monitor `health.status` rather than `sync.status` when this bug is present.
 
 ---
 

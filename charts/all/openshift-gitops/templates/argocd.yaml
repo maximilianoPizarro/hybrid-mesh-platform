@@ -39,6 +39,18 @@ spec:
       kinds:
       - TaskRun
       - PipelineRun
+    - apiGroups:
+      - clusterview.open-cluster-management.io
+      clusters:
+      - '*'
+      kinds:
+      - '*'
+    - apiGroups:
+      - internal.open-cluster-management.io
+      clusters:
+      - '*'
+      kinds:
+      - '*'
   applicationSet:
     resources:
       limits:
