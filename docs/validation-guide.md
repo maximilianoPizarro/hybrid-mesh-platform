@@ -15,7 +15,7 @@ For RHDP-specific install order, token handling, and first-hour 503s, see the [R
 | Outcome | Validation |
 | ------- | ---------- |
 | Fleet inventory | `oc get managedclusters` — east/west **Available** |
-| One-click platform access | `bash scripts/verify-console-links.sh` on hub — HTTP 200 on GitOps, Grafana, ACS, Kafka Console, etc. |
+| One-click platform access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **19** links HTTP 200 (see [checklist](#hub-console-links-19-expected)) |
 | Private hub↔spoke mesh | Skupper `sitesInNetwork: 3` on hub site |
 | Edge through hub | `https://industrial-edge.apps.<hub-domain>` after spokes imported |
 | Dual GitOps | Hub ApplicationSet + spoke `field-content` apps **Healthy** |
@@ -123,14 +123,43 @@ oc get kafkatopics -n industrial-edge-stormshift-messaging
 The pattern creates Console Links so operators reach GitOps, observability, security, and developer surfaces from the OpenShift console menu — the main **day-one product check** on the hub.
 
 ```bash
+# Log in on the hub — OpenShift AI dashboard requires a bearer token (403 without it)
+oc login --token=<token> --server=<hub-api-url>
+
 # List all platform links
 oc get consolelink -o custom-columns='NAME:.metadata.name,URL:.spec.href'
 
 # HTTP reachability (200–399 = OK; 503 = route up, backend still syncing)
-bash scripts/verify-console-links.sh
+MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 ```
 
-Expected hub links include (among others): `argocd`, `platform-grafana`, `platform-kiali`, `platform-developer-hub`, `platform-kafka-console`, `platform-acs-central`, `platform-industrial-edge`, `platform-skupper-console`.
+Expected summary on a fully synced hub: **`19 OK (200-399), 0 503, 0 other`**, exit code **0**.
+
+The script skips operator-created duplicate **`rhodslink`** ConsoleLinks and sends `Authorization: Bearer` when `oc whoami -t` succeeds.
+
+#### Hub console links (19 expected)
+
+| ConsoleLink name | Product surface |
+| ---------------- | --------------- |
+| `argocd` | OpenShift GitOps (Argo CD) |
+| `platform-acm-clusters` | ACM fleet inventory |
+| `platform-acs-central` | ACS Central |
+| `platform-developer-hub` | Developer Hub (Backstage) |
+| `platform-gitea` | Gitea SCM |
+| `platform-grafana` | Fleet Grafana |
+| `platform-hybrid-mesh-workshop` | Workshop registration |
+| `platform-industrial-edge` | Industrial Edge hub-gateway ingress |
+| `platform-kafka-console` | Kafka Console (multi-cluster) |
+| `platform-kairos-console` | Kairos AI console |
+| `platform-kiali` | Kiali (mesh / observability) |
+| `platform-kubecost` | Kubecost |
+| `platform-mailpit` | Mailpit (workshop email) |
+| `platform-minio` | MinIO console (IE ML workspace) |
+| `platform-neuroface` | NeuroFace demo |
+| `platform-openshift-ai` | OpenShift AI dashboard (OAuth) |
+| `platform-quay-registry` | Quay registry |
+| `platform-skupper-console` | Skupper network observer |
+| `vault-link` | Vault UI (`/ui/` — avoids 307 on route root) |
 
 Cross-check ConsoleLink hostnames against cluster Routes:
 

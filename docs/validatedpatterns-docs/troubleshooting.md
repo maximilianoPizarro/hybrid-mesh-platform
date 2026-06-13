@@ -14,7 +14,8 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | Symptom | Likely cause | Fix |
 | ------- | ------------ | --- |
 | Hub console links **503** (Developer Hub, Gitea, ODS, Skupper) | Backends still syncing or missing deps (catalog CM, SCC, Site) | Wait 60–90 min; see [install playbook](install-improvements.md) sections per product |
-| East/west namespaces **Terminating** / recreating | Spoke tokens in auto-syncing `field-content` while import fails | Remove tokens from GitOps values; import once via ACM; `fleet-values-sync` = domains only |
+| OpenShift AI link **403** in curl | OAuth-protected dashboard | Log in with `oc login`; script uses `oc whoami -t` bearer token |
+| East/west namespaces **Terminating** / recreating | Spoke tokens in auto-syncing `field-content` while import fails, or **Namespace pre-created** with `managedCluster` label before `ManagedCluster` | Remove tokens from GitOps values; import via ACM UI or chart order (`ManagedCluster` first); `fleet-values-sync` = domains only |
 | `acm-operator` stuck, no MCH | CRD not ready before PostSync | `helm template acm charts/all/acm-operator \| oc apply -f -` |
 | RHODS / COO CSV *multiple operatorgroups* | Duplicate OG from subscription + `operatorGroup: true` | Remove duplicate OG flag in hub values |
 | ArgoCD apps show **Unknown** sync status | ACM 2.16 CRD schema bug | Add resource exclusion for `clusterview.open-cluster-management.io`; see [below](#argocd-unknown-sync-status-acm-216) |

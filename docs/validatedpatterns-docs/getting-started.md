@@ -13,7 +13,7 @@ This guide bootstraps the **hub** with one Helm install, registers **east** and 
 - [ ] **Argo CD** — `east-spoke-components` / `west-spoke-components` from ApplicationSet
 - [ ] **Industrial Edge** — sensors, MQTT, Kafka, line-dashboard on each spoke
 - [ ] **Skupper** — hub `sitesInNetwork: 3`; listeners Ready in `service-interconnect`
-- [ ] **Console links** — `bash scripts/verify-console-links.sh` on hub (fleet menu surfaces)
+- [ ] **Console links** — `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub (**19** links; log in with `oc` first)
 - [ ] **Grafana / Kiali / Kafka Console** — hub fleet views
 - [ ] **Developer Hub** — catalog + software templates
 - [ ] **Dev Spaces** — CheCluster on east and west spokes (not hub)
@@ -77,7 +77,7 @@ This creates Application `hybrid-mesh-platform-hub`, which syncs hub workloads f
 
 ## Phase 3: Register spokes (ACM + tokens)
 
-1. Import **east** and **west** in ACM (UI or `ManagedCluster` + `auto-import-secret`) **after** hub MCH is **Running**.
+1. Import **east** and **west** in ACM (UI or **`ManagedCluster` + `auto-import-secret`**) **after** hub MCH is **Running**. When importing via Git/chart, create **`ManagedCluster` first** — ACM creates the cluster namespace; pre-creating a labeled `Namespace` causes a **Terminating** loop (see [install playbook](install-improvements.md)).
 2. Label clusters for placement:
 
 ```yaml
@@ -166,7 +166,7 @@ Confirm the **product surfaces** you installed are reachable — not only that A
 
 | Check | Command / UI | Product value |
 | ----- | -------------- | --------------- |
-| Console links (hub) | `bash scripts/verify-console-links.sh` | One-click access to GitOps, Grafana, Developer Hub, ACS, Kafka Console, IE gateway |
+| Console links (hub) | `oc login` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` | **19** fleet menu surfaces HTTP 200 — see [Validation guide](../validation-guide.md#hub-console-links-19-expected) |
 | ACM clusters | Console → **Infrastructure → Clusters** | Fleet inventory |
 | Spoke app tree | ACM **Applications** or hub Argo CD | Dual GitOps (PUSH + PULL) |
 | Skupper | `oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'` | Private hub↔spoke connectivity (`3`) |

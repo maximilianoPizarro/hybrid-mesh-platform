@@ -143,7 +143,8 @@ oc get applications -n openshift-gitops -l validatedpatterns.io/pattern=hybrid-m
 Expect **`hybrid-mesh-platform-hub`** then child apps (`acm-hub-spoke`, `developer-hub`, `console-links`, …). Prove platform surfaces are reachable:
 
 ```bash
-bash scripts/verify-console-links.sh   # hub — fleet menu links
+oc login --token=<token> --server=<hub-api-url>
+MIN_OK_CODE=200 bash scripts/verify-console-links.sh   # hub — expect 19 OK
 bash scripts/verify-fleet.sh
 ```
 

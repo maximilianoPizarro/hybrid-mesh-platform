@@ -98,8 +98,11 @@ See [Region Strategy](docs/validatedpatterns-docs/region-strategy.md) for detail
 Prove the **product surfaces** — not only that Argo CD apps exist:
 
 ```bash
-# Hub: console menu links (GitOps, Grafana, Developer Hub, ACS, Kafka Console, …)
-bash scripts/verify-console-links.sh
+# Hub: log in so OAuth-protected links (OpenShift AI) get a bearer token
+oc login --token=<token> --server=<hub-api-url>
+
+# Console menu links — expect 19 OK on a full hub install
+MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 
 # Fleet inventory + Skupper + ApplicationSet
 bash scripts/verify-fleet.sh
@@ -109,7 +112,7 @@ bash scripts/argocd-preflight.sh
 python scripts/verify-gitops-strategies.py
 ```
 
-See [Validation Guide](docs/validation-guide.md) for the full component matrix.
+See [Validation Guide](docs/validation-guide.md) for the full component matrix and [hub console links checklist](docs/validation-guide.md#hub-console-links-19-expected).
 
 ## Documentation
 

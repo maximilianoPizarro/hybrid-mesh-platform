@@ -21,11 +21,12 @@ Lessons from fresh RHDP fleets (hub + east + west). This guide helps you reach *
 Run the platform smoke test from the hub:
 
 ```bash
-bash scripts/verify-console-links.sh
+oc login --token=... --server=<hub-api-url>
+MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 bash scripts/verify-fleet.sh
 ```
 
-Expect **60–90 minutes** after hub sync for all hub console links to return HTTP 200 (operators, CRs, and routes converge gradually). Some links may show **503** while pods sync — that usually means the route exists but the backend is still starting.
+Expect **60–90 minutes** after hub sync for all **19** hub console links to return HTTP 200 (operators, CRs, and routes converge gradually). Some links may show **503** while pods sync — that usually means the route exists but the backend is still starting. Full checklist: [Validation guide → Hub console links](../validation-guide.md#hub-console-links-19-expected).
 
 ---
 
@@ -70,7 +71,7 @@ Wait for MCH **Running** before importing spokes or enabling heavy `acm-hub-spok
 **Preferred flow:**
 
 1. MCH **Running**
-2. Import east/west (UI or manual `ManagedCluster` + `auto-import-secret`)
+2. Import east/west (ACM UI, or **`ManagedCluster` first** then `auto-import-secret` — see chart `acm-hub-spoke`; do **not** pre-create a `Namespace` with `cluster.open-cluster-management.io/managedCluster` label)
 3. Optional: patch domains via `fleet-values-sync` manual job
 4. Re-enable automated sync on `acm-hub-spoke` once clusters are **Available**
 
@@ -182,6 +183,8 @@ MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 | **404 / 000** | Wrong hostname or no Route — check [Troubleshooting](troubleshooting.md) |
 
 Script uses cluster bearer token when logged in; excludes operator-created duplicate `rhodslink` ConsoleLinks.
+
+**Success criteria:** `Summary: 19 OK (200-399), 0 503 (route exists / pods down), 0 other` with exit code **0**.
 
 ---
 
