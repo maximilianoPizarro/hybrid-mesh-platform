@@ -84,7 +84,7 @@ oc get secret continue-ai-config -n user1-devspaces
 | Symptom | Fix |
 | ------- | --- |
 | DevSpaces link 404 on hub | Expected — DevSpaces is spoke-only; use east/west domain |
-| DevSpaces login fails | Use **htpasswd_users** on the spoke console login (not Keycloak); same `userN` / `Welcome123!` |
+| DevSpaces login fails | Use **workshop-users** on the spoke console login (not Keycloak); same `userN` / `Welcome123!` |
 | Wrong spoke DevSpaces | Template must set `targetCluster` + `spokeAppsDomain`; link uses `devspaces.<spokeAppsDomain>` |
 | Continue AI no API key | Ensure `kairos-system/kairos-ai-credentials` exists on spoke; re-run sync job |
 | Gitea clone fails in workspace | Check `devspaces-gitea-credentials` job and `{user}-devspaces` secret |

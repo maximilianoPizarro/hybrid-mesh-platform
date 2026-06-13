@@ -231,7 +231,7 @@ clusterGroup:
       namespace: hub-gateway-system
       argoProject: mesh
       path: charts/all/hub-gateway
-      syncWave: '0'
+      syncWave: '5'
     workshop-kuadrant-apis:
       name: workshop-kuadrant-apis
       namespace: workshop-kuadrant-apis

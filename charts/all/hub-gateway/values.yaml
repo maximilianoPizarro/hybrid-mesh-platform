@@ -5,6 +5,11 @@ clusters:
   west:
     domain: ""
 gateway:
+  # proxy = nginx → Skupper ExternalName services (works without Istio GatewayClass).
+  # istio = Gateway API + HTTPRoute (requires Service Mesh operator).
+  mode: proxy
+  proxy:
+    image: mirror.gcr.io/nginxinc/nginx-unprivileged:1.27.3-alpine
   weights:
     east: 50
     west: 50

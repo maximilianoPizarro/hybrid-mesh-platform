@@ -1,3 +1,4 @@
+{{- if eq (.Values.gateway.mode | default "proxy") "istio" }}
 {{- $cb := .Values.gateway.circuitBreaking | default dict }}
 {{- if ne (toString (index $cb "enabled" | default true)) "false" }}
 {{- $cp := $cb.connectionPool | default dict }}
@@ -67,5 +68,6 @@ spec:
       interval: {{ $od.interval | default "10s" }}
       baseEjectionTime: {{ $od.baseEjectionTime | default "30s" }}
       maxEjectionPercent: {{ $od.maxEjectionPercent | default 100 }}
+{{- end }}
 {{- end }}
 {{- end }}

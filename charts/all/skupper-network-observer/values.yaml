@@ -1,1 +1,11 @@
-network-observer: {}
+# Subchart values — deploy into Argo destination namespace (service-interconnect).
+network-observer:
+  fullnameOverride: skupper-network-observer
+  route:
+    enabled: false
+  tls:
+    skupperIssued: true
+  auth:
+    strategy: basic
+    basic:
+      create: true

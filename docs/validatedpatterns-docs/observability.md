@@ -208,9 +208,18 @@ Re-sync the `kafka-console` Argo CD application after Skupper listeners are heal
 
 | Dashboard | Scope | Datasources |
 | --------- | ----- | ----------- |
-| `east-west-traffic` | Hub | Hub, Prometheus-East, Prometheus-West — Kafka health row (gauges, pie, bargauge) |
-| `multi-cluster-istio` | Hub | Hub, Prometheus-East, Prometheus-West — L4 bargauge + error/latency timeseries |
+| **`platform-overview`** | Hub | Hub, Prometheus-East, Prometheus-West — mesh, hub-gateway, Kafka fleet KPIs |
 | `local-metrics` | Each spoke | Local Prometheus (UWM/Thanos) — ztunnel + Kafka + workloads |
+
+Legacy doc names `east-west-traffic` / `multi-cluster-istio` are consolidated into **`platform-overview`** (`charts/all/grafana-dashboards/templates/platform-overview.yaml`).
+
+### Fleet metrics checklist
+
+1. Skupper VAN complete — `sitesInNetwork: 3`
+2. Hub listeners `prometheus-east`, `prometheus-west` **Ready**
+3. Spoke Connectors + `prometheus-auth-proxy` Running (`spoke-interconnect`)
+4. GrafanaDatasource CRs present on hub
+5. Generate traffic (Industrial Edge / hub-gateway) for mesh panels
 
 ## References
 

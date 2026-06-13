@@ -1,5 +1,34 @@
 {{- $count := int .Values.userCount }}
-{{- $namespaces := list "industrial-edge-tst-all" "industrial-edge-data-lake" "hub-gateway-system" "workshop-kuadrant-apis" "neuroface" "developer-hub" "maas-workshop" "mailpit-templates" "mcp-system" "showroom" "redhat-ods-applications" "openshift-gitops" }}
+{{- $namespaces := list
+  "industrial-edge-tst-all"
+  "industrial-edge-data-lake"
+  "industrial-edge-stormshift-messaging"
+  "industrial-edge-ml-workspace"
+  "hub-gateway-system"
+  "workshop-kuadrant-apis"
+  "neuroface"
+  "developer-hub"
+  "maas-workshop"
+  "mailpit-templates"
+  "mcp-system"
+  "showroom"
+  "redhat-ods-applications"
+  "openshift-gitops"
+  "service-interconnect"
+  "openshift-cnv"
+  "cnv-workshop"
+  "camel-dashboard"
+  "kafka-console"
+  "stackrox"
+  "gitea"
+  "kubecost"
+  "kairos-system"
+  "quay-registry"
+  "openshift-cluster-observability-operator"
+  "vault"
+  "redhat-connectivity-link-operator"
+  "spoke-gateway-system"
+}}
 {{- range $ns := $namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -19,4 +48,10 @@ subjects:
     kind: User
     name: {{ printf "user%d" (add $i 1) | quote }}
 {{- end }}
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: admin
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: platformadmin
 {{- end }}

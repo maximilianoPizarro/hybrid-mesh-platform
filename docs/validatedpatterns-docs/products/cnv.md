@@ -10,12 +10,17 @@ weight: 19
 
 Red Hat **OpenShift Virtualization** (KubeVirt) runs virtual machines alongside containers. This platform ships a workshop example VM and a Developer Hub software template for hands-on CNV labs.
 
+## Prerequisites
+
+- Hub workers with **nested virtualization** (or bare-metal). Many cloud/RHDP worker flavors do **not** expose nested virt — CSV may stay Pending or VMs fail to start.
+- OLM subscription `kubevirt-hyperconverged` in namespace `openshift-cnv` (hub clustergroup).
+
 ## What ships
 
 | Resource | Purpose |
 | -------- | ------- |
 | KubeVirt / CNV operator | OLM subscription on hub |
-| Example VM `workshop-cnv-demo` | Cirros-based demo in `cnv-example` namespace |
+| Example VM `workshop-cnv-demo` | Cirros-based demo in **`cnv-workshop`** namespace |
 | Software template **CNV VM Workshop** | Scaffolds VM manifests into user Gitea org |
 
 The example VM uses cloud-init with user `cirros` for console login (see [`charts/all/cnv-example/templates/all.yaml`](https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/cnv-example/templates/all.yaml)).
@@ -40,10 +45,14 @@ KubeVirt CRs (`VirtualMachine`, `DataVolume`) are reconciled by the CNV operator
 ## Verify
 
 ```bash
+oc get csv -n openshift-cnv
 oc get kubevirt -n openshift-cnv
-oc get vm -n cnv-example
-virtctl console workshop-cnv-demo -n cnv-example
+oc get hyperconverged -n openshift-cnv
+oc get vm -n cnv-workshop
+virtctl console workshop-cnv-demo -n cnv-workshop
 ```
+
+Workshop htpasswd users (`workshop-users` IdP) receive `view` in `cnv-workshop` via `platform-users` RoleBindings.
 
 ## Documentation
 

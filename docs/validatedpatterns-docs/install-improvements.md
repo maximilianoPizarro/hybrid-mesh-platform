@@ -188,6 +188,79 @@ Script uses cluster bearer token when logged in; excludes operator-created dupli
 
 ---
 
+## Industrial Edge dashboard (hub-gateway)
+
+Default **`gateway.mode: proxy`** in `charts/all/hub-gateway` deploys nginx → Skupper `ie-gateway-{east,west}` listeners. Requires:
+
+1. **`fleet-values-sync`** populated `clusters.east.domain` / `clusters.west.domain` on hub
+2. Skupper **`sitesInNetwork: 3`** (hub + east + west)
+3. Spoke apps **`spoke-interconnect`** + **`spoke-gateway`** + **`industrial-edge-tst`** Healthy on each spoke
+4. Listeners `ie-gateway-east|west` **Ready** (not *No matching connectors*)
+
+```bash
+bash scripts/verify-industrial-edge.sh
+# optional: EAST_DOMAIN=apps.<east> WEST_DOMAIN=apps.<west> ...
+```
+
+Per-spoke direct check: `https://line-dashboard-industrial-edge-tst-all.<spoke-domain>/`
+
+Set `gateway.mode: istio` only when Service Mesh GatewayClass is programmed.
+
+---
+
+## Grafana fleet metrics (East/West)
+
+Hub dashboard **`platform-overview`** uses datasources `Prometheus-East` / `Prometheus-West` → Skupper listeners `prometheus-east|west`.
+
+**No data on East/West panels** usually means:
+
+- Skupper links incomplete (`sitesInNetwork` ≠ 3)
+- Spoke **`spoke-interconnect`** missing `prometheus-{east,west}` Connector + `prometheus-auth-proxy`
+- Hub listeners `prometheus-east|west` **Pending** (*No matching connectors*)
+- ztunnel not Ready on ambient namespaces
+
+```bash
+oc get grafanadatasource -n openshift-cluster-observability-operator
+oc get listener -n service-interconnect | grep prometheus
+oc get ds -n ztunnel
+```
+
+Fix Skupper VAN first — same prerequisite as Industrial Edge.
+
+---
+
+## Workshop users (`workshop-users` IdP)
+
+Chart `platform-users` creates htpasswd users **`user1..userN`**, **`admin`**, **`platformadmin`** (default password `Welcome123!`).
+
+- OAuth IdP name: **`workshop-users`** (secret `workshop-users` in `openshift-config`)
+- **`grantClusterReader: true`** — Platform Hub-Spoke menu (ACM, Kiali, Skupper, Grafana links)
+- Namespace **`view`** RoleBindings for middleware namespaces
+
+Re-apply after rename:
+
+```bash
+oc apply -f scripts/fix-htpasswd-users-secret-job.yaml
+oc wait --for=condition=complete job/htpasswd-users-secret-fix -n openshift-gitops --timeout=5m
+```
+
+Login: OpenShift console → **workshop-users** → `user1` / `Welcome123!`
+
+---
+
+## OpenShift Virtualization (CNV)
+
+Hub-only. Chart `cnv-example` installs Subscription + HyperConverged + demo VM in **`cnv-workshop`**.
+
+Requires nested virtualization on workers (may be unavailable on some RHDP cloud flavors).
+
+```bash
+oc get csv -n openshift-cnv | grep kubevirt
+oc get vm -n cnv-workshop
+```
+
+---
+
 ## Related docs
 
 - [Getting started](getting-started.md) — ACM-first install phases

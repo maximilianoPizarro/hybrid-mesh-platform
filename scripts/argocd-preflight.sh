@@ -75,3 +75,4 @@ PY
 
 echo ""
 echo "=== Preflight complete ==="
+exit "$failed"
