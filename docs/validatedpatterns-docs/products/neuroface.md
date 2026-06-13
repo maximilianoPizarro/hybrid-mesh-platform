@@ -21,4 +21,4 @@ Shared **Hybrid Mesh AI Workshop** demo for webcam face/object detection and con
 
 **Not LibreChat:** workshop chat multimodal UX is NeuroFace only.
 
-Workshop content: [Hybrid Mesh AI Workshop — NeuroFace](../workshop/parte-b/25-neuroface.md).
+Workshop content: [Hybrid Mesh AI Workshop](../workshop/index.md) (module 27 — NeuroFace).

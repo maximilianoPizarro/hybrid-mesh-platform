@@ -40,9 +40,9 @@ screenshots:
 
   - filename: 05-cases-roadmap.png
     dest: docs/assets/images/workshop/05-cases-roadmap.png
-    url: "https://console-openshift-console.{hub_domain}/"
-    wait_for: "Application menu"
-    notes: Console Application Menu → Platform Hub-Spoke links
+    url: "https://kafka-console.{hub_domain}/"
+    wait_for: "Kafka"
+    notes: Kafka Console multicluster (dev/factory/prod × east/west) — customer journey milestone sensors→Kafka
 
   - filename: 10-acm-multicluster.png
     dest: docs/assets/images/workshop/10-acm-multicluster.png
@@ -64,9 +64,9 @@ screenshots:
 
   - filename: 13-deploy-industrial-edge.png
     dest: docs/assets/images/workshop/13-deploy-industrial-edge.png
-    url: "https://industrial-edge.{hub_domain}/"
-    wait_for: "Industrial"
-    notes: Industrial Edge line dashboard (east)
+    url: "https://industrial-edge.{hub_domain}/sensors"
+    wait_for: "temperature"
+    notes: ManuELA Realtime Data — pump-1 temperature/vibration charts (east spoke IE stack)
 
   - filename: 14-kairos-scaling.png
     dest: docs/assets/images/workshop/14-kairos-scaling.png
@@ -167,9 +167,9 @@ screenshots:
 
   - filename: 29-full-verification.png
     dest: docs/assets/images/workshop/29-full-verification.png
-    url: "https://console-openshift-console.{hub_domain}/"
-    wait_for: "Platform Hub-Spoke"
-    notes: Console links grid (facilitator verification)
+    url: "https://openshift-gitops-server-openshift-gitops.{hub_domain}/applications"
+    wait_for: "Applications"
+    notes: Argo CD Applications tiles Healthy/Synced (facilitator Fleet+GitOps pillar)
 
   - filename: 30-ai-show-and-tell.png
     dest: docs/assets/images/workshop/30-ai-show-and-tell.png

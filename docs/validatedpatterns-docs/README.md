@@ -38,6 +38,13 @@ Hub-spoke multi-cluster GitOps on OpenShift. **Sandbox tier** Validated Pattern.
 | Observability | [observability.md](observability.md) |
 | Scaffolding new edge instances | [scaffolding.md](scaffolding.md) |
 
+## Workshop
+
+| Topic | File |
+|-------|------|
+| **Showroom guide** (heroes, sync, verify) | [workshop/index.md](workshop/index.md) |
+| Live Antora content | [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai) |
+
 ## Reference
 
 | Topic | File |

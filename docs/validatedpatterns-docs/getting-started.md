@@ -238,7 +238,7 @@ curl -sk -o /dev/null -w '%{http_code}\n' https://showroom-showroom.apps.<hub-do
 
 3. Facilitator test: register at `workshop-registration` → redirect Showroom with `USER_NAME=user1`; Developer Hub → System **`hybrid-mesh-shared-demos`**.
 
-Detail: [Workshop docs](workshop/index.md) · Cursor skill **hybrid-mesh-ai-workshop** (`.cursor/skills/hybrid-mesh-ai-workshop/SKILL.md`).
+Detail: [Workshop guide](workshop/index.md) (heroes, sync, verify) · Cursor skills: platform `.cursor/skills/` · showroom `.cursor/skills/hybrid-mesh-ai-workshop/SKILL.md`.
 
 ---
 

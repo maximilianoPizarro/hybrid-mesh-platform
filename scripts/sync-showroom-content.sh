@@ -42,10 +42,23 @@ copy "$IMG_SRC/openshift-ia.png" "22-openshift-ia-stack.png"
 copy "$IMG_SRC/kairos-ia-agents.png" "14-kairos-ia-agents.png"
 
 echo "== Legacy workshop hero images (module thumbnails) =="
+LEGACY_ORPHANS=(
+  "00-index-hybrid-mesh.png"
+  "23-llm-rag.png"
+  "25-neuroface-dashboard.png"
+  "26-ai-end-user-apps.png"
+  "27-full-verification.png"
+)
 if [[ -d "$IMG_SRC/workshop" ]]; then
   for f in "$IMG_SRC/workshop"/*.png; do
     [[ -f "$f" ]] || continue
-    copy "$f" "$(basename "$f")"
+    base="$(basename "$f")"
+    skip=0
+    for o in "${LEGACY_ORPHANS[@]}"; do
+      [[ "$base" == "$o" ]] && skip=1 && break
+    done
+    [[ "$skip" -eq 1 ]] && echo "  skip legacy orphan $base" && continue
+    copy "$f" "$base"
   done
 fi
 

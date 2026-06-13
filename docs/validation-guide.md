@@ -226,7 +226,9 @@ See the full [Troubleshooting guide](validatedpatterns-docs/troubleshooting.md) 
 
 ### Validation Without Showroom
 
-The Workshop Showroom (`showroom-hybrid-mesh-ai`) is optional. Without it:
+The Workshop Showroom (`showroom-hybrid-mesh-ai`) is optional but recommended for RHDP labs. Maintainer guide: [Workshop docs](validatedpatterns-docs/workshop/index.md).
+
+Without it:
 
 1. **Skip these applications:**
    - `showroom`

@@ -6,7 +6,7 @@
 Validated Patterns implementation of the Hybrid Mesh hub-spoke platform (forked from [multicloud-gitops](https://github.com/validatedpatterns/multicloud-gitops)).
 
 **Documentation:** [maximilianopizarro.github.io/hybrid-mesh-platform](https://maximilianopizarro.github.io/hybrid-mesh-platform/)  
-**Workshop Showroom:** [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai)
+**Workshop Showroom:** [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai) · [Workshop guide (GitHub Pages)](docs/validatedpatterns-docs/workshop/index.md)
 
 ## Why this pattern?
 
@@ -114,6 +114,20 @@ python scripts/verify-gitops-strategies.py
 
 See [Validation Guide](docs/validation-guide.md) for the full component matrix and [hub console links checklist](docs/validation-guide.md#hub-console-links-19-expected).
 
+## Workshop Showroom
+
+Hub-resident Antora lab (`showroom`, `workshop-registration`, `workshop-demos` charts). Learners register → `https://showroom-showroom.apps.<hub-domain>/` with per-user `USER_NAME`.
+
+| Task | Command |
+| ---- | ------- |
+| Sync hero PNGs to showroom repo | `SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh` |
+| Screenshot manifest (live hub URLs) | `scripts/workshop-screenshot-manifest.yaml` |
+| Batch capture | `node scripts/capture-workshop-screenshots.mjs` |
+| Verify routes | `bash scripts/verify-workshop-http200.sh` |
+| Rollout after content push | `oc rollout restart deployment/showroom -n showroom` |
+
+Hero images are **live cluster captures** in `docs/assets/images/workshop/` (ACS heroes `03`/`20` preserved). Full maintainer guide: [Workshop docs](docs/validatedpatterns-docs/workshop/index.md).
+
 ## Documentation
 
 | Topic | Link |
@@ -127,6 +141,7 @@ See [Validation Guide](docs/validation-guide.md) for the full component matrix a
 | **Deployment chain** | [docs/validatedpatterns-docs/gitops-deployment-chain.md](docs/validatedpatterns-docs/gitops-deployment-chain.md) |
 | **Products Index** | [docs/validatedpatterns-docs/products/index.md](docs/validatedpatterns-docs/products/index.md) |
 | **Troubleshooting** | [docs/validatedpatterns-docs/troubleshooting.md](docs/validatedpatterns-docs/troubleshooting.md) |
+| **Workshop Showroom** | [docs/validatedpatterns-docs/workshop/index.md](docs/validatedpatterns-docs/workshop/index.md) |
 
 ## Support
 

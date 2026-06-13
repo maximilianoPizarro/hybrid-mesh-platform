@@ -23,6 +23,7 @@ nav_order: 1
 | Red Hat products | [Products index](validatedpatterns-docs/products/index.md) |
 | Scaffolding | [Scaffolding](validatedpatterns-docs/scaffolding.md) |
 | Troubleshooting | [Troubleshooting](validatedpatterns-docs/troubleshooting.md) |
+| **Workshop Showroom** | [Hybrid Mesh AI Workshop](validatedpatterns-docs/workshop/index.md) |
 
 ## Reference
 
