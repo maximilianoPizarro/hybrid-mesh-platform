@@ -1,0 +1,233 @@
+# Workshop hero screenshot sources — hub cluster live UI only.
+# Hub domain from: oc get ingresses.config/cluster -o jsonpath='{.spec.domain}'
+hub_domain: apps.cluster-22jv2.dynamic2.redhatworkshops.io
+viewport:
+  width: 1440
+  height: 900
+output_width: 960
+
+# auth: Console token via oc whoami -t (pre-login session in browser)
+auth:
+  console_url: "https://console-openshift-console.{hub_domain}/"
+  devhub_url: "https://developer-hub.{hub_domain}/"
+  token_param: "access_token"
+
+screenshots:
+  - filename: 01-hybrid-strategy.png
+    dest: docs/assets/images/workshop/01-hybrid-strategy.png
+    url: "https://console-openshift-console.{hub_domain}/multicloud/infrastructure/clusters"
+    wait_for: "Managed clusters"
+    notes: ACM Infrastructure → Clusters (3 Available)
+
+  - filename: 02-rosa-architecture.png
+    dest: docs/assets/images/workshop/02-rosa-architecture.png
+    url: "https://console-openshift-console.{hub_domain}/overview"
+    wait_for: "Cluster"
+    notes: Console Overview / cluster health
+
+  - filename: 03-security-scale-hybrid.png
+    dest: docs/assets/images/workshop/03-security-scale-hybrid.png
+    preserve: true
+    url: "https://central-stackrox.{hub_domain}/main/clusters"
+    wait_for: "Secure clusters"
+    notes: ACS Central — keep existing capture (Clusters / registration secret)
+
+  - filename: 04-aws-ai-integration.png
+    dest: docs/assets/images/workshop/04-aws-ai-integration.png
+    url: "https://developer-hub.{hub_domain}/catalog"
+    wait_for: "Catalog"
+    notes: Developer Hub catalog / ODS system
+
+  - filename: 05-cases-roadmap.png
+    dest: docs/assets/images/workshop/05-cases-roadmap.png
+    url: "https://console-openshift-console.{hub_domain}/"
+    wait_for: "Application menu"
+    notes: Console Application Menu → Platform Hub-Spoke links
+
+  - filename: 10-acm-multicluster.png
+    dest: docs/assets/images/workshop/10-acm-multicluster.png
+    url: "https://console-openshift-console.{hub_domain}/multicloud/infrastructure/clusters"
+    wait_for: "Managed clusters"
+    notes: ACM fleet / ManagedClusters list
+
+  - filename: 11-hybrid-mesh.png
+    dest: docs/assets/images/workshop/11-hybrid-mesh.png
+    url: "https://skupper-network-observer-service-interconnect.{hub_domain}/"
+    wait_for: "Sites"
+    notes: Skupper Network Observer topology
+
+  - filename: 12-software-templates.png
+    dest: docs/assets/images/workshop/12-software-templates.png
+    url: "https://developer-hub.{hub_domain}/create"
+    wait_for: "Software Template"
+    notes: Developer Hub → Create → Software Template
+
+  - filename: 13-deploy-industrial-edge.png
+    dest: docs/assets/images/workshop/13-deploy-industrial-edge.png
+    url: "https://industrial-edge.{hub_domain}/"
+    wait_for: "Industrial"
+    notes: Industrial Edge line dashboard (east)
+
+  - filename: 14-kairos-scaling.png
+    dest: docs/assets/images/workshop/14-kairos-scaling.png
+    url: "https://kairos-console-kairos-system.{hub_domain}/"
+    wait_for: "Kairos"
+    notes: Kairos SmartScaling console
+
+  - filename: 15-observability.png
+    dest: docs/assets/images/workshop/15-observability.png
+    url: "https://grafana.{hub_domain}/d/platform-overview/platform-overview"
+    wait_for: "Grafana"
+    notes: Grafana platform-overview dashboard
+
+  - filename: 16-openshift-gitops.png
+    dest: docs/assets/images/workshop/16-openshift-gitops.png
+    url: "https://openshift-gitops-server-openshift-gitops.{hub_domain}/applications"
+    wait_for: "Applications"
+    notes: Argo CD Applications (hub)
+
+  - filename: 17-service-mesh.png
+    dest: docs/assets/images/workshop/17-service-mesh.png
+    url: "https://kiali-openshift-cluster-observability-operator.{hub_domain}/kiali/console/graph/namespaces"
+    wait_for: "Graph"
+    notes: Kiali service mesh graph
+
+  - filename: 18-scalability.png
+    dest: docs/assets/images/workshop/18-scalability.png
+    url: "https://grafana.{hub_domain}/d/platform-overview/platform-overview?orgId=1&viewPanel=1"
+    wait_for: "Grafana"
+    notes: HPA / Kafka metrics panel in Grafana
+
+  - filename: 19-network-policies.png
+    dest: docs/assets/images/workshop/19-network-policies.png
+    url: "https://console-openshift-console.{hub_domain}/k8s/all-namespaces/networking.k8s.io~v1~NetworkPolicy"
+    wait_for: "NetworkPolicy"
+    notes: Console Networking → NetworkPolicies
+
+  - filename: 19-openshift-virtualization.png
+    dest: docs/assets/images/workshop/19-openshift-virtualization.png
+    url: "https://console-openshift-console.{hub_domain}/k8s/ns/workshop-cnv-demo/kubevirt.io~v1~VirtualMachine"
+    wait_for: "VirtualMachine"
+    notes: Console Virtualization → workshop-cnv-demo VM
+
+  - filename: 20-acs-kuadrant.png
+    dest: docs/assets/images/workshop/20-acs-kuadrant.png
+    preserve: true
+    url: "https://central-stackrox.{hub_domain}/main/clusters"
+    wait_for: "Secure clusters"
+    notes: ACS Central — keep existing capture (module 20 hero)
+
+  - filename: 21-finops-kubecost.png
+    dest: docs/assets/images/workshop/21-finops-kubecost.png
+    url: "https://kubecost.{hub_domain}/allocations"
+    wait_for: "Allocations"
+    notes: Kubecost allocations UI
+
+  - filename: 22-openshift-ai.png
+    dest: docs/assets/images/workshop/22-openshift-ai.png
+    url: "https://rhods-dashboard-redhat-ods-applications.{hub_domain}/projects/maas-workshop"
+    wait_for: "Projects"
+    notes: ODS dashboard → maas-workshop project
+
+  - filename: 23-ai-gateway.png
+    dest: docs/assets/images/workshop/23-ai-gateway.png
+    url: "https://developer-hub.{hub_domain}/catalog/default/component/workshop-ai-gateway"
+    wait_for: "AI Gateway"
+    notes: Developer Hub AI Gateway component / Swagger
+
+  - filename: 24-mcp-gateway.png
+    dest: docs/assets/images/workshop/24-mcp-gateway.png
+    url: "https://developer-hub.{hub_domain}/catalog/default/component/workshop-mcp-gateway"
+    wait_for: "MCP"
+    notes: Developer Hub MCP Gateway / Lightspeed
+
+  - filename: 25-llm-rag.png
+    dest: docs/assets/images/workshop/25-llm-rag.png
+    url: "https://developer-hub.{hub_domain}/lightspeed"
+    wait_for: "Lightspeed"
+    notes: Lightspeed chat with MaaS
+
+  - filename: 26-text-ai-predictive.png
+    dest: docs/assets/images/workshop/26-text-ai-predictive.png
+    url: "https://mailpit.{hub_domain}/"
+    wait_for: "Mailpit"
+    notes: Mailpit IE anomaly alert inbox
+
+  - filename: 27-neuroface.png
+    dest: docs/assets/images/workshop/27-neuroface.png
+    url: "https://neuroface.{hub_domain}/"
+    wait_for: "NeuroFace"
+    notes: NeuroFace PPE Safety UI
+
+  - filename: 28-ai-end-user-apps.png
+    dest: docs/assets/images/workshop/28-ai-end-user-apps.png
+    url: "https://industrial-edge.{hub_domain}/"
+    wait_for: "Industrial"
+    notes: Line dashboard / Camel K integration view
+
+  - filename: 29-full-verification.png
+    dest: docs/assets/images/workshop/29-full-verification.png
+    url: "https://console-openshift-console.{hub_domain}/"
+    wait_for: "Platform Hub-Spoke"
+    notes: Console links grid (facilitator verification)
+
+  - filename: 30-ai-show-and-tell.png
+    dest: docs/assets/images/workshop/30-ai-show-and-tell.png
+    url: "https://developer-hub.{hub_domain}/catalog/default/system/openshift-ai-workshop"
+    wait_for: "OpenShift AI"
+    notes: Developer Hub AI platform system view
+
+  # Architecture / index images (synced with arch-* prefix in showroom)
+  - filename: 00-arch-hub-spoke-flow.png
+    dest: docs/assets/images/arch-hub-spoke-flow.png
+    url: "https://skupper-network-observer-service-interconnect.{hub_domain}/"
+    wait_for: "Sites"
+    notes: Skupper observer topology (3 sites)
+
+  - filename: 00-arch-overview.png
+    dest: docs/assets/images/arch-overview.png
+    url: "https://console-openshift-console.{hub_domain}/"
+    wait_for: "Application menu"
+    notes: Console Application Menu Platform section
+
+  - filename: 11-arch-spoke-gateway.png
+    dest: docs/assets/images/arch-spoke-gateway.png
+    url: "https://grafana.{hub_domain}/d/platform-overview/platform-overview"
+    wait_for: "hub-gateway"
+    notes: Grafana hub-gateway panel with data
+
+  - filename: 11-arch-skupper-topology.png
+    dest: docs/assets/images/arch-skupper-topology.png
+    url: "https://skupper-network-observer-service-interconnect.{hub_domain}/"
+    wait_for: "Sites"
+    notes: Skupper observer sites=3
+
+  - filename: 13-arch-data-flow.png
+    dest: docs/assets/images/arch-data-flow.png
+    url: "https://kafka-console.{hub_domain}/"
+    wait_for: "Kafka"
+    notes: Kafka Console multicluster
+
+  - filename: 16-arch-gitops-sync.png
+    dest: docs/assets/images/arch-gitops-sync-sequence.png
+    url: "https://openshift-gitops-server-openshift-gitops.{hub_domain}/applications/argocd/hybrid-mesh-platform"
+    wait_for: "Sync"
+    notes: Argo CD app tree / sync waves
+
+  - filename: 15-arch-observability.png
+    dest: docs/assets/images/arch-observability-pipeline.png
+    url: "https://grafana.{hub_domain}/d/platform-overview/platform-overview"
+    wait_for: "Grafana"
+    notes: Grafana multicluster observability
+
+  - filename: 22-openshift-ia-stack.png
+    dest: docs/assets/images/openshift-ia.png
+    url: "https://rhods-dashboard-redhat-ods-applications.{hub_domain}/"
+    wait_for: "DataScienceCluster"
+    notes: ODS DSC / cluster status
+
+  - filename: 16-arch-sync-waves.png
+    dest: docs/assets/images/arch-sync-waves.png
+    url: "https://openshift-gitops-server-openshift-gitops.{hub_domain}/applications/argocd/hybrid-mesh-platform"
+    wait_for: "Sync"
+    notes: Argo CD sync waves detail
