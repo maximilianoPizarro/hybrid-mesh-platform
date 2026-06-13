@@ -23,6 +23,10 @@ components:
     syncWave: "2"
 
 subscriptions:
+  - name: servicemeshoperator3
+    namespace: openshift-operators
+    channel: stable-3.2
+    source: redhat-operators
   - name: skupper-operator
     namespace: openshift-operators
     channel: stable-2

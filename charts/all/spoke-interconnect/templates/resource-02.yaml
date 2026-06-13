@@ -1,7 +1,7 @@
 apiVersion: skupper.io/v2alpha1
 kind: Site
 metadata:
-  name: {{ .Values.clusterName }}
+  name: {{ include "spoke-interconnect.clusterName" . }}
   namespace: service-interconnect
   annotations:
     argocd.argoproj.io/sync-wave: "1"

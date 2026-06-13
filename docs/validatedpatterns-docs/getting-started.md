@@ -167,6 +167,8 @@ Confirm the **product surfaces** you installed are reachable — not only that A
 | Check | Command / UI | Product value |
 | ----- | -------------- | --------------- |
 | Console links (hub) | `oc login` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` | **19** fleet menu surfaces HTTP 200 — see [Validation guide](../validation-guide.md#hub-console-links-19-expected) |
+| Workshop + AI (strict 200) | `bash scripts/verify-workshop-http200.sh` | Showroom, MCP, DevSpaces spokes, ODS with token |
+| Day-2 bootstrap (ACM 2.16 Unknown) | `bash scripts/apply-post-install-day2.sh` | Mesh, showroom, MCP when Argo sync blocked — [install playbook](install-improvements.md#post-install-day-2-automated) |
 | ACM clusters | Console → **Infrastructure → Clusters** | Fleet inventory |
 | Spoke app tree | ACM **Applications** or hub Argo CD | Dual GitOps (PUSH + PULL) |
 | Skupper | `oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'` | Private hub↔spoke connectivity (`3`) |
@@ -211,7 +213,11 @@ Create `continue-ai-config` Secret with MaaS API key after deploy (not in Git).
 
 ### Hybrid Mesh AI Workshop (hub)
 
-Enabled by default in hub `values.yaml` (sync waves 4–7). Antora content: [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai) (separate repo).
+Enabled by default in hub `values.yaml` (sync waves 4–7). Antora content: [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai) (separate repo). Sync architecture images:
+
+```bash
+SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh
+```
 
 1. After hub sync, create ACS init bundle credentials (clusters empty in ACS UI until this runs):
 

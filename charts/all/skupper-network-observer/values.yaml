@@ -5,7 +5,8 @@ network-observer:
     enabled: false
   tls:
     skupperIssued: true
+  # Demo: open console without basic auth on /api (workshop / RHDP labs only).
   auth:
-    strategy: basic
+    strategy: none
     basic:
-      create: true
+      create: false

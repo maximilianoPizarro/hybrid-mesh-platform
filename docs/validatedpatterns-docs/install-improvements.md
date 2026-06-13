@@ -23,6 +23,7 @@ Run the platform smoke test from the hub:
 ```bash
 oc login --token=... --server=<hub-api-url>
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
+bash scripts/verify-workshop-http200.sh   # console links + showroom/MCP/IE/spokes
 bash scripts/verify-fleet.sh
 ```
 
@@ -38,7 +39,8 @@ Expect **60–90 minutes** after hub sync for all **19** hub console links to re
 2. **East / West** — `charts/region/east` and `charts/region/west` (parallel is fine).
 3. **Import spokes** — ACM UI or `auto-import-secret` (see [Getting started → Phase 3](getting-started.md#phase-3-register-spokes-acm--tokens)).
 4. **Sync domains** — trigger `fleet-values-sync` once (domains only; see below).
-5. **Verify** — console links + Skupper VAN (`sitesInNetwork: 3`).
+5. **Day-2 bootstrap** — when spokes are **Available**, run `bash scripts/apply-post-install-day2.sh` (mesh, showroom, MCP gateway, HTTP 200 gate).
+6. **Verify** — console links + Skupper VAN (`sitesInNetwork: 3`).
 
 ### Option B — Three RHDP orders in parallel
 
@@ -190,12 +192,13 @@ Script uses cluster bearer token when logged in; excludes operator-created dupli
 
 ## Industrial Edge dashboard (hub-gateway)
 
-Default **`gateway.mode: proxy`** in `charts/all/hub-gateway` deploys nginx → Skupper `ie-gateway-{east,west}` listeners. Requires:
+Hub **`hub-gateway`** uses **Istio Gateway API** (`Gateway` + `HTTPRoute`) → Skupper `ie-gateway-{east,west}` listeners. Requires:
 
-1. **`fleet-values-sync`** populated `clusters.east.domain` / `clusters.west.domain` on hub
-2. Skupper **`sitesInNetwork: 3`** (hub + east + west)
-3. Spoke apps **`spoke-interconnect`** + **`spoke-gateway`** + **`industrial-edge-tst`** Healthy on each spoke
-4. Listeners `ie-gateway-east|west` **Ready** (not *No matching connectors*)
+1. **OSSM 3.2** installed on hub and spokes (`servicemeshoperator3` Subscription + `Istio`/`ZTunnel` CRs — sync wave **4**, before `hub-gateway` wave **5**)
+2. **`fleet-values-sync`** populated `clusters.east.domain` / `clusters.west.domain` on hub
+3. Skupper **`sitesInNetwork: 3`** (hub + east + west)
+4. Spoke apps **`spoke-interconnect`** + **`spoke-gateway`** + **`industrial-edge-tst`** Healthy on each spoke
+5. Listeners `ie-gateway-east|west` **Ready** (not *No matching connectors*)
 
 ```bash
 bash scripts/verify-industrial-edge.sh
@@ -204,7 +207,11 @@ bash scripts/verify-industrial-edge.sh
 
 Per-spoke direct check: `https://line-dashboard-industrial-edge-tst-all.<spoke-domain>/`
 
-Set `gateway.mode: istio` only when Service Mesh GatewayClass is programmed.
+If Argo sync is **Unknown**, bootstrap mesh + Skupper manually:
+
+```bash
+bash scripts/apply-fleet-mesh.sh
+```
 
 ---
 
@@ -229,6 +236,61 @@ Fix Skupper VAN first — same prerequisite as Industrial Edge.
 
 ---
 
+## Skupper Network Observer (demo, sin auth)
+
+Console link: `https://skupper-network-observer-service-interconnect.<hub-domain>/`
+
+Chart `charts/all/skupper-network-observer` usa **`auth.strategy: none`** (sin basic auth en `/api/`). Solo para demos / RHDP — no usar en producción expuesta a Internet.
+
+Si la consola pide usuario/contraseña, re-sincronizar la app o aplicar:
+
+```bash
+helm template skupper-network-observer charts/all/skupper-network-observer \
+  --set global.localClusterDomain=apps.<hub-domain> \
+  | oc apply -n service-interconnect -f -
+```
+
+---
+
+## Service Mesh + Skupper bootstrap (spokes)
+
+**Symptom:** `istiod` **Not found**, spoke `Gateway/spoke-gateway` stuck *Waiting for controller*, Skupper `sitesInNetwork=1`, IE **502/503**.
+
+**Automated GitOps (default):**
+
+| Layer | Mechanism |
+| ----- | --------- |
+| Operator | `servicemeshoperator3` Subscription (`stable-3.2`) in clustergroup subscriptions + `operators-edge` / `operators-platform` (PUSH) |
+| Mesh CRs | App `servicemeshoperator3` (sync wave **4**) → `Istio`, `IstioCNI`, `ZTunnel`, ambient labels |
+| Spoke ingress | App `spoke-gateway` (wave **6**) after istiod **Running** |
+| Hub ingress | App `hub-gateway` (wave **5**) — Istio `Gateway` + `HTTPRoute` (no nginx fallback) |
+
+**Cause chain when broken:**
+
+1. **`servicemeshoperator3` Subscription** missing or mesh app synced before CSV installs
+2. **`spoke-interconnect`** rendered with empty `clusterName` → invalid `Site/` and `Connector/ie-gateway-`
+3. Skupper tokens never create `Link/hub-link` until spoke `Site` exists
+
+**Mitigation** (after ManagedClusters **Available**):
+
+```bash
+bash scripts/apply-fleet-mesh.sh
+```
+
+Installs OSSM 3.2 (`stable-3.2`), applies `spoke-interconnect` + `spoke-gateway` + `industrial-edge-tst` on east/west, re-runs Skupper token sync, and validates IE + Prometheus paths.
+
+**Verify:**
+
+```bash
+oc get pods -n istio-system -l app=istiod   # east/west
+oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'
+bash scripts/verify-industrial-edge.sh
+```
+
+Expect **`sitesInNetwork=3`**, **istiod Running** on spokes, hub IE **200**, `prometheus-east|west` listeners **Ready**.
+
+---
+
 ## Workshop users (`workshop-users` IdP)
 
 Chart `platform-users` creates htpasswd users **`user1..userN`**, **`admin`**, **`platformadmin`** (default password `Welcome123!`).
@@ -245,6 +307,95 @@ oc wait --for=condition=complete job/htpasswd-users-secret-fix -n openshift-gito
 ```
 
 Login: OpenShift console → **workshop-users** → `user1` / `Welcome123!`
+
+---
+
+## Workshop Showroom (Antora lab)
+
+Hub apps **`workshop-registration`** (wave 4) and **`showroom`** (wave 5) live in namespace **`showroom`**. Entry from the console link **Hybrid Mesh AI Workshop** → registration → redirect to Antora with `USER_NAME=userN`.
+
+| URL | Purpose |
+| --- | ------- |
+| `https://workshop-registration.<hub-domain>/` | Assign `userN`, progress tracking |
+| `https://showroom-showroom.<hub-domain>/` | Lab guide + embedded terminal (`/terminal/`) |
+
+**Symptom:** `showroom-showroom` returns **503** — Route missing or Argo never applied the `showroom` chart (common when sync status is **Unknown** on ACM 2.16 hubs).
+
+**Mitigation** (after `fleet-values-sync` has east/west domains, or once ManagedClusters are **Available**):
+
+```bash
+bash scripts/apply-workshop-showroom.sh
+```
+
+The script reads hub/east/west domains from the cluster, runs `helm template | oc apply`, and waits for the pod (Antora build init can take ~3 min).
+
+**Verify:**
+
+```bash
+curl -sk -o /dev/null -w '%{http_code}\n' https://workshop-registration.apps.<hub-domain>/api/health
+curl -sk -o /dev/null -w '%{http_code}\n' https://showroom-showroom.apps.<hub-domain>/
+```
+
+Expect **200** on both. Facilitator flow: register → Showroom with `?USER_NAME=user1` → Developer Hub catalog **`hybrid-mesh-shared-demos`**.
+
+After pushing new Antora content to `showroom-hybrid-mesh-ai`:
+
+```bash
+bash scripts/sync-showroom-content.sh
+# or: oc rollout restart deployment/showroom -n showroom
+```
+
+---
+
+## Post-install day-2 (automated)
+
+When ACM import and `fleet-values-sync` are done but Argo CD shows **Unknown** sync (ACM 2.16), run one script from the hub:
+
+```bash
+export KUBECONFIG=/tmp/hub-kubeconfig   # or oc login
+bash scripts/apply-post-install-day2.sh
+```
+
+| Step | Script | What it fixes |
+| ---- | ------ | ------------- |
+| Fleet mesh + Skupper | `apply-fleet-mesh.sh` | OSSM 3.2, spoke-interconnect, IE listeners, `sitesInNetwork=3` |
+| Workshop showroom | `apply-workshop-showroom.sh` | Registration + Antora pod when `showroom` app never synced |
+| MCP Gateway | `apply-mcp-gateway.sh` | CRDs + MCPServerRegistration when `/mcp` returns 503 |
+| HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
+
+Skip mesh if already healthy: `SKIP_MESH=1 bash scripts/apply-post-install-day2.sh`.
+
+---
+
+## MCP Gateway
+
+Console link: `https://mcp-gateway.<hub-domain>/mcp` (expect **HTTP 200** on `/mcp`).
+
+When Argo app `mcp-gateway` stays **Unknown** and the route returns **503**:
+
+```bash
+bash scripts/apply-mcp-gateway.sh
+```
+
+Requires hub OpenShift AI / Lightspeed stack for MCPServerRegistration backends.
+
+---
+
+## Kafka + Camel MQTT (spokes)
+
+**Symptom:** `mqtt-to-kafka` Integration Error; Kafka metadata timeout; no messages on topic `temperature`.
+
+**Fix chain (Git + day-2):**
+
+1. **`clusterName`** in spoke values — `charts/region/east|west/values.yaml` overrides for `industrial-edge-tst`, `stormshift`, `industrial-edge-data-lake` (avoids empty broker DNS `broker-0-.`).
+2. **Kafka advertised host** — Strimzi `advertisedHost` needs matching **EndpointSlice** on hub (`*-kafka-brokers-advertised`); see [Troubleshooting → Kafka advertised DNS](troubleshooting.md#kafka-advertised-dns-endpointslice).
+3. **Istio ambient + Camel K** — trait **`deployment`** with `istio.io/dataplane-mode: none` on `mqtt-to-kafka` (trait `pod` is ignored in Camel K 2.10).
+4. **Registry 401** — refresh `camel-k-registry-docker`, delete Integration + IntegrationKit, re-sync app.
+
+```bash
+oc get integration mqtt-to-kafka -n industrial-edge-tst-all -o jsonpath='{.status.phase}{"\n"}'
+# Expect Running
+```
 
 ---
 

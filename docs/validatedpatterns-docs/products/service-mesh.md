@@ -22,9 +22,12 @@ Red Hat **OpenShift Service Mesh 3** (OSSM3) provides **ambient mesh** on OpenSh
 | `candidates` | 3.0.0-tp.2 | **No** | Tech Preview — do not use for production demos |
 | **`stable-3.2`** | 3.2.x | **Yes** | **Recommended** for this platform (OCP 4.18–4.21) |
 
-Subscription: `charts/all/operators/templates/servicemeshoperator3.yaml` → `channel: stable-3.2`.
+Subscription: `servicemeshoperator3` (`channel: stable-3.2`) is installed automatically on **hub and spokes** via:
 
-Mesh manifests: `charts/all/servicemeshoperator3` (sync-wave 3 on hub and spokes via ApplicationSet).
+- Clustergroup **subscriptions** (`charts/region/{hub,east,west}/values.yaml`)
+- **`operators-edge`** (spoke PULL) and **`operators-platform`** (spoke PUSH via `spoke-meta-push`)
+
+Mesh manifests: `charts/all/servicemeshoperator3` (sync-wave **4** on hub and spokes, after operator CSV).
 
 ## Ambient architecture
 

@@ -32,6 +32,9 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | TechDocs tab 404 / builder not local | `techdocs.builder: external` or missing mkdocs | Set `builder: local` in app-config; scaffolded repos need `mkdocs.yml` + `backstage.io/techdocs-ref: dir:.` |
 | Quay org-setup Job failing | `/version` redirect, CSRF, or duplicate robot | Use GitOps `setup.py` with `/discovery` + bearer token; see [Quay](products/quay.md) |
 | DevSpaces link on hub 404 | DevSpaces is spoke-only | Open `https://devspaces.<east-or-west-domain>` from template output |
+| MCP Gateway **503** / `/mcp` 404 | Argo Unknown — CRDs never applied | `bash scripts/apply-mcp-gateway.sh` |
+| Camel `mqtt-to-kafka` Error, Kafka metadata timeout | Missing advertised EndpointSlice or ambient ztunnel on Kafka TCP | EndpointSlice + `deployment` trait `istio.io/dataplane-mode: none`; see [below](#kafka-advertised-dns-endpointslice) |
+| Stormshift MirrorMaker2 CrashLoop | Empty `clusterName` → `broker-0-.` | Set `clusterName: east|west` in spoke app values |
 
 ---
 
@@ -285,6 +288,53 @@ oc get integration mqtt-to-kafka -n industrial-edge-tst-all \
 **Enable ML inference later:** upload model to MinIO, set `anomalyDetection.enabled: true` in spoke app values, sync `industrial-edge-data-science-cluster` then `industrial-edge-tst`.
 
 **Camel K `401 Unauthorized` / `ImagePullBackOff` on internal registry:** The PostSync Job `camel-k-registry-bootstrap` creates `camel-k-registry-docker` from the `builder` SA token and patches `IntegrationPlatform` + `pull-secret` trait. If the integration kit is stuck in Error, delete the Integration and IntegrationKit, then re-sync the app.
+
+**Camel K + Istio ambient (MQTT → Kafka silent failure):** With `istio.io/dataplane-mode: ambient` on `industrial-edge-tst-all`, ztunnel intercepts Kafka broker TCP and Camel cannot complete metadata fetch. Git fix: `deployment` trait (not `pod`) sets `istio.io/dataplane-mode: none` on the integration Deployment.
+
+```yaml
+# charts/all/industrial-edge-tst/templates/camel-integrations.yaml
+traits:
+  deployment:
+    configuration:
+      metadata:
+        labels:
+          istio.io/dataplane-mode: none
+```
+
+---
+
+## Kafka advertised DNS (EndpointSlice)
+
+**Symptom:** Camel or MirrorMaker2 logs `UnknownHostException` for `dev-cluster-broker-0-<clusterName>.<namespace>.svc` or metadata request timeout.
+
+**Cause:** Strimzi `Kafka` CR sets `advertisedHost` to a custom DNS name; clients resolve it via hub **EndpointSlice** objects that Skupper/kafka-console charts create. If `clusterName` is empty in spoke values, broker hostnames are invalid (`broker-0-.`).
+
+**Fix:**
+
+1. Set `clusterName: east|west` in `charts/region/east|west/values.yaml` for IE tst, stormshift, datalake apps.
+2. Verify EndpointSlices exist on hub for each broker advertised name.
+3. Re-sync `field-content-kafka-console` if west/east broker lists are stale.
+
+```bash
+oc get endpointslices -A | grep kafka-brokers-advertised
+oc get kafka -n industrial-edge-tst-all -o yaml | grep -A2 advertisedHost
+```
+
+---
+
+## MCP Gateway (Argo Unknown)
+
+**Symptom:** `https://mcp-gateway.<hub-domain>/mcp` returns **503** or **404**; Argo app `mcp-gateway` sync **Unknown**.
+
+**Cause:** ACM 2.16 schema bug blocks Application sync; MCPServerRegistration CRDs and routes never land.
+
+**Fix:**
+
+```bash
+bash scripts/apply-mcp-gateway.sh
+curl -sk -o /dev/null -w '%{http_code}\n' https://mcp-gateway.<hub-domain>/mcp
+# Expect 200
+```
 
 ---
 

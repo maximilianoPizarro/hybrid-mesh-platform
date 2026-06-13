@@ -42,6 +42,13 @@ spec:
     - camel:paho
     - camel:kafka
   traits:
+    # Ambient mesh breaks Kafka plain-TCP from Integration pods; broker EO already uses none.
+    deployment:
+      enabled: true
+      configuration:
+        metadata:
+          labels:
+            istio.io/dataplane-mode: none
     pull-secret:
       enabled: true
       configuration:

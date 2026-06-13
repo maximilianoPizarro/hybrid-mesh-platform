@@ -99,6 +99,11 @@ clusterGroup:
       namespace: openshift-operators
       channel: stable-2
       source: redhat-operators
+    servicemeshoperator3:
+      name: servicemeshoperator3
+      namespace: openshift-operators
+      channel: stable-3.2
+      source: redhat-operators
     quay-operator:
       name: quay-operator
       namespace: openshift-operators
@@ -156,10 +161,10 @@ clusterGroup:
       syncWave: '3'
     servicemeshoperator3:
       name: servicemeshoperator3
-      namespace: openshift-operators
+      namespace: istio-system
       argoProject: mesh
       path: charts/all/servicemeshoperator3
-      syncWave: '0'
+      syncWave: '4'
     acm-operator:
       name: acm-operator
       namespace: open-cluster-management

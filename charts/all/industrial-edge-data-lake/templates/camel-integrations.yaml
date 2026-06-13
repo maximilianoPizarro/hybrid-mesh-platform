@@ -48,6 +48,13 @@ spec:
   dependencies:
     - camel:kafka
     - camel:aws2-s3
+  traits:
+    deployment:
+      enabled: true
+      configuration:
+        metadata:
+          labels:
+            istio.io/dataplane-mode: none
   configuration:
     - type: property
       value: |

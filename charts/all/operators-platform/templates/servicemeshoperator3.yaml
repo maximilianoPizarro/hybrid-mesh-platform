@@ -1,4 +1,3 @@
-{{- if eq .Values.clusterRole "hub" }}
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -12,4 +11,3 @@ spec:
   name: servicemeshoperator3
   source: redhat-operators
   sourceNamespace: openshift-marketplace
-{{- end }}

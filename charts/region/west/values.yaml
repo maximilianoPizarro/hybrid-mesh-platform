@@ -87,6 +87,11 @@ clusterGroup:
       namespace: redhat-ods-operator
       channel: stable-2.25
       source: redhat-operators
+    servicemeshoperator3:
+      name: servicemeshoperator3
+      namespace: openshift-operators
+      channel: stable-3.2
+      source: redhat-operators
     eso:
       name: openshift-external-secrets-operator
       namespace: external-secrets-operator
@@ -138,9 +143,9 @@ clusterGroup:
       path: charts/all/camel-dashboard-openshift
     servicemeshoperator3:
       name: servicemeshoperator3
-      namespace: openshift-operators
+      namespace: istio-system
       argoProject: mesh
-      syncWave: '3'
+      syncWave: '4'
       path: charts/all/servicemeshoperator3
     observability:
       name: observability
@@ -190,12 +195,18 @@ clusterGroup:
       argoProject: industrial-edge
       syncWave: '5'
       path: charts/all/industrial-edge-tst
+      overrides:
+        - name: clusterName
+          value: west
     industrial-edge-stormshift:
       name: industrial-edge-stormshift
       namespace: industrial-edge-stormshift-messaging
       argoProject: industrial-edge
       syncWave: '5'
       path: charts/all/industrial-edge-stormshift
+      overrides:
+        - name: clusterName
+          value: west
     industrial-edge-pipelines:
       name: industrial-edge-pipelines
       namespace: industrial-edge-ci
@@ -214,6 +225,9 @@ clusterGroup:
       argoProject: industrial-edge
       syncWave: '5'
       path: charts/all/industrial-edge-data-lake
+      overrides:
+        - name: clusterName
+          value: west
     industrial-edge-data-science-project:
       name: industrial-edge-data-science-project
       namespace: ml-development
@@ -238,6 +252,9 @@ clusterGroup:
       argoProject: mesh
       syncWave: '8'
       path: charts/all/spoke-interconnect
+      overrides:
+        - name: clusterName
+          value: west
     devspaces:
       name: devspaces
       namespace: devspaces
