@@ -52,6 +52,9 @@ jobs:
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
           # Trivy Kubernetes security scanning disabled - OpenShift SCC handles pod security
           VALIDATE_TRIVY: false
+          # HTML linters disabled - Jekyll partials (_includes) are not full HTML documents
+          VALIDATE_HTML: false
+          VALIDATE_HTML_PRETTIER: false
           # VP docs (Hugo front matter + legacy markdown) are not linted like README
           FILTER_REGEX_EXCLUDE: (docs/validatedpatterns-docs/.*|docs/index\.md|charts/all/developer-hub/files/)
           # VALIDATE_DOCKERFILE_HADOLINT: false
