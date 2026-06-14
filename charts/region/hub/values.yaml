@@ -25,6 +25,7 @@ clusterGroup:
     showroom: {}
     neuroface: {}
     cnv-workshop: {}
+    openshift-cnv: {}
     redhat-connectivity-link-operator: {}
     openshift-cluster-observability-operator: {}
     openshift-opentelemetry: {}
@@ -108,11 +109,6 @@ clusterGroup:
       name: quay-operator
       namespace: openshift-operators
       channel: stable-3.14
-      source: redhat-operators
-    kubevirt-hyperconverged:
-      name: kubevirt-hyperconverged
-      namespace: openshift-cnv
-      channel: stable
       source: redhat-operators
     eso:
       name: openshift-external-secrets-operator

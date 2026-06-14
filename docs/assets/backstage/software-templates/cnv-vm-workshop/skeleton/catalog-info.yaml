@@ -3,7 +3,7 @@ kind: Component
 metadata:
   name: ${{ values.name }}-cnv
   title: KubeVirt VM — ${{ values.name }}
-  description: Workshop cirros VM in namespace ${{ values.name }}
+  description: Workshop cirros VM in namespace ${{ values.name }} (memory ${{ values.memory }}, cpu ${{ values.cpu }})
   annotations:
     backstage.io/kubernetes-id: ${{ values.name }}
     backstage.io/kubernetes-namespace: ${{ values.name }}
@@ -12,8 +12,11 @@ metadata:
     - url: https://console-openshift-console.${{ values.clusterDomain }}/k8s/ns/${{ values.name }}/kubevirt.io~v1~VirtualMachine
       title: Virtual Machines (console)
       icon: web
+    - url: https://console-openshift-console.${{ values.clusterDomain }}/k8s/ns/openshift-cnv/operators.coreos.com~v1alpha1~ClusterServiceVersion
+      title: OpenShift Virtualization operator
+      icon: catalog
 spec:
   type: virtual-machine
   lifecycle: experimental
   owner: ${{ values.owner }}
-  system: industrial-edge
+  system: cnv-workshop

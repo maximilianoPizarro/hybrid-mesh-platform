@@ -112,6 +112,8 @@ Templates are published as **GitHub Pages** static assets under `docs/assets/bac
 | Industrial Edge | IoT instance on east/west → Gitea + ArgoCD + catalog |
 | Camel Kaoto | Camel routes, DevSpaces, Continue AI |
 | Industrial Edge Delete | Remove ArgoCD app + Gitea repo + notification |
+| **CNV VM Workshop** | Hub KubeVirt VM → Gitea + catalog (+ optional Argo CD app) |
+| **OpenShift AI Workspace** | Data Science project metadata on hub |
 
 Catalog location (in `app-config-rhdh`):
 

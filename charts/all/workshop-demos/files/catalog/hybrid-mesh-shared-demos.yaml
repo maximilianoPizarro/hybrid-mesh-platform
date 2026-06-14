@@ -113,6 +113,17 @@ metadata:
   title: CNV VM (shared)
   description: workshop-cnv-demo in cnv-workshop
   tags: [workshop, cnv, plan-b]
+  annotations:
+    backstage.io/kubernetes-id: workshop-cnv-demo
+    backstage.io/kubernetes-namespace: cnv-workshop
+    backstage.io/kubernetes-cluster: hub
+  links:
+    - url: https://console-openshift-console.YOUR_HUB_DOMAIN/k8s/ns/cnv-workshop/kubevirt.io~v1~VirtualMachine/workshop-cnv-demo
+      title: Demo VM (console)
+      icon: web
+    - url: https://developer-hub.YOUR_HUB_DOMAIN/create
+      title: CNV VM Workshop template
+      icon: catalog
 spec:
   type: service
   lifecycle: production

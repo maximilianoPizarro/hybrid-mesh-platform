@@ -263,7 +263,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "developer-hub.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://workshop-apis.{{ $hubDomain }}"
+  href: "https://workshop-apis.{{ $hubDomain }}/httpbin/get"
   location: ApplicationMenu
   text: "Workshop APIs (Kuadrant)"
 ---
@@ -277,7 +277,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://ai-gateway.{{ $hubDomain }}"
+  href: "https://ai-gateway.{{ $hubDomain }}/v1/models"
   location: ApplicationMenu
   text: "AI Gateway (MaaS + Kuadrant)"
 {{- end }}

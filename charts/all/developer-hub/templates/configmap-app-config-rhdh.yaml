@@ -136,6 +136,10 @@ data:
           target: /opt/app-root/src/catalog-data/ai-platform/ai-platform.yaml
           rules:
             - allow: [System, Component]
+        - type: file
+          target: /opt/app-root/src/catalog-data/cnv-workshop/cnv-workshop.yaml
+          rules:
+            - allow: [System, Component]
         - type: url
           target: https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/assets/backstage/software-templates/templates-catalog.yaml
           rules:

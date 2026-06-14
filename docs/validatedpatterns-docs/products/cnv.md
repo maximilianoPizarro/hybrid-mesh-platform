@@ -13,21 +13,21 @@ Red Hat **OpenShift Virtualization** (KubeVirt) runs virtual machines alongside 
 ## Prerequisites
 
 - Hub workers with **nested virtualization** (or bare-metal). Many cloud/RHDP worker flavors do **not** expose nested virt — CSV may stay Pending or VMs fail to start.
-- OLM subscription `kubevirt-hyperconverged` in namespace `openshift-cnv` (hub clustergroup).
+- OLM subscription `kubevirt-hyperconverged` in namespace `openshift-cnv` via **`operators-platform`** chart (hub only, sync-wave 1–2).
 
 ## What ships
 
 | Resource | Purpose |
 | -------- | ------- |
-| KubeVirt / CNV operator | OLM subscription on hub |
-| Example VM `workshop-cnv-demo` | Cirros-based demo in **`cnv-workshop`** namespace |
+| **`operators-platform`** | `kubevirt-hyperconverged` Subscription + `HyperConverged` CR on hub |
+| Example VM `workshop-cnv-demo` | Cirros-based demo in **`cnv-workshop`** namespace (`cnv-example` chart) |
 | Software template **CNV VM Workshop** | Scaffolds VM manifests into user Gitea org |
 
 The example VM uses cloud-init with user `cirros` for console login (see [`charts/all/cnv-example/templates/all.yaml`](https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/cnv-example/templates/all.yaml)).
 
 ## Software template
 
-**CNV VM Workshop** (`docs/assets/backstage/software-templates/cnv-vm-workshop/`) publishes VM YAML to Gitea and registers a catalog Component. Users deploy via Argo CD or `oc apply` from their repo.
+**CNV VM Workshop** (`docs/assets/backstage/software-templates/cnv-vm-workshop/`) publishes VM YAML to Gitea and registers a catalog Component. Form fields: **name**, **owner**, **hub apps domain**, **memory**, **vCPU**, **guest username/password**. Optional Argo CD Application on hub syncs `manifests/` from the new repo.
 
 ## Operator discovery
 

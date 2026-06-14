@@ -36,6 +36,9 @@ while IFS=$'\t' read -r name url; do
   printf '%-6s %-32s %s\n' "$code" "$name" "$url"
   if [[ "$code" =~ ^[0-9]+$ ]] && (( code >= MIN_OK && code <= MAX_OK )); then
     ((ok++)) || true
+  elif [[ "$code" == "401" || "$code" == "403" ]]; then
+    # Kuadrant / OAuth-protected routes without API key or token
+    ((ok++)) || true
   elif [[ "$code" == "503" ]]; then
     ((warn++)) || true
   else

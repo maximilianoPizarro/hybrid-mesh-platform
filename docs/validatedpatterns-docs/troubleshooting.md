@@ -53,7 +53,7 @@ SchemaError(github.com/stolostron/cluster-lifecycle-api/clusterview/v1alpha1.Use
 unknown model in reference
 ```
 
-**Cause:** ACM 2.16 introduces CRDs that ArgoCD's cluster cache cannot parse correctly. This affects the OpenAPI schema loading but does not impact actual sync operations.
+**Cause:** MCE `ocm-proxyserver` publishes aggregated `clusterview` OpenAPI with a broken `UserPermission.status` reference. Argo CD cannot load the hub OpenAPI cache, so apps show **Unknown** / `ComparisonError`. `resourceExclusions` alone does **not** fix this.
 
 **Verification:** Applications still show `Healthy` health status and `operationState.phase: Succeeded`:
 
@@ -66,26 +66,21 @@ oc get application <app-name> -n openshift-gitops \
 oc get applications -n openshift-gitops -o jsonpath='{range .items[*]}{.metadata.name}: {.status.health.status}{"\n"}{end}' | grep -v Healthy
 ```
 
-**Automated fix (new installations):** The `openshift-gitops` chart now includes `resourceExclusions` for `clusterview.open-cluster-management.io` and `internal.open-cluster-management.io` by default. New installations are not affected.
+**Automated fix (Git):** `charts/all/openshift-gitops` — `acmArgocdOpenapiFix` (enabled by default): scales `ocm-proxyserver` to 0, deletes its APIServices, PostSync Job + CronJob, restarts the application controller.
 
-**Manual workaround (existing installations):**
+**Manual one-shot:**
 
 ```bash
-# Patch ArgoCD with resource exclusion
-oc patch argocd openshift-gitops -n openshift-gitops --type merge -p '{
-  "spec": {
-    "resourceExclusions": "- apiGroups:\n  - clusterview.open-cluster-management.io\n  kinds:\n  - \"*\"\n  clusters:\n  - \"*\"\n- apiGroups:\n  - internal.open-cluster-management.io\n  kinds:\n  - \"*\"\n  clusters:\n  - \"*\"\n"
-  }
-}'
-
-# Restart the application controller
+oc scale deployment/ocm-proxyserver -n multicluster-engine --replicas=0
+for name in v1.clusterview.open-cluster-management.io \
+  v1alpha1.clusterview.open-cluster-management.io \
+  v1beta1.proxy.open-cluster-management.io; do
+  oc delete apiservice "$name" --ignore-not-found
+done
 oc rollout restart statefulset openshift-gitops-application-controller -n openshift-gitops
-
-# Wait for restart
-oc rollout status statefulset openshift-gitops-application-controller -n openshift-gitops --timeout=120s
 ```
 
-**Note:** On **new** hubs, `acm-operator` disables MCE `cluster-proxy-addon` via PostSync/CronJob. On **existing** hubs stuck in Unknown, sync may remain blocked until reinstall — resource exclusions alone may not suffice. Monitor `health.status`, Routes, and pod counts — not only `sync.status`.
+**Note:** Pair with `acm-operator` PostSync to disable `cluster-proxy-addon`. Success: **0 Unknown** apps. Trade-off: clusterview `UserPermission` via proxy is unavailable; direct spoke APIs and ACM fleet inventory still work.
 
 ---
 

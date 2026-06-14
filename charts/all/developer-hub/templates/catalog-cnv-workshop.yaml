@@ -1,0 +1,49 @@
+{{- $hub := include "developer-hub.clusterDomain" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-cnv-workshop
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  cnv-workshop.yaml: |
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: System
+    metadata:
+      name: cnv-workshop
+      title: OpenShift Virtualization Workshop
+      description: KubeVirt operator on hub and user-scaffolded VirtualMachine instances
+      tags: [cnv, kubevirt, virtualization, workshop]
+    spec:
+      owner: platform-engineering
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: openshift-virtualization-operator
+      title: OpenShift Virtualization (CNV)
+      description: kubevirt-hyperconverged operator — required for CNV VM Workshop software template
+      tags: [cnv, operator, kubevirt]
+      annotations:
+        backstage.io/kubernetes-namespace: openshift-cnv
+        backstage.io/kubernetes-cluster: hub
+        backstage.io/kubernetes-id: kubevirt-hyperconverged
+      links:
+        - url: https://console-openshift-console.{{ $hub }}/k8s/ns/openshift-cnv/operators.coreos.com~v1alpha1~ClusterServiceVersion
+          title: Operator status (console)
+          icon: catalog
+        - url: https://console-openshift-console.{{ $hub }}/k8s/ns/cnv-workshop/kubevirt.io~v1~VirtualMachine
+          title: Shared demo VM (workshop-cnv-demo)
+          icon: web
+        - url: https://developer-hub.{{ $hub }}/create
+          title: CNV VM Workshop template
+          icon: catalog
+    spec:
+      type: operator
+      lifecycle: production
+      owner: platform-engineering
+      system: cnv-workshop
