@@ -17,7 +17,7 @@ ports:
 endpoints:
   - addresses:
       - {{ $pod.status.podIP | quote }}
-    hostname: prod-cluster-broker-0-{{ .Values.clusterName }}
+    hostname: prod-cluster-broker-0-{{ include "industrial-edge-data-lake.clusterName" . }}
     conditions:
       ready: true
 {{- end }}

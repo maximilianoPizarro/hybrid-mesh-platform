@@ -378,9 +378,21 @@ Skip mesh if already healthy: `SKIP_MESH=1 bash scripts/apply-post-install-day2.
 
 **Facilitator init:** Vault chart is external VP `hashicorp-vault`. Create local `values-secret.yaml` (gitignored) for init/unseal — never commit tokens. External Secrets Operator (`openshift-external-secrets`) connects ESO to Vault when configured.
 
+**Demo login (userpass):** chart `vault-demo-auth` creates workshop users for the UI. Same password as OpenShift workshop users (`Welcome123!` by default).
+
+| Vault user | Password (demo) | Policy |
+|------------|-----------------|--------|
+| `admin` | `Welcome123!` | read/write `secret/workshop/*`, read `secret/global/*` |
+| `user1` | `Welcome123!` | read `secret/workshop/*` |
+
+Vault UI → **Sign in** → method **Username** (`userpass`) → `admin` / `Welcome123!`.
+
+Re-apply: `bash scripts/apply-vault-demo-auth.sh`
+
 ```bash
 oc get route -n vault
 oc get pods -n vault
+oc get cm vault-demo-login -n vault -o yaml
 ```
 
 Future: model keys via Vault paths + `ExternalSecret` (today: `scripts/apply-maas-secrets.sh`).

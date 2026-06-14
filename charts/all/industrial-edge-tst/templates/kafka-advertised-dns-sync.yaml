@@ -1,0 +1,91 @@
+{{- if .Values.enabled | default true }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafka-advertised-dns-sync
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kafka-advertised-dns-sync
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kafka-advertised-dns-sync
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kafka-advertised-dns-sync
+subjects:
+  - kind: ServiceAccount
+    name: kafka-advertised-dns-sync
+    namespace: industrial-edge-tst-all
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-advertised-dns-sync-hook
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccountName: kafka-advertised-dns-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: {{ .Values.kafkaAdvertisedDnsSync.image | default "registry.redhat.io/openshift4/ose-cli:latest" | quote }}
+          env:
+            - name: NS
+              value: industrial-edge-tst-all
+            - name: BROKER_POD
+              value: dev-cluster-broker-0
+            - name: ENDPOINT_SLICE
+              value: dev-cluster-kafka-brokers-advertised
+            - name: HOSTNAME
+              value: dev-cluster-broker-0-{{ include "industrial-edge-tst.clusterName" . }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              oc wait pod/"$BROKER_POD" -n "$NS" --for=condition=Ready --timeout=180s
+              IP=$(oc get pod "$BROKER_POD" -n "$NS" -o jsonpath='{.status.podIP}')
+              [[ -n "$IP" ]] || { echo "broker pod IP missing"; exit 1; }
+              CURRENT=$(oc get endpointslices "$ENDPOINT_SLICE" -n "$NS" -o jsonpath='{.endpoints[0].addresses[0]}' 2>/dev/null || true)
+              if [[ "$CURRENT" == "$IP" ]]; then
+                echo "EndpointSlice already points to $IP"
+                exit 0
+              fi
+              echo "Patching $ENDPOINT_SLICE: $CURRENT -> $IP (hostname=$HOSTNAME)"
+              oc patch endpointslices "$ENDPOINT_SLICE" -n "$NS" --type=json \
+                -p="[{\"op\":\"replace\",\"path\":\"/endpoints/0/addresses/0\",\"value\":\"$IP\"},{\"op\":\"replace\",\"path\":\"/endpoints/0/hostname\",\"value\":\"$HOSTNAME\"}]"
+{{- end }}

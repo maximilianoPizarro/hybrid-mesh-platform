@@ -8,3 +8,6 @@ global:
 # s3://models/anomaly-detection/model, and RawDeployment serving runtime.
 anomalyDetection:
   enabled: false
+
+kafkaAdvertisedDnsSync:
+  image: registry.redhat.io/openshift4/ose-cli:latest

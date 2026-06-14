@@ -1,0 +1,21 @@
+enabled: true
+
+# Align with platform-users defaultPassword for a consistent workshop experience.
+defaultPassword: "Welcome123!"
+
+demoUsers:
+  - username: admin
+    policies:
+      - workshop-demo-admin
+      - default
+  - username: user1
+    policies:
+      - workshop-demo-read
+      - default
+
+workshopSecretPaths:
+  - secret/data/workshop/*
+  - secret/metadata/workshop/*
+
+image: registry.connect.redhat.com/hashicorp/vault:1.21.4-ubi
+cliImage: registry.redhat.io/openshift4/ose-cli:latest

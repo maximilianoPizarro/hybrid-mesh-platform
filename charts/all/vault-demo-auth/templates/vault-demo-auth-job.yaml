@@ -1,0 +1,153 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-demo-auth
+  namespace: vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-demo-auth
+  namespace: vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec"]
+    verbs: ["get", "list", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-demo-auth
+  namespace: vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vault-demo-auth
+subjects:
+  - kind: ServiceAccount
+    name: vault-demo-auth
+    namespace: vault
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vault-demo-auth-read-keys
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["vaultkeys"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-demo-auth-read-keys
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vault-demo-auth-read-keys
+subjects:
+  - kind: ServiceAccount
+    name: vault-demo-auth
+    namespace: vault
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-demo-auth-hook
+  namespace: vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: vault-demo-auth
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: {{ .Values.cliImage | quote }}
+          env:
+            - name: VAULT_NAMESPACE
+              value: vault
+            - name: VAULT_POD
+              value: vault-0
+            - name: DEMO_PASSWORD
+              value: {{ .Values.defaultPassword | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              echo "Waiting for Vault..."
+              oc wait pod/"$VAULT_POD" -n "$VAULT_NAMESPACE" --for=condition=Ready --timeout=180s
+
+              ROOT=$(oc get secret vaultkeys -n imperative -o jsonpath='{.data.vault_data_json}' \
+                | python3 -c "import sys,json,base64; print(json.loads(base64.b64decode(sys.stdin.read()))['root_token'])")
+              [[ -n "$ROOT" ]] || { echo "ERROR: missing root token"; exit 1; }
+
+              vault_exec() {
+                oc exec -i -n "$VAULT_NAMESPACE" "$VAULT_POD" -- env \
+                  VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="$ROOT" \
+                  vault "$@"
+              }
+
+              vault_exec auth enable -path=userpass userpass 2>/dev/null || echo "userpass already enabled"
+
+              printf '%s\n' \
+                'path "secret/data/workshop/*" {' \
+                '  capabilities = ["read", "list"]' \
+                '}' \
+                'path "secret/metadata/workshop/*" {' \
+                '  capabilities = ["read", "list"]' \
+                '}' \
+                | vault_exec policy write workshop-demo-read -
+
+              printf '%s\n' \
+                'path "secret/data/workshop/*" {' \
+                '  capabilities = ["create", "read", "update", "delete", "list"]' \
+                '}' \
+                'path "secret/metadata/workshop/*" {' \
+                '  capabilities = ["read", "list", "delete"]' \
+                '}' \
+                'path "secret/data/global/*" {' \
+                '  capabilities = ["read", "list"]' \
+                '}' \
+                'path "secret/metadata/global/*" {' \
+                '  capabilities = ["read", "list"]' \
+                '}' \
+                | vault_exec policy write workshop-demo-admin -
+
+              {{- range .Values.demoUsers }}
+              echo "User: {{ .username }}"
+              vault_exec write auth/userpass/users/{{ .username }} \
+                password="$DEMO_PASSWORD" \
+                policies="{{ join "," .policies }}"
+              {{- end }}
+
+              echo "Done. Login: Vault UI → userpass → admin / $DEMO_PASSWORD"
+{{- end }}

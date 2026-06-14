@@ -1,0 +1,33 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-demo-login
+  namespace: vault
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  README.md: |
+    # Vault demo login (userpass)
+
+    Open **Vault UI** → **Sign in** → method **userpass** (Username).
+
+    | User | Password | Access |
+    |------|----------|--------|
+    {{- range .Values.demoUsers }}
+    | `{{ .username }}` | `{{ $.Values.defaultPassword }}` | {{ join ", " .policies }} |
+    {{- end }}
+
+    Example paths (KV v2):
+    - `secret/workshop/maas` — upstream MaaS token
+    - `secret/workshop/kuadrant/<user>/<product>` — optional API keys
+
+    CLI from a pod with network access to Vault:
+
+    ```bash
+    vault login -method=userpass username=admin
+    vault kv get secret/workshop/maas
+    ```
+
+    Re-apply demo auth: `bash scripts/apply-vault-demo-auth.sh`
+{{- end }}

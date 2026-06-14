@@ -374,6 +374,12 @@ clusterGroup:
       chart: hashicorp-vault
       chartVersion: 0.1.*
       syncWave: '2'
+    vault-demo-auth:
+      name: vault-demo-auth
+      namespace: vault
+      argoProject: external-secrets
+      path: charts/all/vault-demo-auth
+      syncWave: '3'
     openshift-external-secrets:
       name: openshift-external-secrets
       namespace: external-secrets

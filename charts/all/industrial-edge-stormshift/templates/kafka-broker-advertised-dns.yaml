@@ -17,7 +17,7 @@ ports:
 endpoints:
   - addresses:
       - {{ $pod.status.podIP | quote }}
-    hostname: factory-cluster-broker-0-{{ .Values.clusterName }}
+    hostname: factory-cluster-broker-0-{{ include "industrial-edge-stormshift.clusterName" . }}
     conditions:
       ready: true
 {{- end }}

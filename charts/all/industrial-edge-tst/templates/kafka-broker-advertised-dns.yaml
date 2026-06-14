@@ -22,7 +22,7 @@ ports:
 endpoints:
   - addresses:
       - {{ $pod.status.podIP | quote }}
-    hostname: dev-cluster-broker-0-{{ .Values.clusterName }}
+    hostname: dev-cluster-broker-0-{{ include "industrial-edge-tst.clusterName" . }}
     conditions:
       ready: true
 {{- end }}
