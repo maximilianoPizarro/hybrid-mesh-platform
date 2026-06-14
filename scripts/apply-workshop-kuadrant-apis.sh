@@ -26,6 +26,15 @@ fi
 
 helm template wka "$ROOT/charts/all/workshop-kuadrant-apis" "${SET_ARGS[@]}" | oc apply -f -
 
+echo "Restarting Kuadrant operator (Gateway API provider detection runs at pod startup)..."
+oc rollout restart deployment/kuadrant-operator-controller-manager -n redhat-connectivity-link-operator 2>/dev/null || true
+oc rollout status deployment/kuadrant-operator-controller-manager -n redhat-connectivity-link-operator --timeout=180s 2>/dev/null || true
+for _ in $(seq 1 24); do
+  ready=$(oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || true)
+  [[ "$ready" == "True" ]] && break
+  sleep 5
+done
+
 WORKSHOP_HOST="workshop-apis.$HUB_DOMAIN"
 AI_HOST="ai-gateway.$HUB_DOMAIN"
 CODE=$(curl -sk -o /dev/null -w '%{http_code}' "https://$WORKSHOP_HOST/httpbin/get" 2>/dev/null || true)

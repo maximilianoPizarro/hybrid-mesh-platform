@@ -238,7 +238,7 @@ clusterGroup:
       namespace: workshop-kuadrant-apis
       argoProject: workshop
       path: charts/all/workshop-kuadrant-apis
-      syncWave: '1'
+      syncWave: '6'
     mcp-gateway:
       name: mcp-gateway
       namespace: mcp-system

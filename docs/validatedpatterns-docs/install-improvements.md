@@ -417,13 +417,16 @@ Public APIs via **ExternalName** + Istio **ServiceEntry** → hub **Gateway API*
 
 | URL | Purpose |
 |-----|---------|
-| `https://workshop-apis.<hub-domain>/httpbin/*` | httpbin (PlanPolicy) |
+| `https://workshop-apis.<hub-domain>/httpbin/*` | httpbin (PlanPolicy bronze/silver/gold) |
 | `https://workshop-apis.<hub-domain>/countries/*` | REST Countries |
-| `https://workshop-apis.<hub-domain>/llm/v1/chat/completions` | MaaS (TokenRateLimit) |
+| `https://workshop-apis.<hub-domain>/mcp` | MCP Gateway (Kuadrant API key) |
+| `https://ai-gateway.<hub-domain>/v1/chat/completions` | MaaS LLM (TokenRateLimit free/gold) |
 
-**Developer Hub:** `/kuadrant` → API Products → Request key → **My API Keys** → `Authorization: APIKEY …`
+**Developer Hub:** `/kuadrant` → API Products → Request key (auto-approved) → **My API Keys** → `Authorization: APIKEY …`
 
-**OpenShift Console:** Custom resources `APIProduct` in `hub-gateway-system`; ConsoleLink **Workshop APIs (Kuadrant)**.
+**OpenShift Console:** RHCL console plugin — AuthPolicy / PlanPolicy in `workshop-kuadrant-apis` and `ai-gateway-system`; APIProducts in same namespaces.
+
+**RHCL + mesh order:** `rhcl-operator` syncWave `1`, `hub-gateway` / mesh syncWave `5`, `workshop-kuadrant-apis` syncWave `6`. If policies stay **Not Accepted**, verify `ISTIO_GATEWAY_CONTROLLER_NAMES` on the Kuadrant operator deployment and restart the pod (see [Connectivity Link](products/connectivity-link.md#rhcl--sailistio-mesh-required)).
 
 ```bash
 bash scripts/apply-workshop-kuadrant-apis.sh

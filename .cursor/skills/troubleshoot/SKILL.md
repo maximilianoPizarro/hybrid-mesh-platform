@@ -296,6 +296,31 @@ oc patch argocd openshift-gitops -n openshift-gitops --type merge -p '{
 
 ---
 
+### 12. Kuadrant AuthPolicy Not Accepted (MissingDependency)
+
+**Symptom:** RHCL console or `oc get authpolicy` shows **Not Accepted** / `MissingDependency` — gateway provider not installed.
+
+**Checks:**
+
+```bash
+oc get gatewayclass istio -o jsonpath='controller={.spec.controllerName} accepted={.status.conditions[?(@.type=="Accepted")].status}{"\n"}'
+oc get deployment kuadrant-operator-controller-manager -n redhat-connectivity-link-operator \
+  -o jsonpath='ISTIO_GATEWAY_CONTROLLER_NAMES={.spec.template.spec.containers[0].env[?(@.name=="ISTIO_GATEWAY_CONTROLLER_NAMES")].value}{"\n"}'
+oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditions[?(@.type=="Ready")].status}{"\n"}'
+```
+
+**Fix:**
+
+1. Sync `rhcl-operator` (subscription sets `istio.io/gateway-controller,openshift.io/gateway-controller/v1`)
+2. Restart operator after mesh ready: `bash scripts/apply-workshop-kuadrant-apis.sh` or delete kuadrant operator pod
+3. Verify AuthPolicy **Enforced=True**; curl httpbin returns **401** without key, **200** with `Authorization: APIKEY …`
+
+**Developer Hub:** `/kuadrant` empty → sync `developer-hub` (ClusterRole `developer-hub-kuadrant`).
+
+Docs: `docs/validatedpatterns-docs/products/connectivity-link.md`
+
+---
+
 ## Diagnostic Commands
 
 ```bash

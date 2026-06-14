@@ -11,3 +11,8 @@ spec:
   name: rhcl-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+  # Sail/Istio GatewayClass uses istio.io/gateway-controller; RHCL CSV default is openshift only.
+  config:
+    env:
+      - name: ISTIO_GATEWAY_CONTROLLER_NAMES
+        value: {{ .Values.kuadrant.istioGatewayControllerNames | default "istio.io/gateway-controller,openshift.io/gateway-controller/v1" | quote }}

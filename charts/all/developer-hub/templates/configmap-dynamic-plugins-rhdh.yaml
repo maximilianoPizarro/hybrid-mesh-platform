@@ -139,6 +139,10 @@ data:
                     menuItem:
                       icon: kuadrantIcon
                       text: Kuadrant
+                  - path: /kuadrant/api-products/:namespace/:name
+                    importName: ApiProductPage
+                  - path: /kuadrant/api-keys/:namespace/:name
+                    importName: ApiKeyPage
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
         disabled: false
         pluginConfig:

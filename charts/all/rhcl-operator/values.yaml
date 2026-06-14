@@ -1,1 +1,7 @@
 clusterDomain: ""
+
+namespace: redhat-connectivity-link-operator
+
+kuadrant:
+  # Sail/Istio GatewayClass controller + OSSM native (comma-separated)
+  istioGatewayControllerNames: istio.io/gateway-controller,openshift.io/gateway-controller/v1

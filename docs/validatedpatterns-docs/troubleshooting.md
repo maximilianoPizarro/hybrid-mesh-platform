@@ -27,7 +27,9 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | Strimzi entity-operator CrashLoop | mTLS on 9091 conflicts with ztunnel | Exclude operator namespace from ambient or use documented Strimzi tuning |
 | Skupper listener not Ready | Site or token not synced | Check `oc get site,listener -n service-interconnect` on hub and spoke |
 | GitOpsCluster: *legacy secret not found* | ACM hasn't created cluster secret yet | Wait 5-10 min; check klusterlet on spoke; verify ManagedCluster is Joined |
-| Kuadrant `/kuadrant`: failed to fetch APIProducts | K8s plugin lacks `devportal.kuadrant.io` RBAC | Sync `developer-hub`; verify `oc auth can-i list apiproducts.devportal.kuadrant.io --as=system:serviceaccount:developer-hub:developer-hub -A` |
+| Kuadrant `/kuadrant`: failed to fetch APIProducts | K8s RBAC or CRD group | Sync `developer-hub`; ClusterRole `developer-hub-kuadrant` needs `devportal.kuadrant.io` + `gateway.networking.k8s.io` gateways/httproutes |
+| AuthPolicy **Not Accepted** / `MissingDependency` | Wrong `ISTIO_GATEWAY_CONTROLLER_NAMES` or operator started before mesh | Sync `rhcl-operator` subscription config; restart `kuadrant-operator-controller-manager`; see [Connectivity Link](products/connectivity-link.md#rhcl--sailistio-mesh-required) |
+| API key works in console but not httpbin | AuthPolicy selector `app` ≠ APIProduct name | Match `app` label to APIProduct (e.g. `workshop-mcp-gateway`, `workshop-llm-tokens`) |
 | API Overview: Expected object at root, got string | Incomplete OpenAPI in catalog entity | Ensure API entities have valid `definition` with `paths`; fix `$text` file refs in `reading.allow` |
 | TechDocs tab 404 / builder not local | `techdocs.builder: external` or missing mkdocs | Set `builder: local` in app-config; scaffolded repos need `mkdocs.yml` + `backstage.io/techdocs-ref: dir:.` |
 | Quay org-setup Job failing | `/version` redirect, CSRF, or duplicate robot | Use GitOps `setup.py` with `/discovery` + bearer token; see [Quay](products/quay.md) |

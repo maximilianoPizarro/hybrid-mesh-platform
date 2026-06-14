@@ -24,6 +24,7 @@ spec:
           selector:
             matchLabels:
               app: workshop-httpbin
+              kuadrant.io/apikey: "true"
         credentials:
           authorizationHeader:
             prefix: APIKEY
@@ -73,6 +74,7 @@ spec:
           selector:
             matchLabels:
               app: workshop-restcountries
+              kuadrant.io/apikey: "true"
         credentials:
           authorizationHeader:
             prefix: APIKEY
@@ -121,7 +123,8 @@ spec:
           allNamespaces: true
           selector:
             matchLabels:
-              app: workshop-mcp
+              app: workshop-mcp-gateway
+              kuadrant.io/apikey: "true"
         credentials:
           authorizationHeader:
             prefix: APIKEY
@@ -173,7 +176,8 @@ spec:
           allNamespaces: true
           selector:
             matchLabels:
-              app: workshop-maas
+              app: workshop-llm-tokens
+              kuadrant.io/apikey: "true"
         credentials:
           authorizationHeader:
             prefix: APIKEY

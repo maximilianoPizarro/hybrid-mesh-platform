@@ -201,7 +201,8 @@ Rollout DevHub after Git merge: sync Argo app `field-content-developer-hub` on t
 | K8s plugin TLS errors | Self-signed API certs | `skipTLSVerify` + `NODE_TLS_REJECT_UNAUTHORIZED=0` |
 | CI tab empty | Wrong Tekton annotation | `janus-idp.io/tekton: <namespace>` not `"true"` |
 | IoT dashboard 503 from hub | Mesh on IE namespaces | Keep `industrial-edge-tst-all` and `spoke-gateway-system` **off** ambient mesh |
-| Kuadrant API Products empty | K8s RBAC or CRD group | ClusterRole needs `devportal.kuadrant.io`; sync `workshop-kuadrant-apis` |
+| Kuadrant API Products empty | K8s RBAC or CRD group | ClusterRole `developer-hub-kuadrant`: `devportal.kuadrant.io` apiproducts/apikeys + `gateway.networking.k8s.io` gateways/httproutes; sync `developer-hub` |
+| Kuadrant create API key fails | Backstage permission or RBAC | `rbac-policy.csv`: `kuadrant.apikey.create`, `kuadrant.apikey.list`; routes `/kuadrant/api-products/...` |
 | Lightspeed chat 401 | Missing MaaS key | `bash scripts/apply-maas-secrets.sh` |
 | TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to Gitea repo |
 

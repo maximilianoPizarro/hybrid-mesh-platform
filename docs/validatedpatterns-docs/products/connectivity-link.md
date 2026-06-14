@@ -19,13 +19,34 @@ Industrial Edge and workshop APIs need **consistent north-south ingress** with o
 
 ### Example policies in this repo
 
-Workshop chart `charts/all/workshop-kuadrant-apis` deploys Kuadrant policies on hub gateway routes:
+Workshop chart `charts/all/workshop-kuadrant-apis` deploys dedicated **Gateway API** gateways (`workshop-apis`, `ai-gateway`) with Kuadrant policies:
 
-- **`AuthPolicy`** — API key authentication (`Authorization: APIKEY …`) on `workshop-httpbin` and `workshop-restcountries` HTTPRoutes
-- **`PlanPolicy`** — tiered limits (`free` / `gold`) keyed off `secret.kuadrant.io/plan-id` annotation
-- **`TokenRateLimitPolicy`** — token-bucket limits on `/llm/v1/chat/completions` (MaaS proxy); counts `usage.total_tokens` from OpenAI-compatible responses
+| API Product | HTTPRoute | Plans | Policy types |
+| ----------- | --------- | ----- | -------------- |
+| `workshop-httpbin` | `workshop-httpbin` | bronze / silver / gold | AuthPolicy + PlanPolicy |
+| `workshop-restcountries` | `workshop-restcountries` | bronze / silver / gold | AuthPolicy + PlanPolicy |
+| `workshop-mcp-gateway` | `workshop-mcp` | bronze / gold | AuthPolicy + PlanPolicy |
+| `workshop-llm-tokens` | `ai-maas` | free / gold | AuthPolicy + PlanPolicy + TokenRateLimitPolicy |
 
-Policies target **`spec.targetRef`** → `HTTPRoute` in `hub-gateway-system`. Enable or tune tiers in `charts/all/workshop-kuadrant-apis/values.yaml`. Production RHCL deployments often start with routes only and enable Kuadrant policies incrementally.
+- **`AuthPolicy`** — API key authentication (`Authorization: APIKEY …`); secret selector label `app` must match **APIProduct.metadata.name**
+- **`PlanPolicy`** — tiered limits keyed off `secret.kuadrant.io/plan-id` annotation on the API key secret
+- **`TokenRateLimitPolicy`** — token-bucket limits on `POST /v1/chat/completions` (MaaS proxy)
+
+Policies target **`spec.targetRef`** → `HTTPRoute` in `workshop-kuadrant-apis` or `ai-gateway-system`. Tune tiers in `charts/all/workshop-kuadrant-apis/values.yaml`.
+
+### RHCL + Sail/Istio mesh (required)
+
+RHCL CSV defaults `ISTIO_GATEWAY_CONTROLLER_NAMES` to `openshift.io/gateway-controller/v1`. This platform uses Sail/Istio **`GatewayClass` `istio`** with controller **`istio.io/gateway-controller`**. The chart `charts/all/rhcl-operator` sets the subscription override:
+
+```yaml
+spec.config.env:
+  - name: ISTIO_GATEWAY_CONTROLLER_NAMES
+    value: istio.io/gateway-controller,openshift.io/gateway-controller/v1
+```
+
+Kuadrant detects the gateway provider **only at operator pod startup**. After mesh is ready, `workshop-kuadrant-apis` runs a PostSync Job to restart `kuadrant-operator-controller-manager` (or use `bash scripts/apply-workshop-kuadrant-apis.sh`).
+
+**Symptom:** AuthPolicy / PlanPolicy **Invalid (Not Accepted)** — `MissingDependency: Gateway API provider (istio / envoy gateway) is not installed`. Fix subscription env + restart operator; verify `oc get kuadrant kuadrant -n kuadrant-system` → **Ready=True**.
 
 ![Connectivity Link – Policy Topology]({{ site.baseurl }}/assets/images/connectivity-link-hub.png)
 {: .mb-4 }

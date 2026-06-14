@@ -139,6 +139,8 @@ bash scripts/verify-industrial-edge.sh   # IE dashboard chain
 | `charts/all/skupper-network-observer/` | OCI network-observer wrapper + passthrough Route |
 | `charts/all/openshift-ai-hub/` | DSCInitialization, DataScienceCluster RawDeployment |
 | `charts/all/console-links/templates/all.yaml` | ConsoleLink hrefs |
+| `charts/all/rhcl-operator/` | RHCL subscription + `ISTIO_GATEWAY_CONTROLLER_NAMES` for Sail/Istio |
+| `charts/all/workshop-kuadrant-apis/` | Workshop Gateway API + Kuadrant APIProducts, AuthPolicy, PlanPolicy |
 | `charts/all/fleet-values-sync/` | Cross-cluster domain patching (works even when Argo sync Unknown) |
 | `values-global.yaml` | Pattern-wide globals |
 
@@ -226,6 +228,24 @@ Do **not** assume "Unknown = cosmetic" on a hub that shows all apps Unknown — 
 ### MaaS model alias
 
 Workshop default `llama-scout-17b` is RHDP MaaS alias; upstream model is `meta-llama/Llama-Scout-17B-16E-Instruct`.
+
+### Kuadrant policies Not Accepted (RHCL + Sail mesh)
+
+**Symptom:** AuthPolicy / PlanPolicy show **Invalid (Not Accepted)** — `MissingDependency: Gateway API provider (istio / envoy gateway) is not installed`.
+
+**Cause:** RHCL CSV sets `ISTIO_GATEWAY_CONTROLLER_NAMES=openshift.io/gateway-controller/v1` but Sail/Istio `GatewayClass istio` uses `istio.io/gateway-controller`. Kuadrant also detects the provider only at **pod startup** (often before mesh is ready).
+
+**Fix (Git):** `charts/all/rhcl-operator` subscription `spec.config.env` + `workshop-kuadrant-apis` PostSync restart job. Hub syncWave: `workshop-kuadrant-apis` at **`6`** (after `hub-gateway`).
+
+**Day-2:**
+
+```bash
+bash scripts/apply-workshop-kuadrant-apis.sh
+oc get authpolicy,planpolicy -A -o custom-columns='NAME:.metadata.name,ACCEPTED:.status.conditions[?(@.type=="Accepted")].status,ENFORCED:.status.conditions[?(@.type=="Enforced")].status'
+oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditions[?(@.type=="Ready")].status}{"\n"}'
+```
+
+**Developer Hub API keys:** `/kuadrant` — ClusterRole `developer-hub-kuadrant`; AuthPolicy secret selector `app` must match APIProduct name (`workshop-mcp-gateway`, `workshop-llm-tokens`, …).
 
 ## External links
 

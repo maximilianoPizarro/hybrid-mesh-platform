@@ -75,3 +75,9 @@ vault:
   # KV paths documented for workshop API credentials (see templates/vault-paths.yaml)
   maasSecretPath: secret/workshop/maas
   kuadrantKeysPathPrefix: secret/workshop/kuadrant
+
+# PostSync hook: restart RHCL Kuadrant operator after Istio GatewayClass exists (detection is at pod startup)
+kuadrantOperatorRestart:
+  image: registry.redhat.io/openshift4/ose-cli:latest
+  operatorNamespace: redhat-connectivity-link-operator
+  deployment: kuadrant-operator-controller-manager

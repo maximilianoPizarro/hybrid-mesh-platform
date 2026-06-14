@@ -218,6 +218,19 @@ curl -sk -o /dev/null -w '%{http_code}\n' "https://developer-hub.${HUB_DOMAIN}/l
 
 Developer Hub Kuadrant keys: log in as `userN` → `/kuadrant` → **My API Keys** → `Authorization: APIKEY <key>`.
 
+### Kuadrant policy enforcement
+
+After `workshop-kuadrant-apis` and mesh sync:
+
+```bash
+oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditions[?(@.type=="Ready")].status}{"\n"}'
+oc get authpolicy -A -o custom-columns='NS:.metadata.namespace,NAME:.metadata.name,ACCEPTED:.status.conditions[?(@.type=="Accepted")].status,ENFORCED:.status.conditions[?(@.type=="Enforced")].status'
+oc get deployment kuadrant-operator-controller-manager -n redhat-connectivity-link-operator \
+  -o jsonpath='ISTIO_GATEWAY_CONTROLLER_NAMES={.spec.template.spec.containers[0].env[?(@.name=="ISTIO_GATEWAY_CONTROLLER_NAMES")].value}{"\n"}'
+```
+
+Expect **Ready=True**, all AuthPolicies **Enforced=True**, controller names include `istio.io/gateway-controller`. If **Not Accepted**, run `bash scripts/apply-workshop-kuadrant-apis.sh`.
+
 ## Offline validation
 
 ```bash
