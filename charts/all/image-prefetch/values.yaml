@@ -1,0 +1,11 @@
+enabled: true
+
+images:
+  - registry.connect.redhat.com/hashicorp/vault:1.21.4-ubi
+  - dl.gitea.com/gitea/gitea:1.23
+  - quay.io/kubecost1/kubecost-cost-model:latest
+  - registry.redhat.io/openshift4/ose-cli:latest
+  - registry.redhat.io/rhdh/rhdh-hub-rhel9:latest
+
+nodeSelector: {}
+tolerations: []

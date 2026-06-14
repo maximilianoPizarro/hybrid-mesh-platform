@@ -5,3 +5,11 @@ adminUser: gitea_admin
 adminPassword: "openshift"
 adminEmail: "admin@gitea.local"
 userCount: 50
+
+# External Gitea Helm chart values (subchart via dependency alias gitea-chart)
+gitea-chart:
+  gitea:
+    admin:
+      username: gitea_admin
+      password: openshift
+      passwordMode: keepUpdated

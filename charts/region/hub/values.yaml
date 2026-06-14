@@ -131,17 +131,12 @@ clusterGroup:
   - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
     }}.yaml
   applications:
-    platform-users:
-      name: platform-users
+    # --- Wave 0: Foundation (namespaces, GitOps config, base platform) ---
+    image-prefetch:
+      name: image-prefetch
       namespace: openshift-gitops
       argoProject: platform
-      path: charts/all/platform-users
-      syncWave: '0'
-    openshift-gitops:
-      name: openshift-gitops
-      namespace: openshift-gitops
-      argoProject: platform
-      path: charts/all/openshift-gitops
+      path: charts/all/image-prefetch
       syncWave: '0'
     namespaces:
       name: namespaces
@@ -149,167 +144,171 @@ clusterGroup:
       argoProject: platform
       path: charts/all/namespaces
       syncWave: '0'
-    kairos:
-      name: kairos
-      namespace: kairos-system
-      argoProject: security
-      path: charts/all/kairos
-      syncWave: '3'
-    servicemeshoperator3:
-      name: servicemeshoperator3
-      namespace: istio-system
-      argoProject: mesh
-      path: charts/all/servicemeshoperator3
-      syncWave: '4'
-    acm-operator:
-      name: acm-operator
-      namespace: open-cluster-management
-      argoProject: fleet
-      path: charts/all/acm-operator
-      syncWave: '0'
-    acs-operator:
-      name: acs-operator
-      namespace: stackrox
-      argoProject: security
-      path: charts/all/acs-operator
-      syncWave: '0'
-    acs-init-bundle-sync:
-      name: acs-init-bundle-sync
-      namespace: stackrox
-      argoProject: security
-      path: charts/all/acs-init-bundle-sync
-      syncWave: '7'
-    developer-hub:
-      name: developer-hub
-      namespace: developer-hub
-      argoProject: workshop
-      path: charts/all/developer-hub
-      syncWave: '0'
-    acm-hub-spoke:
-      name: acm-hub-spoke
+    openshift-gitops:
+      name: openshift-gitops
       namespace: openshift-gitops
-      argoProject: fleet
-      path: charts/all/acm-hub-spoke
-      syncWave: '6'
-    fleet-values-sync:
-      name: fleet-values-sync
+      argoProject: platform
+      path: charts/all/openshift-gitops
+      syncWave: '0'
+    platform-users:
+      name: platform-users
       namespace: openshift-gitops
-      argoProject: fleet
-      path: charts/all/fleet-values-sync
-      syncWave: '5'
+      argoProject: platform
+      path: charts/all/platform-users
+      syncWave: '0'
     observability:
       name: observability
       namespace: openshift-cluster-observability-operator
       argoProject: observability
       path: charts/all/observability
       syncWave: '0'
-    kiali:
-      name: kiali
-      namespace: openshift-cluster-observability-operator
-      argoProject: observability
-      path: charts/all/kiali
-      syncWave: '0'
-    opentelemetry:
-      name: opentelemetry
-      namespace: openshift-opentelemetry
-      argoProject: observability
-      path: charts/all/opentelemetry
-      syncWave: '0'
-    distributed-tracing:
-      name: distributed-tracing
-      namespace: distributed-tracing
-      argoProject: observability
-      path: charts/all/distributed-tracing
-      syncWave: '5'
+    # --- Wave 1: Operators + fleet prerequisites ---
+    operators-platform:
+      name: operators-platform
+      namespace: openshift-operators
+      argoProject: operators-platform
+      path: charts/all/operators-platform
+      syncWave: '1'
+    acm-operator:
+      name: acm-operator
+      namespace: open-cluster-management
+      argoProject: fleet
+      path: charts/all/acm-operator
+      syncWave: '1'
+    acs-operator:
+      name: acs-operator
+      namespace: stackrox
+      argoProject: security
+      path: charts/all/acs-operator
+      syncWave: '1'
     rhcl-operator:
       name: rhcl-operator
       namespace: redhat-connectivity-link-operator
       argoProject: mesh
       path: charts/all/rhcl-operator
       syncWave: '1'
-    hub-gateway:
-      name: hub-gateway
-      namespace: hub-gateway-system
-      argoProject: mesh
-      path: charts/all/hub-gateway
-      syncWave: '5'
-    workshop-kuadrant-apis:
-      name: workshop-kuadrant-apis
-      namespace: workshop-kuadrant-apis
+    fleet-pull-overview:
+      name: fleet-pull-overview
+      namespace: openshift-gitops
+      argoProject: fleet-pull
+      path: charts/all/fleet-pull-overview
+      syncWave: '1'
+    # --- Wave 2: Stateful services + secrets ---
+    gitea:
+      name: gitea
+      namespace: gitea
       argoProject: workshop
-      path: charts/all/workshop-kuadrant-apis
-      syncWave: '6'
+      path: charts/all/gitea
+      syncWave: '2'
+    quay-registry:
+      name: quay-registry
+      namespace: quay-registry
+      argoProject: workshop
+      path: charts/all/quay-registry
+      syncWave: '2'
+    vault:
+      name: vault
+      namespace: vault
+      argoProject: external-secrets
+      chart: hashicorp-vault
+      chartVersion: 0.1.*
+      syncWave: '2'
+    openshift-external-secrets:
+      name: openshift-external-secrets
+      namespace: external-secrets
+      argoProject: external-secrets
+      chart: openshift-external-secrets
+      chartVersion: 0.0.*
+      syncWave: '2'
     mcp-gateway:
       name: mcp-gateway
       namespace: mcp-system
       argoProject: workshop
       path: charts/all/mcp-gateway
       syncWave: '2'
-    gitea-chart:
-      name: gitea-chart
-      namespace: gitea
-      argoProject: workshop
-      repoURL: https://dl.gitea.com/charts/
-      chart: gitea
-      targetRevision: 12.5.0
-      syncWave: '0'
-      values:
-        gitea:
-          admin:
-            username: gitea_admin
-            password: openshift
-            passwordMode: keepUpdated
-    gitea:
-      name: gitea
-      namespace: gitea
-      argoProject: workshop
-      path: charts/all/gitea
-      syncWave: '0'
-    console-links:
-      name: console-links
-      namespace: openshift-gitops
-      argoProject: workshop
-      path: charts/all/console-links
-      syncWave: '10'
-    grafana-dashboards:
-      name: grafana-dashboards
+    kiali:
+      name: kiali
       namespace: openshift-cluster-observability-operator
       argoProject: observability
-      path: charts/all/grafana-dashboards
-      syncWave: '0'
+      path: charts/all/kiali
+      syncWave: '2'
+    opentelemetry:
+      name: opentelemetry
+      namespace: openshift-opentelemetry
+      argoProject: observability
+      path: charts/all/opentelemetry
+      syncWave: '2'
     istio-monitoring:
       name: istio-monitoring
       namespace: istio-system
       argoProject: observability
       path: charts/all/istio-monitoring
-      syncWave: '0'
+      syncWave: '2'
       overrides:
         - name: workshopGateways.enabled
           value: "true"
+    industrial-edge-minio:
+      name: industrial-edge-minio
+      namespace: industrial-edge-ml-workspace
+      argoProject: ai
+      path: charts/all/industrial-edge-minio
+      syncWave: '2'
+    mailpit:
+      name: mailpit
+      namespace: mailpit
+      argoProject: workshop
+      path: charts/all/mailpit
+      syncWave: '2'
+    mailpit-templates:
+      name: mailpit-templates
+      namespace: mailpit-templates
+      argoProject: workshop
+      path: charts/all/mailpit-templates
+      syncWave: '2'
+    # --- Wave 3: App platform (developer tools, mesh, secrets post-config) ---
+    developer-hub:
+      name: developer-hub
+      namespace: developer-hub
+      argoProject: workshop
+      path: charts/all/developer-hub
+      syncWave: '3'
+    grafana-dashboards:
+      name: grafana-dashboards
+      namespace: openshift-cluster-observability-operator
+      argoProject: observability
+      path: charts/all/grafana-dashboards
+      syncWave: '3'
+    kairos:
+      name: kairos
+      namespace: kairos-system
+      argoProject: security
+      path: charts/all/kairos
+      syncWave: '3'
     service-interconnect:
       name: service-interconnect
       namespace: service-interconnect
       argoProject: mesh
       path: charts/all/service-interconnect
       syncWave: '3'
-    mailpit:
-      name: mailpit
-      namespace: mailpit
-      argoProject: workshop
-      path: charts/all/mailpit
-      syncWave: '0'
-    mailpit-templates:
-      name: mailpit-templates
-      namespace: mailpit-templates
-      argoProject: workshop
-      path: charts/all/mailpit-templates
-      syncWave: '0'
-    industrial-edge-minio:
-      name: industrial-edge-minio
-      namespace: industrial-edge-ml-workspace
-      argoProject: ai
-      path: charts/all/industrial-edge-minio
-      syncWave: '0'
+    vault-demo-auth:
+      name: vault-demo-auth
+      namespace: vault
+      argoProject: external-secrets
+      path: charts/all/vault-demo-auth
+      syncWave: '3'
+    kubecost:
+      name: kubecost
+      namespace: kubecost
+      argoProject: observability
+      path: charts/all/kubecost
+      syncWave: '3'
+    # --- Wave 4: Mesh + Kafka + workshop registration ---
+    servicemeshoperator3:
+      name: servicemeshoperator3
+      namespace: istio-system
+      argoProject: mesh
+      path: charts/all/servicemeshoperator3
+      syncWave: '4'
     kafka-console:
       name: kafka-console
       namespace: kafka-console
@@ -322,42 +321,69 @@ clusterGroup:
       argoProject: mesh
       path: charts/all/skupper-network-observer
       syncWave: '4'
-    quay-registry:
-      name: quay-registry
-      namespace: quay-registry
-      argoProject: workshop
-      path: charts/all/quay-registry
-      syncWave: '0'
-    kubecost:
-      name: kubecost
-      namespace: kubecost
-      argoProject: observability
-      path: charts/all/kubecost
-      syncWave: '0'
-    openshift-ai-hub:
-      name: openshift-ai-hub
-      namespace: maas-workshop
-      argoProject: ai
-      path: charts/all/openshift-ai-hub
-      syncWave: '5'
     workshop-registration:
       name: workshop-registration
       namespace: showroom
       argoProject: workshop
       path: charts/all/workshop-registration
       syncWave: '4'
+    # --- Wave 5: Gateway + AI + tracing ---
+    hub-gateway:
+      name: hub-gateway
+      namespace: hub-gateway-system
+      argoProject: mesh
+      path: charts/all/hub-gateway
+      syncWave: '5'
+    distributed-tracing:
+      name: distributed-tracing
+      namespace: distributed-tracing
+      argoProject: observability
+      path: charts/all/distributed-tracing
+      syncWave: '5'
+    fleet-values-sync:
+      name: fleet-values-sync
+      namespace: openshift-gitops
+      argoProject: fleet
+      path: charts/all/fleet-values-sync
+      syncWave: '5'
+    openshift-ai-hub:
+      name: openshift-ai-hub
+      namespace: maas-workshop
+      argoProject: ai
+      path: charts/all/openshift-ai-hub
+      syncWave: '5'
     showroom:
       name: showroom
       namespace: showroom
       argoProject: workshop
       path: charts/all/showroom
       syncWave: '5'
+    # --- Wave 6: ACM spoke push + Kuadrant APIs + workshop demos ---
+    acm-hub-spoke:
+      name: acm-hub-spoke
+      namespace: openshift-gitops
+      argoProject: fleet
+      path: charts/all/acm-hub-spoke
+      syncWave: '6'
+    workshop-kuadrant-apis:
+      name: workshop-kuadrant-apis
+      namespace: workshop-kuadrant-apis
+      argoProject: workshop
+      path: charts/all/workshop-kuadrant-apis
+      syncWave: '6'
     workshop-demos:
       name: workshop-demos
       namespace: developer-hub
       argoProject: workshop
       path: charts/all/workshop-demos
       syncWave: '6'
+    # --- Wave 7: Post-config (ACS bundles, NeuroFace) ---
+    acs-init-bundle-sync:
+      name: acs-init-bundle-sync
+      namespace: stackrox
+      argoProject: security
+      path: charts/all/acs-init-bundle-sync
+      syncWave: '7'
     neuroface:
       name: neuroface
       namespace: neuroface
@@ -367,44 +393,21 @@ clusterGroup:
       overrides:
         - name: neuroface.route.host
           value: neuroface.{{ $.Values.global.localClusterDomain }}
+    # --- Wave 8: CNV ---
     cnv-example:
       name: cnv-example
       namespace: cnv-workshop
       argoProject: ai
       path: charts/all/cnv-example
       syncWave: '8'
-    vault:
-      name: vault
-      namespace: vault
-      argoProject: external-secrets
-      chart: hashicorp-vault
-      chartVersion: 0.1.*
-      syncWave: '2'
-    vault-demo-auth:
-      name: vault-demo-auth
-      namespace: vault
-      argoProject: external-secrets
-      path: charts/all/vault-demo-auth
-      syncWave: '3'
-    openshift-external-secrets:
-      name: openshift-external-secrets
-      namespace: external-secrets
-      argoProject: external-secrets
-      chart: openshift-external-secrets
-      chartVersion: 0.0.*
-      syncWave: '2'
-    operators-platform:
-      name: operators-platform
-      namespace: openshift-operators
-      argoProject: operators-platform
-      path: charts/all/operators-platform
-      syncWave: '1'
-    fleet-pull-overview:
-      name: fleet-pull-overview
+    # --- Wave 10: Console links (last, all routes must exist) ---
+    console-links:
+      name: console-links
       namespace: openshift-gitops
-      argoProject: fleet-pull
-      path: charts/all/fleet-pull-overview
-      syncWave: '1'
+      argoProject: workshop
+      path: charts/all/console-links
+      syncWave: '10'
+    # --- Wave 99: Validation ---
     platform-validation:
       name: platform-validation
       namespace: openshift-gitops

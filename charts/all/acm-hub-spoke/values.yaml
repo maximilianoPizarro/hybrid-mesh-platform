@@ -7,7 +7,6 @@ gitops:
       enabled: true
       applicationSetName: fleet-spoke-push
       componentIds:
-        - operators-ci
         - operators-platform
     pull:
       enabled: true

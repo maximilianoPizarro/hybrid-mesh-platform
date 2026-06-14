@@ -1,5 +1,0 @@
-apiVersion: v2
-name: operators-ci
-description: CI/CD OLM operators — Tekton, Camel K, DevSpaces, Image Puller (PUSH strategy)
-type: application
-version: 0.1.0

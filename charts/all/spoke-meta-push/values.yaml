@@ -16,11 +16,6 @@ components:
     namespace: openshift-operators
     argoProject: operators-platform
     syncWave: "2"
-  - id: operators-ci
-    path: charts/all/operators-ci
-    namespace: openshift-operators
-    argoProject: operators-ci
-    syncWave: "2"
 
 subscriptions:
   - name: servicemeshoperator3

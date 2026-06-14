@@ -1,5 +1,0 @@
-apiVersion: v2
-name: operators
-description: OLM operator subscriptions
-type: application
-version: 0.1.0

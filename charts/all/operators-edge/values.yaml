@@ -16,3 +16,16 @@ subscriptions:
     namespace: redhat-ods-operator
     channel: stable-2.25
     source: redhat-operators
+  # Merged from operators-ci (CI/CD + DevSpaces)
+  - name: camel-k
+    namespace: openshift-operators
+    channel: stable-v2
+    source: community-operators
+  - name: devspaces
+    namespace: openshift-operators
+    channel: stable
+    source: redhat-operators
+  - name: kubernetes-imagepuller-operator
+    namespace: openshift-operators
+    channel: stable
+    source: community-operators
