@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neuroface-maas-key-sync
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neuroface-maas-key-sync
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["neuroface-backend"]
+    verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["neuroface-maas-api-key"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neuroface-maas-key-sync
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: neuroface-maas-key-sync
+subjects:
+  - kind: ServiceAccount
+    name: neuroface-maas-key-sync
+    namespace: neuroface
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: neuroface-maas-key-sync
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: neuroface-maas-key-sync
+      containers:
+        - name: sync
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              KEY=$(oc get secret neuroface-maas-api-key -n neuroface -o jsonpath='{.data.api-key}' | base64 -d)
+              if [ -z "${KEY}" ] || [ "${KEY}" = "CHANGEME-inject-via-RHDP" ]; then
+                echo "neuroface-maas-api-key missing or placeholder — run scripts/apply-maas-secrets.sh" >&2
+                exit 1
+              fi
+              oc patch deployment neuroface-backend -n neuroface --type=json -p='[
+                {"op":"remove","path":"/spec/template/spec/serviceAccountName"},
+                {"op":"replace","path":"/spec/template/spec/containers/0/env","value":[
+                  {"name":"NEUROFACE_CHAT_API_KEY","valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}}
+                ]}
+              ]'
+              oc rollout status deployment/neuroface-backend -n neuroface --timeout=180s
+              echo "neuroface-backend wired to neuroface-maas-api-key"

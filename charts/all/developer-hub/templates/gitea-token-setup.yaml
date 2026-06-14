@@ -39,6 +39,35 @@ subjects:
     name: gitea-token-setup
     namespace: developer-hub
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitea-token-setup-read-credentials
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["gitea-admin-credentials"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitea-token-setup-read-credentials
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitea-token-setup-read-credentials
+subjects:
+  - kind: ServiceAccount
+    name: gitea-token-setup
+    namespace: developer-hub
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -58,12 +87,8 @@ spec:
         - name: setup
           image: registry.redhat.io/openshift4/ose-cli:latest
           env:
-            - name: GITEA_ADMIN_USER
-              value: {{ .Values.giteaAdminUser | default "gitea_admin" | quote }}
-            - name: GITEA_ADMIN_PASS
-              value: {{ .Values.giteaAdminPassword | default "openshift" | quote }}
             - name: GITEA_INTERNAL_URL
-              value: "http://field-content-gitea-chart-http.gitea.svc.cluster.local:3000"
+              value: "http://{{ .Values.giteaInternalHttpService | default "gitea-http" }}.gitea.svc.cluster.local:3000"
             - name: RHDH_NAMESPACE
               value: developer-hub
             - name: RHDH_DEPLOYMENT
@@ -75,6 +100,8 @@ spec:
             - -c
             - |
               set -euo pipefail
+              GITEA_ADMIN_USER=$(oc get secret gitea-admin-credentials -n gitea -o jsonpath='{.data.username}' | base64 -d)
+              GITEA_ADMIN_PASS=$(oc get secret gitea-admin-credentials -n gitea -o jsonpath='{.data.password}' | base64 -d)
               AUTH="${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASS}"
               BASE="${GITEA_INTERNAL_URL}"
 

@@ -1,4 +1,5 @@
 import base64
+import http.cookiejar
 import json
 import os
 import ssl
@@ -15,6 +16,7 @@ org, robot = os.environ["QUAY_ORG"], os.environ["ROBOT_NAME"]
 user, password = os.environ["QUAY_ADMIN_USER"], os.environ["QUAY_ADMIN_PASSWORD"]
 ctx = ssl.create_default_context()
 ctx.check_hostname, ctx.verify_mode = False, ssl.CERT_NONE
+HTTPS_HANDLER = urllib.request.HTTPSHandler(context=ctx)
 
 
 def parse_json(raw):
@@ -43,6 +45,68 @@ def request(method, path, headers=None, data=None, json_body=None):
             return resp.status, parse_json(raw)
     except urllib.error.HTTPError as e:
         return e.code, parse_json(e.read())
+
+
+class SessionClient:
+    def __init__(self):
+        self.cookie_jar = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(self.cookie_jar),
+            HTTPS_HANDLER,
+        )
+
+    def _call(self, method, url, headers=None, json_body=None):
+        hdrs = dict(headers or {})
+        body = None
+        if json_body is not None:
+            body = json.dumps(json_body).encode()
+            hdrs["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, data=body, headers=hdrs, method=method)
+        try:
+            with self.opener.open(req, timeout=60) as resp:
+                raw = resp.read()
+                return resp.status, parse_json(raw)
+        except urllib.error.HTTPError as e:
+            return e.code, parse_json(e.read())
+
+    def fetch_csrf(self):
+        status, body = self._call(
+            "GET",
+            base + "/csrf_token",
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        if status != 200 or not body.get("csrf_token"):
+            print("csrf_token: {0} {1}".format(status, body), file=sys.stderr)
+            sys.exit(1)
+        return body["csrf_token"]
+
+    def signin(self):
+        csrf = self.fetch_csrf()
+        status, body = self._call(
+            "POST",
+            base + "/api/v1/signin",
+            headers={
+                "X-CSRF-Token": csrf,
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            json_body={"username": user, "password": password},
+        )
+        if status != 200 or not body.get("success"):
+            print("signin: {0} {1}".format(status, body), file=sys.stderr)
+            sys.exit(1)
+        print("Signed in to Quay with admin password", file=sys.stderr)
+
+    def api(self, method, path, json_body=None):
+        csrf = self.fetch_csrf()
+        return self._call(
+            method,
+            base + "/api/v1" + path,
+            headers={
+                "X-CSRF-Token": csrf,
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            json_body=json_body,
+        )
 
 
 def wait_for_quay():
@@ -90,6 +154,8 @@ def load_bearer_token():
     if status == 200 and body.get("username") == user:
         print("Using Quay admin bearer token", file=sys.stderr)
         return token
+    if token:
+        print("Stored Quay admin bearer token is invalid", file=sys.stderr)
     return None
 
 
@@ -120,24 +186,33 @@ def save_bearer_token(token):
 
 wait_for_quay()
 bearer = load_bearer_token()
+session = None
 if not bearer:
     bearer = initialize_admin()
 if not bearer:
-    print(
-        "Quay already initialized; set secret quay-admin-api-token with a valid OAuth token",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-try:
-    save_bearer_token(bearer)
-except Exception as exc:
-    print("Warning: could not persist admin token: {0}".format(exc), file=sys.stderr)
+    session = SessionClient()
+    session.signin()
+if bearer:
+    try:
+        save_bearer_token(bearer)
+    except Exception as exc:
+        print(
+            "Warning: could not persist admin token: {0}".format(exc),
+            file=sys.stderr,
+        )
 
-auth_headers = {"Authorization": "Bearer " + bearer}
+    def api(method, path, json_body=None):
+        return request(
+            method,
+            path,
+            headers={"Authorization": "Bearer " + bearer},
+            json_body=json_body,
+        )
 
+else:
 
-def api(method, path, json_body=None):
-    return request(method, path, headers=auth_headers, json_body=json_body)
+    def api(method, path, json_body=None):
+        return session.api(method, path, json_body=json_body)
 
 
 status, _ = api("POST", "/organization/", json_body={"name": org})

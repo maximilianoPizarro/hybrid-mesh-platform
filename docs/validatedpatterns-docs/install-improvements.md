@@ -395,7 +395,7 @@ oc get pods -n vault
 oc get cm vault-demo-login -n vault -o yaml
 ```
 
-Future: model keys via Vault paths + `ExternalSecret` (today: `scripts/apply-maas-secrets.sh`).
+**Target:** model keys via Vault paths + `ExternalSecret` (see [Vault & External Secrets product page](products/vault.md) and Showroom module *Vault & External Secrets*). **Today:** `scripts/apply-maas-secrets.sh` for RHDP day-2 injection.
 
 ---
 

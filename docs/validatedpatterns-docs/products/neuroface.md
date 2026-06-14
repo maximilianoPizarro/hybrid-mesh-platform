@@ -21,4 +21,6 @@ Shared **Hybrid Mesh AI Workshop** demo for webcam face/object detection and con
 
 **Not LibreChat:** workshop chat multimodal UX is NeuroFace only.
 
-Workshop content: [Hybrid Mesh AI Workshop](../workshop/index.md) (module 27 — NeuroFace).
+Workshop content: [Hybrid Mesh AI Workshop](../workshop/index.md) (module *Vault & External Secrets* before AI track; module 27 — NeuroFace).
+
+MaaS API keys should be sourced from **Vault** via **ExternalSecret** — see [Vault & External Secrets](vault.md). Facilitator day-2 fallback: `scripts/apply-maas-secrets.sh`.

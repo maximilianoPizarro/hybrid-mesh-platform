@@ -16,9 +16,15 @@ spec:
           image: curlimages/curl:latest
           env:
             - name: ADMIN_USER
-              value: {{ .Values.adminUser | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-admin-credentials
+                  key: username
             - name: ADMIN_PASS
-              value: {{ .Values.adminPassword | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-admin-credentials
+                  key: password
             - name: ADMIN_EMAIL
               value: {{ .Values.adminEmail | quote }}
           command:
@@ -26,7 +32,7 @@ spec:
             - -c
             - |
               set -e
-              BASE="http://field-content-gitea-chart-http.gitea.svc.cluster.local:3000"
+              BASE="http://{{ .Values.internalHttpService | default "gitea-http" }}.gitea.svc.cluster.local:3000"
               AUTH="${ADMIN_USER}:${ADMIN_PASS}"
               echo "Waiting for Gitea API..."
               for attempt in $(seq 1 60); do

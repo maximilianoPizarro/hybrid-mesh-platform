@@ -106,6 +106,7 @@ spec:
             {{- with .Values.litemaas }}
             {{- if .apiKey }}
             litemaas.apiKey: {{ .apiKey | quote }}
+            neuroface.chat.apiKey: {{ .apiKey | quote }}
             {{- end }}
             {{- if .apiUrl }}
             litemaas.apiUrl: {{ .apiUrl | quote }}

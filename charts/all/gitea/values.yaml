@@ -1,4 +1,6 @@
 clusterDomain: ""
+# PostSync jobs reach Gitea via this Service (Route also targets gitea-http).
+internalHttpService: gitea-http
 adminUser: gitea_admin
 adminPassword: "openshift"
 adminEmail: "admin@gitea.local"

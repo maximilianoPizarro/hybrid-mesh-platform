@@ -24,10 +24,10 @@ Charts: `charts/all/showroom`, `charts/all/workshop-registration`, `charts/all/w
 | ---- | ------- | -------- | -------------- |
 | Welcome | index | All | Hub-spoke architecture + component map |
 | **Part A — Strategy** | 01–05 | Executive / show-and-tell | Hybrid cloud → ROSA → security → AWS AI → customer journey |
-| **Part B — Hands-on** | 10–28 | `userN` lab | Fleet → IE → mesh → GitOps → AI stack → operator apps |
+| **Part B — Hands-on** | 10–28 | `userN` lab | Fleet → IE → mesh → GitOps → Vault/ESO → AI stack → operator apps |
 | **Facilitator** | 29 (not in nav), 30 | Agents / facilitators | Full-stack verification · AI show-and-tell script |
 
-AI track order: **30** (facilitator) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **27** NeuroFace → **28** End-user apps.
+AI track order: **30** (facilitator) → **Vault & External Secrets** (after module 20) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **27** NeuroFace → **28** End-user apps.
 
 ## Hero screenshots (Gemini + manual overrides)
 
@@ -110,6 +110,6 @@ Supplemental UI in the showroom repo:
 - [Getting Started — Workshop section](../getting-started.md#hybrid-mesh-ai-workshop-hub)
 - [RHDP install playbook](../install-improvements.md) — registration, showroom, day-2 scripts
 - [Validation Guide](../../validation-guide.md) — optional showroom apps
-- [Developer Hub](../products/developer-hub.md) · [OpenShift AI](../products/openshift-ai.md) · [NeuroFace](../products/neuroface.md)
+- [Vault & External Secrets](../products/vault.md) · [Developer Hub](../products/developer-hub.md) · [OpenShift AI](../products/openshift-ai.md) · [NeuroFace](../products/neuroface.md)
 
 **Next →** [Getting Started](../getting-started.md) · [Install improvements](../install-improvements.md)

@@ -41,6 +41,12 @@ if [[ -n "${MAAS_KEY_LLAMA:-}" ]]; then
     --dry-run=client -o yaml | oc apply -f -
   echo "  applied maas-workshop/openshift-ai-maas-credentials"
   apply_secret neuroface-maas-api-key neuroface "$MAAS_KEY_LLAMA"
+  oc patch deployment neuroface-backend -n neuroface --type=json -p='[
+    {"op":"remove","path":"/spec/template/spec/serviceAccountName"},
+    {"op":"replace","path":"/spec/template/spec/containers/0/env","value":[
+      {"name":"NEUROFACE_CHAT_API_KEY","valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}}
+    ]}
+  ]' 2>/dev/null || true
   LS_KEY="${MAAS_KEY_GRANITE:-$MAAS_KEY_LLAMA}"
   oc patch secret llama-stack-secrets -n developer-hub --type merge \
     -p "{\"stringData\":{\"VLLM_API_KEY\":\"${LS_KEY}\"}}" 2>/dev/null || true
@@ -70,7 +76,7 @@ fi
 
 echo ""
 echo "== Restart workloads =="
-oc rollout restart deployment/neuroface -n neuroface 2>/dev/null || true
+oc rollout restart deployment/neuroface-backend -n neuroface 2>/dev/null || true
 oc rollout restart deployment/developer-hub -n developer-hub 2>/dev/null || true
 
 if oc get job developer-hub-lightspeed-ai-sync -n developer-hub >/dev/null 2>&1; then

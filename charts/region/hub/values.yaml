@@ -253,6 +253,12 @@ clusterGroup:
       chart: gitea
       targetRevision: 12.5.0
       syncWave: '0'
+      values:
+        gitea:
+          admin:
+            username: gitea_admin
+            password: openshift
+            passwordMode: keepUpdated
     gitea:
       name: gitea
       namespace: gitea
