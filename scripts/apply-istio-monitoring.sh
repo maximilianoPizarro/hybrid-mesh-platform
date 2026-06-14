@@ -16,11 +16,14 @@ apply_cluster() {
   echo "== $ctx: observability (UWM) =="
   helm template obs "$ROOT/charts/all/observability" 2>/dev/null | oc apply -f - || true
   echo "== $ctx: istio-monitoring suffix=${suffix:-none} =="
-  if [[ -n "$suffix" ]]; then
-    helm template im "$ROOT/charts/all/istio-monitoring" --set "clusterSuffix=$suffix" | oc apply -f -
-  else
-    helm template im "$ROOT/charts/all/istio-monitoring" | oc apply -f -
+  SET_ARGS=()
+  if [[ "$ctx" == "hub" ]]; then
+    SET_ARGS+=(--set workshopGateways.enabled=true)
   fi
+  if [[ -n "$suffix" ]]; then
+    SET_ARGS+=(--set "clusterSuffix=$suffix")
+  fi
+  helm template im "$ROOT/charts/all/istio-monitoring" "${SET_ARGS[@]}" | oc apply -f -
 }
 
 echo "== Istio monitoring + UWM =="

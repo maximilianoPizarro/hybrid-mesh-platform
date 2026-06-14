@@ -2,3 +2,6 @@
 clusterDomain: ""
 # Suffix appended to strimzi_io_cluster label for spoke metrics (e.g., "-east", "-west")
 clusterSuffix: ""
+# Hub-only Gateway API namespaces (workshop-apis, ai-gateway, MCP) — enable on hub only
+workshopGateways:
+  enabled: false

@@ -277,6 +277,9 @@ clusterGroup:
       argoProject: observability
       path: charts/all/istio-monitoring
       syncWave: '0'
+      overrides:
+        - name: workshopGateways.enabled
+          value: "true"
     service-interconnect:
       name: service-interconnect
       namespace: service-interconnect
