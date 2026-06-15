@@ -18,6 +18,26 @@ showroom:
   terminal:
     enabled: true
     image: "quay.io/rhpds/openshift-showroom-terminal-ocp:latest"
+    # Match platform-users.userCount for workshop-lab-reader bindings
+    userCount: 50
+    # Namespaces lab modules inspect with oc (Showroom SA + userN after hub-login)
+    workshopNamespaces:
+      - workshop-kuadrant-apis
+      - ai-gateway-system
+      - developer-hub
+      - mcp-system
+      - industrial-edge-tst-all
+      - maas-workshop
+      - neuroface
+      - cnv-workshop
+      - hub-gateway-system
+      - gitea
+      - openshift-gitops
+      - stackrox
+      - kairos-system
+      - vault
+      - redhat-connectivity-link-operator
+      - kuadrant-system
     resources:
       requests:
         cpu: "200m"

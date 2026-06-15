@@ -44,35 +44,6 @@ subjects:
   name: {{ .Values.showroom.name }}
   namespace: {{ .Values.showroom.namespace }}
 ---
-# Showroom secret-reader — workshop namespaces (Industrial Edge, AI, demos)
-{{- $workshopNs := list "industrial-edge-tst-all" "maas-workshop" "neuroface" "cnv-workshop" "workshop-demo-cdc-east" "workshop-demo-apis-east" }}
-{{- range $workshopNs }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: showroom-secret-reader
-  namespace: {{ . }}
-rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: showroom-secret-reader
-  namespace: {{ . }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: showroom-secret-reader
-subjects:
-- kind: ServiceAccount
-  name: {{ $.Values.showroom.name }}
-  namespace: {{ $.Values.showroom.namespace }}
-{{- end }}
----
 # Showroom Nginx ConfigMap
 kind: ConfigMap
 metadata:
@@ -192,6 +163,7 @@ spec:
         app.kubernetes.io/name: {{ .Values.showroom.name }}
     spec:
       serviceAccountName: {{ .Values.showroom.name }}
+      automountServiceAccountToken: true
       initContainers:
       - name: git-cloner
         image: "quay.io/rhpds/git-cloner:v1.1.2"
@@ -336,6 +308,17 @@ spec:
             hub-login() {
               oc login -u "${1:-user1}" -p Welcome123! "https://api.${CLUSTER_DOMAIN#apps.}:6443" --insecure-skip-tls-verify
             }
+            sa-login() {
+              local token="/var/run/secrets/kubernetes.io/serviceaccount/token"
+              local ca="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+              local server="${HUB_API_URL:-https://api.${CLUSTER_DOMAIN#apps.}:6443}"
+              if [[ ! -f "$token" ]]; then
+                echo "No SA token mounted; use hub-login userN"
+                return 1
+              fi
+              oc login --token="$(cat "$token")" --server="$server" \
+                --certificate-authority="$ca" --insecure-skip-tls-verify
+            }
             east-login() {
               oc login -u "${1:-user1}" -p Welcome123! "$EAST_API_URL" --insecure-skip-tls-verify
             }
@@ -381,13 +364,24 @@ spec:
                 -d "{\"model\":\"${model}\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in one word\"}],\"max_tokens\":20}" | head -c 600
               echo
             }
+            kuadrant-verify-oc() {
+              sa-login 2>/dev/null || hub-login "${1:-user1}"
+              echo "== workshop-kuadrant-apis =="
+              oc get httproute,apiproducts -n workshop-kuadrant-apis 2>/dev/null || true
+              oc get authpolicy,planpolicy -n workshop-kuadrant-apis 2>/dev/null || true
+              echo "== ai-gateway-system =="
+              oc get httproute,apiproducts -n ai-gateway-system 2>/dev/null || true
+              oc get authpolicy,tokenratelimitpolicy -n ai-gateway-system 2>/dev/null || true
+            }
 
             echo "╔══════════════════════════════════════════════════════════════╗"
             echo "║  Hybrid Mesh AI Workshop Terminal                            ║"
             echo "╠══════════════════════════════════════════════════════════════╣"
-            echo "║  oc login:     hub-login userN   | east-login | west-login  ║"
+            echo "║  oc login:     hub-login userN | sa-login (read-only SA)     ║"
+            echo "║  spokes:       east-login | west-login                         ║"
             echo "║  Kuadrant:     kuadrant-set-key <key>                        ║"
             echo "║                kuadrant-test-httpbin | kuadrant-test-ai      ║"
+            echo "║                kuadrant-verify-oc  (oc get routes/policies)  ║"
             echo "║  rosa login:   rosa login --token=<token>                   ║"
             echo "║  gcloud:       gcloud auth login --no-launch-browser         ║"
             echo "║  aws config:   aws configure                                ║"
