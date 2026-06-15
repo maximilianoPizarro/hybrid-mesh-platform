@@ -8,6 +8,7 @@ userCount: 50
 
 # External Gitea Helm chart values (subchart via dependency alias gitea-chart)
 gitea-chart:
+  fullnameOverride: gitea
   gitea:
     admin:
       username: gitea_admin
