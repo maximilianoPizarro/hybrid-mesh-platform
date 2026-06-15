@@ -26,6 +26,8 @@ gitea-chart:
         PROTOCOL: http
   postgresql-ha:
     enabled: true
+    volumePermissions:
+      enabled: true
   valkey-cluster:
     enabled: true
   resources:

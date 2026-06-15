@@ -6,6 +6,7 @@ metadata:
   namespace: openshift-gitops
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/skip-health-check: "true"
   labels:
     app.kubernetes.io/name: image-prefetch
     app.kubernetes.io/part-of: hybrid-mesh-platform

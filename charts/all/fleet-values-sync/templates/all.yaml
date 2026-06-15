@@ -64,6 +64,7 @@ metadata:
   namespace: {{ .Values.argocdNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/skip-health-check: "true"
 spec:
   schedule: {{ .Values.schedule | quote }}
   concurrencyPolicy: Forbid

@@ -16,6 +16,7 @@ metadata:
   namespace: {{ .Values.demos.camelCdc.namespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/skip-health-check: "true"
 spec:
   flows:
     - from:

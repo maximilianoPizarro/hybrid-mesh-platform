@@ -180,6 +180,7 @@ metadata:
     opendatahub.io/dashboard: "true"
   annotations:
     argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/skip-health-check: "true"
     serving.kserve.io/deploymentMode: RawDeployment
     maas.redhat.com/model-id: {{ $m.id | quote }}
     maas.redhat.com/display-name: {{ $m.displayName | default $m.id | quote }}

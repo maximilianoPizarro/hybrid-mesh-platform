@@ -346,7 +346,10 @@ def run_hub() -> int:
     for name in SPOKE_CLUSTERS:
         mc = get_managed_cluster(name)
         if mc and cluster_available(mc):
-            upsert_manifestwork(name, hub_domain, hub_api)
+            try:
+                upsert_manifestwork(name, hub_domain, hub_api)
+            except urllib.error.HTTPError as e:
+                print(f"WARN: ManifestWork for {name} failed ({e.code}): {e.reason}")
     return 0
 
 
