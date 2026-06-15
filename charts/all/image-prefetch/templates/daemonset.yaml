@@ -26,6 +26,9 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+      {{- else }}
+      tolerations:
+        - operator: Exists
       {{- end }}
       initContainers:
         {{- range $idx, $img := .Values.images }}
