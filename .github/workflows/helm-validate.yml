@@ -21,6 +21,14 @@ jobs:
           python-version: "3.12"
       - name: Install Python deps
         run: pip install pyyaml
+      - name: Build chart dependencies
+        run: |
+          for chart in charts/all/*/Chart.yaml; do
+            dir=$(dirname "$chart")
+            if grep -q 'dependencies:' "$chart"; then
+              helm dependency build "$dir" 2>/dev/null || true
+            fi
+          done
       - name: Lint all component charts
         run: |
           set -e
@@ -29,7 +37,7 @@ jobs:
           done
       - name: Template key charts
         run: |
-          helm template test charts/all/operators-ci --set clusterRole=spoke
+          helm template test charts/all/operators-edge --set clusterRole=spoke
           helm template test charts/all/spoke-meta-push \
             --set clusterName=east --set gitops.repoUrl=https://github.com/example/hybrid-mesh-platform.git
           helm template test charts/all/acm-hub-spoke \
