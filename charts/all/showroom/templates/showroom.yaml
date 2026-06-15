@@ -321,6 +321,13 @@ spec:
               "$AZ_VENV/bin/pip" install --quiet azure-cli && \
               ln -sf "$AZ_VENV/bin/az" "$BIN/az" || true
             fi
+            if [ ! -f "$BIN/gcloud" ]; then
+              curl -sL "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz" | tar xz -C /home/lab-user/.local 2>/dev/null && \
+              /home/lab-user/.local/google-cloud-sdk/install.sh --quiet --path-update=false --usage-reporting=false 2>/dev/null && \
+              ln -sf /home/lab-user/.local/google-cloud-sdk/bin/gcloud "$BIN/gcloud" && \
+              ln -sf /home/lab-user/.local/google-cloud-sdk/bin/gsutil "$BIN/gsutil" && \
+              ln -sf /home/lab-user/.local/google-cloud-sdk/bin/bq "$BIN/bq" || true
+            fi
             cat > /home/lab-user/.bashrc << 'BASHRC'
             export HOME=/home/lab-user
             export PATH="$HOME/.local/bin:$PATH"
@@ -341,8 +348,9 @@ spec:
             echo "╠══════════════════════════════════════════════════════════════╣"
             echo "║  oc login:     hub-login userN   | east-login | west-login  ║"
             echo "║  rosa login:   rosa login --token=<token>                   ║"
-            echo "║  az login:     az login --use-device-code                   ║"
+            echo "║  gcloud:       gcloud auth login --no-launch-browser         ║"
             echo "║  aws config:   aws configure                                ║"
+            echo "║  az login:     az login --use-device-code                   ║"
             echo "║  argocd:       argocd login argocd-server-openshift-gitops.. ║"
             echo "╠══════════════════════════════════════════════════════════════╣"
             echo "║  Hub: $CLUSTER_DOMAIN"
