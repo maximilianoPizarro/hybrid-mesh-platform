@@ -242,7 +242,7 @@ data:
               email:
                 transportConfig:
                   transport: smtp
-                  hostname: mailpit-templates.mailpit-templates.svc.cluster.local
+                  hostname: mailpit.mailpit.svc.cluster.local
                   port: 1025
                   secure: false
                   requireTLS: false

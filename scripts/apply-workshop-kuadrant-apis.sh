@@ -45,4 +45,5 @@ AI_CODE=$(curl -sk -o /dev/null -w '%{http_code}' "https://$AI_HOST/v1/models" 2
 AI_CODE="${AI_CODE:-000}"
 echo "ai-gateway/v1/models (no API key): HTTP ${AI_CODE//$'\r'/} (expect 401)"
 [[ "$CODE" == "401" || "$CODE" == "403" ]] || echo "WARN: expected 401 without APIKEY on workshop-apis"
+bash "$(cd "$(dirname "$0")/.." && pwd)/scripts/sync-kuadrant-apiproduct-plans.sh" 2>/dev/null || true
 echo "OK: workshop-apis + ai-gateway applied — request keys at Developer Hub /kuadrant"
