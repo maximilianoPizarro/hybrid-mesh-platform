@@ -26,6 +26,8 @@ bash "$ROOT/scripts/apply-workshop-showroom.sh"
 bash "$ROOT/scripts/apply-mcp-gateway.sh"
 bash "$ROOT/scripts/apply-istio-monitoring.sh"
 bash "$ROOT/scripts/apply-workshop-kuadrant-apis.sh"
+bash "$ROOT/scripts/apply-hub-resource-relief.sh"
+bash "$ROOT/scripts/apply-gitea-postgres-fix.sh"
 bash "$ROOT/scripts/apply-gitea-root-url.sh"
 
 if [[ -n "${MAAS_KEY_LLAMA:-}${MAAS_KEY_GRANITE:-}${MAAS_KEY_DEEPSEEK:-}" ]]; then

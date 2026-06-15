@@ -28,6 +28,34 @@ gitea-chart:
     enabled: true
     volumePermissions:
       enabled: true
+      containerSecurityContext:
+        runAsUser: 0
+        privileged: true
+    postgresql:
+      # Workshop hub: 1 replica saves CPU and avoids HA quorum issues on small clusters.
+      replicaCount: 1
+      openshiftUid: "1000910000"
+      podSecurityContext:
+        enabled: true
+        fsGroup: 1000910000
+      containerSecurityContext:
+        enabled: true
+        runAsUser: 1000910000
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+    pgpool:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 250m
+          memory: 256Mi
   valkey-cluster:
     enabled: true
   resources:

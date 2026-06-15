@@ -123,6 +123,26 @@ Route must target Service **`gitea-http`** (not `field-content-gitea-chart-http`
 
 Without Gitea, Developer Hub scaffolding and local SCM integration are degraded — the **Gitea console link** stays 503.
 
+**PostgreSQL HA on small hubs:** chart defaults to **1 replica** + PostSync PVC ownership job (`job-gitea-postgres-fix-perms.yaml`). Day-2: `bash scripts/apply-gitea-postgres-fix.sh` (scales STS to 0, chown `1000910000`, restarts pgpool).
+
+---
+
+## ACS Central (constrained hub CPU)
+
+Central + Central DB default requests (~5.5 CPU) exceed small RHDP hub capacity when MaaS predictors, ODS notebooks, and NooBaa pods are scheduled.
+
+**Chart:** `charts/all/acs-operator` — reduced Central/DB requests and scanner `maxReplicas: 1`.
+
+**Day-2 (before expecting ACS console 200):**
+
+```bash
+bash scripts/apply-hub-resource-relief.sh
+# wait 60–120s; central-db must be Running 2/2
+curl -skI "https://central-stackrox.$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')/"
+```
+
+Relief scales MaaS predictors and `neuroface-ml-lab` notebooks to 0, trims duplicate ACS scanners, and pauses heavy NooBaa backing-store pods until Central DB schedules.
+
 ---
 
 ## Skupper network observer
@@ -437,6 +457,8 @@ Public APIs via **ExternalName** + Istio **ServiceEntry** → hub **Gateway API*
 | `https://ai-gateway.<hub-domain>/v1/chat/completions` | MaaS LLM (TokenRateLimit free/gold) |
 
 **Developer Hub:** `/kuadrant` → API Products → Request key (auto-approved) → **My API Keys** → `Authorization: APIKEY …`
+
+**Kuadrant catalog sync:** APIProduct CRs need `backstage.io/owner: group:default/platform-engineering` (chart `workshop-kuadrant-apis`) so the Kuadrant provider registers entities. Static catalog entities live under System **workshop-kuadrant-apis**. Login via Keycloak (`user1` / `Welcome123!` or `platformadmin` to edit products).
 
 **OpenShift Console:** RHCL console plugin — AuthPolicy / PlanPolicy in `workshop-kuadrant-apis` and `ai-gateway-system`; APIProducts in same namespaces.
 

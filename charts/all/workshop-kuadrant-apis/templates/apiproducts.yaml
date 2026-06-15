@@ -14,6 +14,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    backstage.io/owner: group:default/platform-engineering
 spec:
   displayName: {{ .Values.apis.httpbin.displayName | default "Workshop httpbin (external)" }}
   description: Public httpbin.org via dedicated workshop-apis Gateway API. ExternalName backend + PlanPolicy tiers.
@@ -40,6 +41,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    backstage.io/owner: group:default/platform-engineering
 spec:
   displayName: {{ .Values.apis.restcountries.displayName | default "Workshop REST Countries (external)" }}
   description: External restcountries.com via workshop-apis gateway. Kuadrant API keys + PlanPolicy.
@@ -66,6 +68,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    backstage.io/owner: group:default/platform-engineering
 spec:
   displayName: {{ .Values.apis.mcp.displayName | default "Workshop MCP Gateway" }}
   description: >
@@ -94,6 +97,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    backstage.io/owner: group:default/platform-engineering
 spec:
   displayName: {{ .Values.apis.maas.displayName | default "AI Gateway — MaaS LLM (TokenRateLimit)" }}
   description: >
