@@ -1,0 +1,189 @@
+{{- if .Values.yoloPpeServing.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yolo-ppe-serving
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  server.py: |
+    import os
+    import cv2
+    import numpy as np
+    from fastapi import FastAPI, Request
+    from ultralytics import YOLO
+
+    MODEL_PATH = os.environ.get("MODEL_PATH", "/models/best.pt")
+    app = FastAPI()
+    model = YOLO(MODEL_PATH)
+
+    CLASS_MAP = {
+        "hardhat": "hardhat",
+        "helmet": "hardhat",
+        "safety vest": "safety-vest",
+        "safety-vest": "safety-vest",
+        "vest": "safety-vest",
+        "goggles": "goggles",
+        "person": "person",
+    }
+
+    def normalize(name: str) -> str:
+        key = name.strip().lower().replace("_", " ")
+        if key.startswith("no-"):
+            return key
+        return CLASS_MAP.get(key, key.replace(" ", "-"))
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok", "model": os.path.basename(MODEL_PATH)}
+
+    @app.post("/v1/predict")
+    async def predict(request: Request):
+        conf = float(request.headers.get("X-Confidence", "0.5"))
+        raw = await request.body()
+        arr = np.frombuffer(raw, dtype=np.uint8)
+        img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        if img is None:
+            return {"detections": []}
+        results = model.predict(img, conf=conf, verbose=False)
+        detections = []
+        for result in results:
+            if result.boxes is None:
+                continue
+            for box in result.boxes:
+                cls_id = int(box.cls[0])
+                raw_name = model.names.get(cls_id, str(cls_id))
+                name = normalize(raw_name)
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                detections.append({
+                    "class_id": cls_id,
+                    "class_name": name,
+                    "confidence": float(box.conf[0]),
+                    "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
+                })
+        return {"detections": detections}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: yolo-ppe-model
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo-ppe-serving
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yolo-ppe-serving
+  template:
+    metadata:
+      labels:
+        app: yolo-ppe-serving
+    spec:
+      initContainers:
+        - name: model-download
+          image: {{ .Values.yoloPpeServing.image | quote }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              if [ -f /models/{{ .Values.yoloPpeServing.modelFile }} ]; then
+                echo "Model already present"
+                exit 0
+              fi
+              pip install --no-cache-dir huggingface_hub
+              python - <<'PY'
+              from huggingface_hub import hf_hub_download
+              import shutil
+              src = hf_hub_download(
+                  repo_id={{ .Values.yoloPpeServing.modelRepo | quote }},
+                  filename={{ .Values.yoloPpeServing.modelFile | quote }},
+              )
+              shutil.copy(src, "/models/{{ .Values.yoloPpeServing.modelFile }}")
+              PY
+          volumeMounts:
+            - name: model
+              mountPath: /models
+      containers:
+        - name: serving
+          image: {{ .Values.yoloPpeServing.image | quote }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              pip install --no-cache-dir fastapi uvicorn opencv-python-headless huggingface_hub \
+                numpy scipy pillow pyyaml requests polars psutil matplotlib ultralytics-thop
+              pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+              pip install --no-cache-dir ultralytics --no-deps
+              uvicorn server:app --host 0.0.0.0 --port 8080
+          env:
+            - name: MODEL_PATH
+              value: /models/{{ .Values.yoloPpeServing.modelFile }}
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 240
+            periodSeconds: 30
+            failureThreshold: 10
+          resources:
+            {{- toYaml .Values.yoloPpeServing.resources | nindent 12 }}
+          volumeMounts:
+            - name: model
+              mountPath: /models
+            - name: code
+              mountPath: /opt/app
+            - name: tmp
+              mountPath: /tmp
+          workingDir: /opt/app
+      volumes:
+        - name: model
+          persistentVolumeClaim:
+            claimName: yolo-ppe-model
+        - name: code
+          configMap:
+            name: yolo-ppe-serving
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yolo-ppe-serving
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selector:
+    app: yolo-ppe-serving
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+{{- end }}

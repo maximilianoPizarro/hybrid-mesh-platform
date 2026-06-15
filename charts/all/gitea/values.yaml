@@ -9,8 +9,29 @@ userCount: 50
 # External Gitea Helm chart values (subchart via dependency alias gitea-chart)
 gitea-chart:
   fullnameOverride: gitea
+  ingress:
+    enabled: false
+    hosts:
+      - host: gitea-gitea.apps.cluster.example.com
+        paths:
+          - path: /
   gitea:
     admin:
       username: gitea_admin
       password: openshift
       passwordMode: keepUpdated
+    config:
+      server:
+        # HTTP behind OpenShift Route (TLS termination at edge); ROOT_URL stays https.
+        PROTOCOL: http
+  postgresql-ha:
+    enabled: true
+  valkey-cluster:
+    enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi

@@ -4,10 +4,10 @@ neuroface:
   fullnameOverride: neuroface
   backend:
     image:
-      tag: v1.2.0
+      tag: v1.3.0
   frontend:
     image:
-      tag: v1.2.0
+      tag: v1.3.0
   chat:
     enabled: true
     autoServiceAccount: false
@@ -20,6 +20,26 @@ neuroface:
     modelName: "face-detection-retail-0005"
   litellm:
     enabled: false
+  ppe:
+    enabled: true
+    endpoint: "http://yolo-ppe-serving:8080"
+    classes: "hardhat,safety-vest,goggles"
+    confidence: "0.5"
+    kafka:
+      enabled: false
   route:
     enabled: true
     host: ""
+
+yoloPpeServing:
+  enabled: true
+  image: registry.access.redhat.com/ubi9/python-311:latest
+  modelRepo: Hexmon/vyra-yolo-ppe-detection
+  modelFile: best.pt
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 3Gi

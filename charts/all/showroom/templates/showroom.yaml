@@ -284,7 +284,7 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-            cpu: "500m"
+            cpu: {{ .Values.showroom.terminal.resources.requests.cpu | quote }}
             memory: "1Gi"
           limits:
             cpu: "1"

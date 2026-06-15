@@ -20,7 +20,7 @@ showroom:
     image: "quay.io/rhpds/openshift-showroom-terminal-ocp:latest"
     resources:
       requests:
-        cpu: "500m"
+        cpu: "200m"
         memory: "512Mi"
       limits:
         cpu: "500m"

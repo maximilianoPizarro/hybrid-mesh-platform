@@ -1,0 +1,35 @@
+{{- $host := printf "gitea-gitea.%s" (include "gitea.clusterDomain" .) -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitea-fix-app-ini
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: fix
+          image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              INI=/data/gitea/conf/app.ini
+              [ -f "$INI" ] || { echo "No app.ini yet — first install"; exit 0; }
+              HOST={{ $host | quote }}
+              sed -i "s|^DOMAIN = .*|DOMAIN = ${HOST}|" "$INI"
+              sed -i "s|^ROOT_URL = .*|ROOT_URL = https://${HOST}/|" "$INI"
+              sed -i "s|^PROTOCOL = .*|PROTOCOL = http|" "$INI"
+              sed -i "s|^SSH_DOMAIN = .*|SSH_DOMAIN = ${HOST}|" "$INI"
+              grep -E '^(DOMAIN|ROOT_URL|PROTOCOL|SSH_DOMAIN)' "$INI"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gitea-shared-storage
