@@ -456,7 +456,9 @@ Public APIs via **ExternalName** + Istio **ServiceEntry** → hub **Gateway API*
 | `https://workshop-apis.<hub-domain>/mcp` | MCP Gateway (Kuadrant API key) |
 | `https://ai-gateway.<hub-domain>/v1/chat/completions` | MaaS LLM (TokenRateLimit free/gold) |
 
-**Developer Hub:** `/kuadrant` → API Products → Request key (auto-approved) → **My API Keys** → `Authorization: APIKEY …`
+**Developer Hub:** `/kuadrant` → API Products → click product **name** → **Request API key** (auto-approved) → **My API Keys** → `Authorization: APIKEY …`. Or **Catalog** → API entity → **Kuadrant** tab.
+
+**Fresh install:** Catalog ConfigMaps use piped Helm `replace` (not `$var = replace`, which truncates file content). After sync, confirm `developer-hub-catalog-workshop-kuadrant-apis` contains API entities before opening the UI.
 
 **Kuadrant catalog sync:** APIProduct CRs need `backstage.io/owner: group:default/platform-engineering` (chart `workshop-kuadrant-apis`) so the Kuadrant provider registers entities. Static catalog entities live under System **workshop-kuadrant-apis**. Login via Keycloak (`user1` / `Welcome123!` or `platformadmin` to edit products).
 

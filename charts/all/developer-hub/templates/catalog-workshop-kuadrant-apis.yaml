@@ -3,8 +3,7 @@
   Domain placeholder __HUB_APPS_DOMAIN__ replaced from RHDP-injected clusterDomain.
 */ -}}
 {{- $hub := include "developer-hub.clusterDomain" . -}}
-{{- $catalog := .Files.Get "files/catalog/workshop-kuadrant-apis.yaml" -}}
-{{- $catalog = replace $catalog "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $catalog := .Files.Get "files/catalog/workshop-kuadrant-apis.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

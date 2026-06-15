@@ -30,10 +30,11 @@ Red Hat **Developer Hub** (RHDH) is the enterprise distribution of [Backstage](h
 | **Argo CD** | Argo CD | Read-only app view when `plugins.argocd.enabled` |
 | **Adoption Insights** | Insights | Events read (RBAC CSV) |
 | **Lightspeed** | `/lightspeed` | Granite vLLM via Llama Stack + LCS sidecars (same model as Kairos) |
+| **Kuadrant** | `/kuadrant` | API Products, **Request API key**, My API Keys (`plugins.kuadrant.enabled: true`) |
 | **RBAC** | Permission framework | CSV at `files/lightspeed/rbac-policy.csv` — **not** tied to Lightspeed enable |
 | **Keycloak catalog** | Users/Groups | Sync from Keycloak `backstage` realm |
 
-Disabled or optional: Kafka, Kuadrant, ACS security-insights (package missing in RHDH 1.9 image).
+Disabled or optional: Kafka, ACS security-insights (package missing in RHDH 1.9 image).
 
 ## Authentication (Keycloak OIDC)
 
@@ -189,6 +190,25 @@ With `plugins.rbac.enabled: true`, Backstage uses **deny-by-default**. The platf
 
 Rollout DevHub after Git merge: sync Argo app `field-content-developer-hub` on the hub.
 
+## Kuadrant API keys (workshop)
+
+Workshop users request keys in Developer Hub — no manual `oc` Secret creation.
+
+1. Sign in as `user1`…`userN` or `platformadmin` (Keycloak).
+2. **Option A:** **Kuadrant** sidebar → **API Products** → click the **product name** (not the pencil) → **Request API key** → choose plan (bronze/silver/gold).
+3. **Option B:** **Catalog** → System **workshop-kuadrant-apis** → open an **API** entity → **Kuadrant** tab → **Request API key**.
+4. Copy the key from **Kuadrant → My API Keys**.
+5. Call gateways with `Authorization: APIKEY <key>`:
+
+```bash
+curl -H "Authorization: APIKEY $KEY" https://workshop-apis.<hub-apps-domain>/httpbin/get
+curl -sk -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
+  -X POST "https://ai-gateway.<hub-apps-domain>/v1/chat/completions" \
+  -d '{"model":"granite-3-2-8b-instruct","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
+```
+
+Catalog entities and plugin routes ship in-chart (`catalog-workshop-kuadrant-apis.yaml`, `dynamic-plugins-rhdh`). Post-install: `bash scripts/apply-workshop-kuadrant-apis.sh` and `bash scripts/verify-workshop-kuadrant-curl.sh` (set `KUADRANT_API_KEY`).
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Action |
@@ -203,6 +223,7 @@ Rollout DevHub after Git merge: sync Argo app `field-content-developer-hub` on t
 | IoT dashboard 503 from hub | Mesh on IE namespaces | Keep `industrial-edge-tst-all` and `spoke-gateway-system` **off** ambient mesh |
 | Kuadrant API Products empty | K8s RBAC or CRD group | ClusterRole `developer-hub-kuadrant`: `devportal.kuadrant.io` apiproducts/apikeys + `gateway.networking.k8s.io` gateways/httproutes; sync `developer-hub` |
 | Kuadrant create API key fails | Backstage permission or RBAC | `rbac-policy.csv`: `kuadrant.apikey.create`, `kuadrant.apikey.list`; routes `/kuadrant/api-products/...` |
+| No **Request API key** / Kuadrant tab on API entities | Corrupt catalog ConfigMap (Helm `$var = replace` bug) | ConfigMap `developer-hub-catalog-workshop-kuadrant-apis` must contain full YAML (4× `kind: API`), not only the hub domain string; fixed in chart templates v1.5.1+ — re-sync `field-content-developer-hub` |
 | Lightspeed chat 401 | Missing MaaS key | `bash scripts/apply-maas-secrets.sh` |
 | TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to Gitea repo |
 

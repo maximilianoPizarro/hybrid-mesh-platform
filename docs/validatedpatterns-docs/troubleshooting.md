@@ -41,6 +41,7 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | Gitea assets **503/500** | Wrong `ROOT_URL` or service selector | PostSync `gitea-fix-*` jobs; `bash scripts/apply-gitea-root-url.sh` |
 | Orphan apps in **`default`** | `helm template \| oc apply` without `-n` | Delete orphan stack; always sync via Argo CD (namespace in Application spec) |
 | workshop-apis **401** without key | Expected (Kuadrant AuthPolicy) | Request key at Developer Hub `/kuadrant` |
+| Developer Hub Kuadrant tab missing / catalog parse error | Catalog ConfigMap truncated to hub domain only | Re-sync `developer-hub` chart ≥ v1.5.1; verify `oc get cm developer-hub-catalog-workshop-kuadrant-apis -n developer-hub -o yaml \| grep 'kind: API'` returns 4 lines |
 | Vault console link **307** | href points to route root | Use `/ui/` — see [install playbook](install-improvements.md#hashicorp-vault-hub) |
 | Camel `mqtt-to-kafka` Error, Kafka metadata timeout | Missing advertised EndpointSlice or ambient ztunnel on Kafka TCP | EndpointSlice + `deployment` trait `istio.io/dataplane-mode: none`; see [below](#kafka-advertised-dns-endpointslice) |
 | Stormshift MirrorMaker2 CrashLoop | Empty `clusterName` → `broker-0-.` | Set `clusterName: east|west` in spoke app values |

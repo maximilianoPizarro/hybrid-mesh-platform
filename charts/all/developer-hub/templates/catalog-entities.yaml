@@ -6,10 +6,7 @@
 {{- $hub := include "developer-hub.clusterDomain" . -}}
 {{- $east := .Values.spokeDomains.east | default "apps.cluster-east.example.com" -}}
 {{- $west := .Values.spokeDomains.west | default "apps.cluster-west.example.com" -}}
-{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" -}}
-{{- $catalog = replace $catalog "__HUB_APPS_DOMAIN__" $hub -}}
-{{- $catalog = replace $catalog "__EAST_APPS_DOMAIN__" $east -}}
-{{- $catalog = replace $catalog "__WEST_APPS_DOMAIN__" $west -}}
+{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" | replace "__HUB_APPS_DOMAIN__" $hub | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
