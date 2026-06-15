@@ -343,10 +343,51 @@ spec:
               oc login -u "${1:-user1}" -p Welcome123! "$WEST_API_URL" --insecure-skip-tls-verify
             }
 
+            # Kuadrant API keys — paste from Developer Hub → Kuadrant → My API Keys
+            kuadrant-set-key() {
+              export KUADRANT_API_KEY="${1:-}"
+              export KEY="$KUADRANT_API_KEY"
+              if [[ -n "$KUADRANT_API_KEY" ]]; then
+                echo "KUADRANT_API_KEY set (${#KUADRANT_API_KEY} chars)"
+              else
+                echo "Usage: kuadrant-set-key <paste-api-key-from-developer-hub>"
+              fi
+            }
+            kuadrant-test-httpbin() {
+              local hub="${CLUSTER_DOMAIN}"
+              curl -sk -o /dev/null -w 'httpbin without key: %{http_code}\n' \
+                "https://workshop-apis.${hub}/httpbin/get"
+              if [[ -z "${KUADRANT_API_KEY:-}" ]]; then
+                echo "Set key first: kuadrant-set-key <key>  (Developer Hub → Kuadrant → My API Keys)"
+                return 1
+              fi
+              curl -sk -H "Authorization: APIKEY $KUADRANT_API_KEY" \
+                "https://workshop-apis.${hub}/httpbin/get" | head -c 500
+              echo
+            }
+            kuadrant-test-ai() {
+              local hub="${CLUSTER_DOMAIN}" model="${MAAS_MODEL:-granite-3-2-8b-instruct}"
+              curl -sk -o /dev/null -w 'ai-gateway without key: %{http_code}\n' \
+                -H "Content-Type: application/json" \
+                -X POST "https://ai-gateway.${hub}/v1/chat/completions" \
+                -d "{\"model\":\"${model}\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}],\"max_tokens\":5}"
+              if [[ -z "${KUADRANT_API_KEY:-}" ]]; then
+                echo "Set key first: kuadrant-set-key <key>"
+                return 1
+              fi
+              curl -sk -H "Authorization: APIKEY $KUADRANT_API_KEY" \
+                -H "Content-Type: application/json" \
+                -X POST "https://ai-gateway.${hub}/v1/chat/completions" \
+                -d "{\"model\":\"${model}\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in one word\"}],\"max_tokens\":20}" | head -c 600
+              echo
+            }
+
             echo "╔══════════════════════════════════════════════════════════════╗"
             echo "║  Hybrid Mesh AI Workshop Terminal                            ║"
             echo "╠══════════════════════════════════════════════════════════════╣"
             echo "║  oc login:     hub-login userN   | east-login | west-login  ║"
+            echo "║  Kuadrant:     kuadrant-set-key <key>                        ║"
+            echo "║                kuadrant-test-httpbin | kuadrant-test-ai      ║"
             echo "║  rosa login:   rosa login --token=<token>                   ║"
             echo "║  gcloud:       gcloud auth login --no-launch-browser         ║"
             echo "║  aws config:   aws configure                                ║"

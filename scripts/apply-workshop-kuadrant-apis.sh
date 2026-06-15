@@ -41,9 +41,15 @@ CODE=$(curl -sk -o /dev/null -w '%{http_code}' "https://$WORKSHOP_HOST/httpbin/g
 CODE="${CODE:-000}"
 CODE="${CODE//$'\r'/}"
 echo "workshop-apis/httpbin (no API key): HTTP $CODE (expect 401)"
-AI_CODE=$(curl -sk -o /dev/null -w '%{http_code}' "https://$AI_HOST/v1/models" 2>/dev/null || true)
+MAAS_MODEL="${MAAS_MODEL:-granite-3-2-8b-instruct}"
+AI_CODE=$(curl -sk -o /dev/null -w '%{http_code}' -H "Content-Type: application/json" \
+  -X POST "https://$AI_HOST/v1/chat/completions" \
+  -d "{\"model\":\"$MAAS_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}],\"max_tokens\":5}" 2>/dev/null || true)
 AI_CODE="${AI_CODE:-000}"
-echo "ai-gateway/v1/models (no API key): HTTP ${AI_CODE//$'\r'/} (expect 401)"
+AI_CODE="${AI_CODE//$'\r'/}"
+echo "ai-gateway/v1/chat/completions (no API key): HTTP ${AI_CODE} (expect 401)"
 [[ "$CODE" == "401" || "$CODE" == "403" ]] || echo "WARN: expected 401 without APIKEY on workshop-apis"
+[[ "$AI_CODE" == "401" || "$AI_CODE" == "403" ]] || echo "WARN: expected 401 without APIKEY on ai-gateway"
 bash "$(cd "$(dirname "$0")/.." && pwd)/scripts/sync-kuadrant-apiproduct-plans.sh" 2>/dev/null || true
+bash "$(cd "$(dirname "$0")/.." && pwd)/scripts/verify-workshop-kuadrant-curl.sh" 2>/dev/null || true
 echo "OK: workshop-apis + ai-gateway applied — request keys at Developer Hub /kuadrant"

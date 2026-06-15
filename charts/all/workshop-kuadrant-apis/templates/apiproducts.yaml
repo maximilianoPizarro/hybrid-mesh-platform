@@ -146,5 +146,5 @@ data:
     curl -H "Authorization: APIKEY $KEY" {{ $workshopBase }}/countries/name/chile
     curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
       -X POST {{ $aiBase }}/v1/chat/completions \
-      -d '{"model":"llama-scout-17b","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
+      -d '{"model":"granite-3-2-8b-instruct","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
     ```

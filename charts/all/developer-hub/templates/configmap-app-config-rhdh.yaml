@@ -39,6 +39,7 @@ data:
       kubernetes: true
       argocd: true
       ocm: true
+      kuadrant: true
     kubernetes:
       serviceLocatorMethod:
         type: multiTenant
@@ -96,6 +97,21 @@ data:
         - group: argoproj.io
           apiVersion: v1alpha1
           plural: applications
+        - group: kuadrant.io
+          apiVersion: v1
+          plural: authpolicies
+        - group: kuadrant.io
+          apiVersion: v1
+          plural: ratelimitpolicies
+        - group: kuadrant.io
+          apiVersion: v1
+          plural: tokenratelimitpolicies
+        - group: devportal.kuadrant.io
+          apiVersion: v1alpha1
+          plural: apiproducts
+        - group: devportal.kuadrant.io
+          apiVersion: v1alpha1
+          plural: apikeys
     catalog:
       import:
         entityFilename: catalog-info.yaml
@@ -129,7 +145,7 @@ data:
         - type: file
           target: /opt/app-root/src/catalog-data/workshop-kuadrant/workshop-kuadrant-apis.yaml
           rules:
-            - allow: [System, Component]
+            - allow: [System, Component, API]
         - type: file
           target: /opt/app-root/src/catalog-data/openshift-ai/openshift-ai-workshop.yaml
           rules:

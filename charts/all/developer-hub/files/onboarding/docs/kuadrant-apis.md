@@ -22,15 +22,14 @@ Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** and **AI Gateway (M
 
 ## Flow (Developer Hub)
 
-1. Log in as `userN` / `Welcome123!` (or `platformadmin` for admin tasks)
-2. **Kuadrant** sidebar → **API Products**
-3. Click the **product name** (not the pencil / Edit icon) to open the product page
-4. **Request API key** → choose plan (bronze/silver/gold or free/gold for LLM)
-5. **My API Keys** (Kuadrant sidebar) → copy key
-6. **Catalog** → API entities → **View API** (Swagger) for httpbin / MaaS
-7. Call with: `Authorization: APIKEY <your-key>`
+1. Log in as `userN` / `Welcome123!` or `platformadmin`
+2. **Option A — Kuadrant sidebar:** **Kuadrant** → **API Products** → click the **product name** → **Request API key** → choose plan
+3. **Option B — Catalog API entity:** **Catalog** → System **workshop-kuadrant-apis** → open an **API** (e.g. `workshop-maas-openapi`) → **Kuadrant** tab → **Request API key**
+4. **My API Keys** (Kuadrant sidebar) → copy key
+5. **Definition** tab on the same API entity for Swagger / curl examples
+6. Call with: `Authorization: APIKEY <your-key>`
 
-> **Edit API Product** (pencil icon) needs `status.discoveredPlans` on the APIProduct CR. After GitOps sync, run `bash scripts/sync-kuadrant-apiproduct-plans.sh` if the edit form shows `discoveredPlans` errors. For workshop use, **Request API key** on the product page is enough — you do not need Edit.
+> Do **not** use the pencil (Edit) icon on API Products — use the product **name** or the Catalog **API** entity **Kuadrant** tab instead.
 
 ## Vault (optional)
 
@@ -52,7 +51,7 @@ curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/httpbin/get"
 curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/countries/name/chile"
 curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
   -X POST "$AI/v1/chat/completions" \
-  -d '{"model":"llama-scout-17b","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
+  -d '{"model":"granite-3-2-8b-instruct","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
 ```
 
 ## GitOps

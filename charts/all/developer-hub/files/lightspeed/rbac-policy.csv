@@ -51,6 +51,7 @@ p, role:default/authenticated, kuadrant.apikey.read.all, read, allow
 p, role:default/authenticated, kuadrant.apikey.update.own, update, allow
 p, role:default/authenticated, kuadrant.apikey.delete.own, delete, allow
 p, role:default/authenticated, kuadrant.apikey.list, read, allow
+p, role:default/authenticated, kuadrant.apikey.approve, update, allow
 p, role:default/authenticated, kuadrant.planpolicy.list, read, allow
 p, role:default/authenticated, kuadrant.planpolicy.read, read, allow
 p, role:default/authenticated, kuadrant.planpolicy.read.all, read, allow

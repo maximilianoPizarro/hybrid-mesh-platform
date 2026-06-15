@@ -1,6 +1,8 @@
-{{- $pg := .Values.gitea-chart.postgresql-ha.postgresql | default dict -}}
+{{- $giteaChart := index .Values "gitea-chart" -}}
+{{- $pgHa := index $giteaChart "postgresql-ha" | default dict -}}
+{{- $pg := $pgHa.postgresql | default dict -}}
 {{- $replicas := $pg.replicaCount | default 1 | int -}}
-{{- if .Values.gitea-chart.postgresql-ha.enabled | default true }}
+{{- if ($pgHa.enabled | default true) }}
 # OpenShift restricted SCC: Bitnami init-chmod-data fails on existing PVC data.
 apiVersion: batch/v1
 kind: Job
