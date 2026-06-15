@@ -1,6 +1,7 @@
 ---
 title: Argo CD AppProjects
-weight: 5
+nav_order: 4
+parent: Hybrid Mesh Platform
 ---
 
 # Argo CD AppProjects

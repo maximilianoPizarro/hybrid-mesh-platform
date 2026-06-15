@@ -2,11 +2,14 @@
 layout: default
 title: Home
 nav_order: 1
+description: "Hybrid Mesh Platform — secure multi-cluster GitOps on OpenShift with ACM, Skupper, AI, and Industrial Edge. Sandbox-tier Validated Pattern."
 ---
 
 # Hybrid Mesh Platform
 
-> **Your journey:** Deploy hub + east + west on OpenShift via RHDP or `./pattern.sh install`, connect clusters with ACM and Skupper, and run Industrial Edge workloads from Developer Hub templates.
+**One Git repo governs three OpenShift clusters** — secure connectivity, fleet GitOps, AI inference, and Industrial Edge workloads across hub and spokes without manual operator management.
+
+> Deploy hub + east + west on OpenShift via RHDP or `./pattern.sh install`, connect clusters with ACM and Skupper, and run Industrial Edge workloads from Developer Hub templates.
 
 **Multi-cluster GitOps** using Red Hat Advanced Cluster Management, OpenShift GitOps (Argo CD), ambient Service Mesh, Connectivity Link (Kuadrant), Skupper, Grafana, ACS, Developer Hub, and Industrial Edge.
 
@@ -31,7 +34,7 @@ nav_order: 1
 | ----- | ---- |
 | Bill of Materials | [Operator versions](bill-of-materials.md) |
 | Validation Guide | [Verify deployment](validation-guide.md) |
-| Support Policy | [Community support](../SUPPORT.md) |
+| Support Policy | [Community support](https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/SUPPORT.md) |
 
 ## Repository layout
 

@@ -8,6 +8,8 @@ description: "Multi-cluster GitOps platform with ACM, Connectivity Link, and Ind
 url: "https://maximilianopizarro.github.io"
 baseurl: "/hybrid-mesh-platform"
 
+og_image: "/hybrid-mesh-platform/assets/images/arch-hub-spoke-flow.png"
+
 color_scheme: dark
 
 logo: "/assets/images/rh-logo.svg"
@@ -29,7 +31,7 @@ heading_anchors: true
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "Sandbox tier - Community supported"
+footer_content: "Sandbox tier — Community supported. No SLA; suitable for PoC and workshops. <a href='https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/SUPPORT.md'>Support policy</a>"
 
 mermaid:
   version: "10.9.0"

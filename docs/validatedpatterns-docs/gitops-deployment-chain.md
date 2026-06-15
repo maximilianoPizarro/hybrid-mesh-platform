@@ -1,6 +1,7 @@
 ---
 title: GitOps deployment chain (hub → spokes)
-weight: 4
+nav_order: 5
+parent: Hybrid Mesh Platform
 ---
 
 # GitOps deployment chain (hub → spokes)

@@ -1,6 +1,7 @@
 ---
 title: Region Strategy
-weight: 9
+nav_order: 6
+parent: Hybrid Mesh Platform
 ---
 
 # Region Strategy (single branch)

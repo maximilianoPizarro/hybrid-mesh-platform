@@ -1,6 +1,7 @@
 ---
 title: Hub Gateway
-weight: 9
+nav_order: 8
+parent: Hybrid Mesh Platform
 ---
 
 # Hub Gateway

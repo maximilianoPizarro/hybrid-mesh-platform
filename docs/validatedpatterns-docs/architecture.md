@@ -1,6 +1,7 @@
 ---
 title: Architecture
-weight: 3
+nav_order: 1
+parent: Hybrid Mesh Platform
 ---
 
 # Architecture

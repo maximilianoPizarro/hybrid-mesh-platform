@@ -1,6 +1,7 @@
 ---
 title: Troubleshooting
-weight: 14
+nav_order: 11
+parent: Hybrid Mesh Platform
 ---
 
 # Troubleshooting

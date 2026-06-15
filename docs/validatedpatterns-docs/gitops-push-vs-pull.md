@@ -1,6 +1,7 @@
 ---
 title: GitOps PUSH vs PULL
-weight: 4
+nav_order: 3
+parent: Hybrid Mesh Platform
 ---
 
 # GitOps PUSH vs PULL (dual strategy)

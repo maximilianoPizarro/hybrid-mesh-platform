@@ -1,6 +1,8 @@
 ---
-title: Index
-weight: 24
+title: Red Hat Products
+nav_order: 12
+parent: Hybrid Mesh Platform
+has_children: true
 ---
 
 # Red Hat Products

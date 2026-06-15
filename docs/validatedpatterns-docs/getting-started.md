@@ -1,6 +1,7 @@
 ---
 title: Getting Started (ACM-first)
-weight: 2
+nav_order: 2
+parent: Hybrid Mesh Platform
 ---
 
 # Getting Started (ACM-first)

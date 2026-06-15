@@ -2,6 +2,7 @@
 title: Hybrid Mesh Platform
 nav_order: 2
 layout: default
+has_children: true
 ---
 
 # Hybrid Mesh Platform

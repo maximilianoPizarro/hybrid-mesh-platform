@@ -1,6 +1,7 @@
 ---
 title: RHDP install playbook
-weight: 7
+nav_order: 7
+parent: Hybrid Mesh Platform
 ---
 
 # RHDP install playbook

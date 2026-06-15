@@ -1,6 +1,7 @@
 ---
 title: Observability
-weight: 11
+nav_order: 9
+parent: Hybrid Mesh Platform
 ---
 
 # Observability
