@@ -21,7 +21,36 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     resourceNames: ["neuroface-maas-api-key"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neuroface-maas-key-sync-kairos
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["kairos-ai-credentials"]
     verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neuroface-maas-key-sync-kairos
+  namespace: kairos-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: neuroface-maas-key-sync-kairos
+subjects:
+  - kind: ServiceAccount
+    name: neuroface-maas-key-sync
+    namespace: neuroface
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -64,8 +93,14 @@ spec:
               set -euo pipefail
               KEY=$(oc get secret neuroface-maas-api-key -n neuroface -o jsonpath='{.data.api-key}' | base64 -d)
               if [ -z "${KEY}" ] || [ "${KEY}" = "CHANGEME-inject-via-RHDP" ]; then
-                echo "neuroface-maas-api-key missing or placeholder — run scripts/apply-maas-secrets.sh" >&2
-                exit 1
+                echo "neuroface-maas-api-key placeholder — copying from kairos-ai-credentials"
+                KEY=$(oc get secret kairos-ai-credentials -n kairos-system -o jsonpath='{.data.api-key}' | base64 -d)
+                if [ -z "${KEY}" ]; then
+                  echo "kairos-ai-credentials missing — run scripts/apply-maas-secrets.sh" >&2
+                  exit 1
+                fi
+                oc patch secret neuroface-maas-api-key -n neuroface --type=merge \
+                  -p "{\"stringData\":{\"api-key\":\"${KEY}\"}}"
               fi
               oc patch deployment neuroface-backend -n neuroface --type=json -p='[
                 {"op":"remove","path":"/spec/template/spec/serviceAccountName"},
