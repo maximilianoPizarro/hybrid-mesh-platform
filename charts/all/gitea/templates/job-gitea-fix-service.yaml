@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitea-fix-http-service
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: gitea-fix-service
+      containers:
+        - name: fix
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              oc patch svc gitea-http -n gitea --type=merge -p \
+                '{"spec":{"selector":{"app.kubernetes.io/instance":"gitea","app.kubernetes.io/name":"gitea"}}}'
+              echo "gitea-http selector aligned with gitea Deployment pods"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gitea-fix-service
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitea-fix-service
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    resourceNames: ["gitea-http"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitea-fix-service
+  namespace: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitea-fix-service
+subjects:
+  - kind: ServiceAccount
+    name: gitea-fix-service
+    namespace: gitea

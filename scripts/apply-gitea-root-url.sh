@@ -59,6 +59,9 @@ oc logs job/gitea-fix-app-ini-manual -n gitea
 
 oc patch secret gitea-inline-config -n gitea --type=merge -p "{\"stringData\":{\"server\":\"APP_DATA_PATH=/data\\nDOMAIN=${HOST}\\nENABLE_PPROF=false\\nHTTP_PORT=3000\\nPROTOCOL=http\\nROOT_URL=https://${HOST}/\\nSSH_DOMAIN=${HOST}\\nSSH_LISTEN_PORT=2222\\nSSH_PORT=22\\nSTART_SSH_SERVER=true\\n\"}}" 2>/dev/null || true
 
+oc patch svc gitea-http -n gitea --type=merge -p \
+  '{"spec":{"selector":{"app.kubernetes.io/instance":"gitea","app.kubernetes.io/name":"gitea"}}}' 2>/dev/null || true
+
 oc scale deploy/gitea -n gitea --replicas=1
 oc rollout status deploy/gitea -n gitea --timeout=300s
 
