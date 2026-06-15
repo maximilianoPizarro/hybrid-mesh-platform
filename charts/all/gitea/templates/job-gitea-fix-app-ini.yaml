@@ -13,19 +13,31 @@ spec:
       serviceAccountName: gitea-fix-service
       containers:
         - name: fix
-          image: registry.access.redhat.com/ubi9/ubi-minimal:latest
-          command: ["/bin/bash", "-c"]
-          args:
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -ec
             - |
               set -euo pipefail
+              DOMAIN=$(oc get ingresses.config cluster -o jsonpath='{.spec.domain}')
+              HOST="gitea-gitea.${DOMAIN}"
+              echo "Fixing app.ini for ${HOST}"
+              oc scale deploy/gitea -n gitea --replicas=0 2>/dev/null || true
+              sleep 8
               INI=/data/gitea/conf/app.ini
-              [ -f "$INI" ] || { echo "No app.ini yet — first install"; exit 0; }
-              HOST={{ printf "gitea-gitea.%s" (include "gitea.clusterDomain" .) | quote }}
+              if [ ! -f "$INI" ]; then
+                echo "No app.ini yet — first install"
+                oc scale deploy/gitea -n gitea --replicas=1 2>/dev/null || true
+                exit 0
+              fi
               sed -i "s|^DOMAIN = .*|DOMAIN = ${HOST}|" "$INI"
               sed -i "s|^ROOT_URL = .*|ROOT_URL = https://${HOST}/|" "$INI"
               sed -i "s|^PROTOCOL = .*|PROTOCOL = http|" "$INI"
               sed -i "s|^SSH_DOMAIN = .*|SSH_DOMAIN = ${HOST}|" "$INI"
               grep -E '^(DOMAIN|ROOT_URL|PROTOCOL|SSH_DOMAIN)' "$INI"
+              oc patch secret gitea-inline-config -n gitea --type=merge -p \
+                "{\"stringData\":{\"server\":\"APP_DATA_PATH=/data\\nDOMAIN=${HOST}\\nENABLE_PPROF=false\\nHTTP_PORT=3000\\nPROTOCOL=http\\nROOT_URL=https://${HOST}/\\nSSH_DOMAIN=${HOST}\\nSSH_LISTEN_PORT=2222\\nSSH_PORT=22\\nSTART_SSH_SERVER=true\\n\"}}" 2>/dev/null || true
+              oc scale deploy/gitea -n gitea --replicas=1
           volumeMounts:
             - name: data
               mountPath: /data

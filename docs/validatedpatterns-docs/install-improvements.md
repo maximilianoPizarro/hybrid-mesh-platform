@@ -364,6 +364,7 @@ bash scripts/apply-post-install-day2.sh
 | MCP Gateway | `apply-mcp-gateway.sh` | CRDs + MCPServerRegistration when `/mcp` returns 503 |
 | Istio/Kafka monitoring | `apply-istio-monitoring.sh` | PodMonitors + UWM on hub/spokes (Grafana panels) |
 | Kuadrant public APIs | `apply-workshop-kuadrant-apis.sh` | workshop-apis gateway + APIProducts |
+| Gitea route/assets | `apply-gitea-root-url.sh` | ROOT_URL, service selector, route host (idempotent; PostSync jobs cover fresh install) |
 | MaaS secrets | `apply-maas-secrets.sh` | Lightspeed / NeuroFace / ODS keys (env vars, optional) |
 | HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
 

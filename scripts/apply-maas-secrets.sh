@@ -41,12 +41,18 @@ if [[ -n "${MAAS_KEY_LLAMA:-}" ]]; then
     --dry-run=client -o yaml | oc apply -f -
   echo "  applied maas-workshop/openshift-ai-maas-credentials"
   apply_secret neuroface-maas-api-key neuroface "$MAAS_KEY_LLAMA"
-  oc patch deployment neuroface-backend -n neuroface --type=json -p='[
-    {"op":"remove","path":"/spec/template/spec/serviceAccountName"},
-    {"op":"replace","path":"/spec/template/spec/containers/0/env","value":[
-      {"name":"NEUROFACE_CHAT_API_KEY","valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}}
-    ]}
-  ]' 2>/dev/null || true
+  if ! oc get deploy neuroface-backend -n neuroface -o jsonpath='{.spec.template.spec.containers[0].env[*].name}' 2>/dev/null | tr ' ' '\n' | grep -qFx NEUROFACE_CHAT_API_KEY; then
+    oc patch deployment neuroface-backend -n neuroface --type=json -p='[
+      {"op":"add","path":"/spec/template/spec/containers/0/env/-","value":{
+        "name":"NEUROFACE_CHAT_API_KEY",
+        "valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}
+      }}
+    ]' 2>/dev/null || oc patch deployment neuroface-backend -n neuroface --type=json -p='[
+      {"op":"add","path":"/spec/template/spec/containers/0/env","value":[
+        {"name":"NEUROFACE_CHAT_API_KEY","valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}}
+      ]}
+    ]'
+  fi
   LS_KEY="${MAAS_KEY_GRANITE:-$MAAS_KEY_LLAMA}"
   oc patch secret llama-stack-secrets -n developer-hub --type merge \
     -p "{\"stringData\":{\"VLLM_API_KEY\":\"${LS_KEY}\"}}" 2>/dev/null || true

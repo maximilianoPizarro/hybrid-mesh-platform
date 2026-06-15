@@ -37,7 +37,9 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | DevSpaces link on hub 404 | DevSpaces is spoke-only | Open `https://devspaces.<east-or-west-domain>` from template output |
 | MCP Gateway **503** / `/mcp` 404 | Argo Unknown — CRDs never applied | `bash scripts/apply-mcp-gateway.sh` |
 | Developer Hub **/lightspeed** chat 401 | Missing MaaS key or wrong vLLM URL | `bash scripts/apply-maas-secrets.sh`; default model `granite-3-2-8b-instruct` via MaaS |
-| NeuroFace **/api/chat** 401 | Secret `neuroface-maas-api-key` placeholder | `apply-maas-secrets.sh` + rollout `neuroface` |
+| NeuroFace **/api/chat** 401 | Secret `neuroface-maas-api-key` placeholder | RHDP `litemaas.apiKey` or `apply-maas-secrets.sh`; PostSync `neuroface-maas-key-sync` |
+| Gitea assets **503/500** | Wrong `ROOT_URL` or service selector | PostSync `gitea-fix-*` jobs; `bash scripts/apply-gitea-root-url.sh` |
+| Orphan apps in **`default`** | `helm template \| oc apply` without `-n` | Delete orphan stack; always sync via Argo CD (namespace in Application spec) |
 | workshop-apis **401** without key | Expected (Kuadrant AuthPolicy) | Request key at Developer Hub `/kuadrant` |
 | Vault console link **307** | href points to route root | Use `/ui/` — see [install playbook](install-improvements.md#hashicorp-vault-hub) |
 | Camel `mqtt-to-kafka` Error, Kafka metadata timeout | Missing advertised EndpointSlice or ambient ztunnel on Kafka TCP | EndpointSlice + `deployment` trait `istio.io/dataplane-mode: none`; see [below](#kafka-advertised-dns-endpointslice) |

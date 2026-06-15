@@ -102,11 +102,18 @@ spec:
                 oc patch secret neuroface-maas-api-key -n neuroface --type=merge \
                   -p "{\"stringData\":{\"api-key\":\"${KEY}\"}}"
               fi
-              oc patch deployment neuroface-backend -n neuroface --type=json -p='[
-                {"op":"remove","path":"/spec/template/spec/serviceAccountName"},
-                {"op":"replace","path":"/spec/template/spec/containers/0/env","value":[
-                  {"name":"NEUROFACE_CHAT_API_KEY","valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}}
-                ]}
-              ]'
+              HAS_KEY=$(oc get deploy neuroface-backend -n neuroface -o jsonpath='{.spec.template.spec.containers[0].env[*].name}' 2>/dev/null | tr ' ' '\n' | grep -Fx NEUROFACE_CHAT_API_KEY && echo yes || echo no)
+              if [ "$HAS_KEY" != "yes" ]; then
+                oc patch deployment neuroface-backend -n neuroface --type=json -p='[
+                  {"op":"add","path":"/spec/template/spec/containers/0/env/-","value":{
+                    "name":"NEUROFACE_CHAT_API_KEY",
+                    "valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}
+                  }}
+                ]' 2>/dev/null || oc patch deployment neuroface-backend -n neuroface --type=json -p='[
+                  {"op":"add","path":"/spec/template/spec/containers/0/env","value":[
+                    {"name":"NEUROFACE_CHAT_API_KEY","valueFrom":{"secretKeyRef":{"name":"neuroface-maas-api-key","key":"api-key"}}}
+                  ]}
+                ]'
+              fi
               oc rollout status deployment/neuroface-backend -n neuroface --timeout=180s
               echo "neuroface-backend wired to neuroface-maas-api-key"
