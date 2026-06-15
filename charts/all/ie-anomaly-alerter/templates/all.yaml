@@ -210,7 +210,7 @@ spec:
             - name: TEMPERATURE_THRESHOLD
               value: {{ .Values.thresholds.temperature | default "80.0" | quote }}
             - name: MAILPIT_URL
-              value: {{ .Values.mailpit.url | default (printf "https://mailpit.%s/api/v1/send" (.Values.hubClusterDomain | default .Values.global.hubClusterDomain | default "INVALID-HUB-DOMAIN")) | quote }}
+              value: {{ include "ie-anomaly-alerter.mailpitUrl" . | quote }}
             - name: HEALTH_INTERVAL
               value: {{ .Values.healthReport.intervalSeconds | default "300" | quote }}
             - name: CLUSTER_NAME

@@ -22,12 +22,15 @@ Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** and **AI Gateway (M
 
 ## Flow (Developer Hub)
 
-1. Log in as `userN` / `Welcome123!`
-2. **Kuadrant** sidebar → **API Products** → pick product
-3. **Request API key** → choose plan (bronze/silver/gold or free/gold for LLM)
-4. **My API Keys** → copy key
-5. **Catalog** → API entities → **View API** (Swagger) for httpbin / MaaS
-6. Call with: `Authorization: APIKEY <your-key>`
+1. Log in as `userN` / `Welcome123!` (or `platformadmin` for admin tasks)
+2. **Kuadrant** sidebar → **API Products**
+3. Click the **product name** (not the pencil / Edit icon) to open the product page
+4. **Request API key** → choose plan (bronze/silver/gold or free/gold for LLM)
+5. **My API Keys** (Kuadrant sidebar) → copy key
+6. **Catalog** → API entities → **View API** (Swagger) for httpbin / MaaS
+7. Call with: `Authorization: APIKEY <your-key>`
+
+> **Edit API Product** (pencil icon) needs `status.discoveredPlans` on the APIProduct CR. After GitOps sync, run `bash scripts/sync-kuadrant-apiproduct-plans.sh` if the edit form shows `discoveredPlans` errors. For workshop use, **Request API key** on the product page is enough — you do not need Edit.
 
 ## Vault (optional)
 

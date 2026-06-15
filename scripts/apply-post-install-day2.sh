@@ -31,6 +31,10 @@ bash "$ROOT/scripts/apply-hub-resource-relief.sh"
 bash "$ROOT/scripts/apply-gitea-postgres-fix.sh"
 bash "$ROOT/scripts/apply-gitea-root-url.sh"
 
+if [[ -f /tmp/east-kubeconfig || -f /tmp/west-kubeconfig ]]; then
+  bash "$ROOT/scripts/apply-ie-anomaly-alerter.sh" || true
+fi
+
 if [[ -n "${MAAS_KEY_LLAMA:-}${MAAS_KEY_GRANITE:-}${MAAS_KEY_DEEPSEEK:-}" ]]; then
   bash "$ROOT/scripts/apply-maas-secrets.sh"
 else

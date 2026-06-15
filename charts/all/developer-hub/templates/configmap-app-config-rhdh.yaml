@@ -14,6 +14,8 @@ data:
       baseUrl: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
     backend:
       baseUrl: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
+      auth:
+        dangerouslyDisableDefaultAuthPolicy: true
       cors:
         origin: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
       reading:
