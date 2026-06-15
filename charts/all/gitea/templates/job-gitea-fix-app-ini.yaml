@@ -1,4 +1,3 @@
-{{- $host := printf "gitea-gitea.%s" (include "gitea.clusterDomain" .) -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -11,6 +10,7 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      serviceAccountName: gitea-fix-service
       containers:
         - name: fix
           image: registry.access.redhat.com/ubi9/ubi-minimal:latest
@@ -20,7 +20,7 @@ spec:
               set -euo pipefail
               INI=/data/gitea/conf/app.ini
               [ -f "$INI" ] || { echo "No app.ini yet — first install"; exit 0; }
-              HOST={{ $host | quote }}
+              HOST={{ printf "gitea-gitea.%s" (include "gitea.clusterDomain" .) | quote }}
               sed -i "s|^DOMAIN = .*|DOMAIN = ${HOST}|" "$INI"
               sed -i "s|^ROOT_URL = .*|ROOT_URL = https://${HOST}/|" "$INI"
               sed -i "s|^PROTOCOL = .*|PROTOCOL = http|" "$INI"

@@ -62,6 +62,8 @@ oc patch secret gitea-inline-config -n gitea --type=merge -p "{\"stringData\":{\
 oc patch svc gitea-http -n gitea --type=merge -p \
   '{"spec":{"selector":{"app.kubernetes.io/instance":"gitea","app.kubernetes.io/name":"gitea"}}}' 2>/dev/null || true
 
+oc patch route gitea -n gitea --type=merge -p "{\"spec\":{\"host\":\"${HOST}\"}}" 2>/dev/null || true
+
 oc scale deploy/gitea -n gitea --replicas=1
 oc rollout status deploy/gitea -n gitea --timeout=300s
 

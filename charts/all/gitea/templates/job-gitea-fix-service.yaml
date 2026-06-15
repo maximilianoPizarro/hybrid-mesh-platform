@@ -21,7 +21,10 @@ spec:
               set -euo pipefail
               oc patch svc gitea-http -n gitea --type=merge -p \
                 '{"spec":{"selector":{"app.kubernetes.io/instance":"gitea","app.kubernetes.io/name":"gitea"}}}'
-              echo "gitea-http selector aligned with gitea Deployment pods"
+              DOMAIN=$(oc get ingresses.config cluster -o jsonpath='{.spec.domain}')
+              HOST="gitea-gitea.${DOMAIN}"
+              oc patch route gitea -n gitea --type=merge -p "{\"spec\":{\"host\":\"${HOST}\"}}" 2>/dev/null || true
+              echo "gitea-http selector + route host ${HOST} aligned"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -43,6 +46,37 @@ rules:
     resources: ["services"]
     resourceNames: ["gitea-http"]
     verbs: ["get", "patch"]
+  - apiGroups: ["route.openshift.io"]
+    resources: ["routes"]
+    resourceNames: ["gitea"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gitea-fix-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups: ["config.openshift.io"]
+    resources: ["ingresses"]
+    resourceNames: ["cluster"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gitea-fix-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gitea-fix-service
+subjects:
+  - kind: ServiceAccount
+    name: gitea-fix-service
+    namespace: gitea
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
