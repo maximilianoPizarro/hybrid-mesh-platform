@@ -31,7 +31,7 @@ showroom:
       - neuroface
       - cnv-workshop
       - hub-gateway-system
-      - gitea
+      - gitlab
       - openshift-gitops
       - stackrox
       - kairos-system

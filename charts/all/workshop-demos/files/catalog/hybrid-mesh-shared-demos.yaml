@@ -44,7 +44,7 @@ metadata:
   description: DevSpaces + Kaoto for mqtt-to-kafka pattern
   tags: [workshop, camel, plan-b]
   links:
-    - url: https://gitea-gitea.YOUR_HUB_DOMAIN/workshop-demos/camel-kaoto-showcase-east
+    - url: https://gitlab.apps.YOUR_HUB_DOMAIN/workshop-demos/camel-kaoto-showcase-east
       title: Gitea repo
       icon: catalog
 spec:
@@ -94,7 +94,7 @@ metadata:
   description: Plan B alias — use catalog System openshift-ai-workshop / maas-workshop-shared instead
   tags: [workshop, ai, plan-b]
   links:
-    - url: https://rhods-dashboard-redhat-ods-applications.YOUR_HUB_DOMAIN
+    - url: https://rh-ai.apps.YOUR_HUB_DOMAIN
       title: ODS Dashboard
       icon: dashboard
     - url: https://developer-hub.YOUR_HUB_DOMAIN/catalog/default/system/openshift-ai-workshop

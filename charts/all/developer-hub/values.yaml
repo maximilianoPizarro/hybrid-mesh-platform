@@ -5,8 +5,8 @@ userCount: 50
 defaultPassword: "Welcome123!"
 # OIDC client secret for developer-hub + Keycloak backstage realm (set via --set, never commit real values)
 keycloakOidcClientSecret: ""
-# Gitea personal access token for gitea_admin (create via Gitea UI or API, never commit real values)
-giteaToken: ""
+# GitLab personal access token for root/scaffolder (PostSync gitlab-token-setup, never commit real values)
+gitlabToken: ""
 sessionSecret: ""
 # Quay.io dockerconfigjson for pipeline push (set via --set, never commit credentials)
 quayDockerConfigJson: ""

@@ -1,0 +1,29 @@
+clusterDomain: ""
+userCount: 50
+namespace: gitlab
+runnerNamespace: gitlab-runner
+
+operator:
+  packageName: gitlab-operator-kubernetes
+  channel: stable
+  source: community-operators
+  installPlanApproval: Manual
+
+runnerOperator:
+  packageName: gitlab-runner-operator
+  channel: stable
+  source: community-operators
+  installPlanApproval: Manual
+
+gitlab:
+  chartVersion: "8.9.0"
+  rootPasswordSecret: gitlab-gitlab-initial-root-password
+  postgresStorage: 50Gi
+  gitalyStorage: 50Gi
+  registryEnabled: true
+
+bootstrap:
+  groupPrefix: ws-
+  developerHubGroup: developer-hub
+  appOfAppsGroup: app-of-apps
+  workshopDemosGroup: workshop-demos

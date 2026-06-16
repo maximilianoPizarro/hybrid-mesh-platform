@@ -10,9 +10,9 @@ metadata:
     backstage.io/techdocs-ref: dir:.
     kafka.apache.org/consumer-groups: cdc-cluster/camel-k-enricher,cdc-cluster/connect-mailpit-http-sink
     che.eclipse.org/che-server: https://devspaces.${{ values.spokeAppsDomain }}
-    devspaces.io/factory: "https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}/raw/branch/main/devfile.yaml"
+    devspaces.io/factory: "https://devspaces.${{ values.spokeAppsDomain }}/#https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}/raw/branch/main/devfile.yaml"
   links:
-    - url: "https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}/raw/branch/main/devfile.yaml"
+    - url: "https://devspaces.${{ values.spokeAppsDomain }}/#https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}/raw/branch/main/devfile.yaml"
       title: Open in DevSpaces
       icon: catalog
       type: ide

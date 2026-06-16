@@ -59,7 +59,7 @@ spec:
       name: Publish to Gitea
       action: publish:github
       input:
-        repoUrl: gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-osai
+        repoUrl: gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-osai
         description: OpenShift AI workspace ${{ parameters.name }}
         defaultBranch: main
     - id: register
@@ -71,6 +71,6 @@ spec:
   output:
     links:
       - title: OpenShift AI Dashboard
-        url: https://rhods-dashboard-redhat-ods-applications.${{ parameters.clusterDomain }}
+        url: https://rh-ai.apps.${{ parameters.clusterDomain }}
       - title: Repository
         url: ${{ steps.publish.output.remoteUrl }}

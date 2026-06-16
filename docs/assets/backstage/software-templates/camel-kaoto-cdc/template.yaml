@@ -106,7 +106,7 @@ spec:
       name: Publish to Gitea
       action: publish:github
       input:
-        repoUrl: "gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-${{ parameters.targetCluster }}"
+        repoUrl: "gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-${{ parameters.targetCluster }}"
         description: ${{ parameters.description }}
         defaultBranch: main
         repoVisibility: public
@@ -139,7 +139,7 @@ spec:
         url: ${{ steps['publish'].output.remoteUrl }}
       - title: Open in DevSpaces (Kaoto + Continue AI)
         icon: chat
-        url: "https://devspaces.${{ parameters.spokeAppsDomain }}/#https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}/raw/branch/main/devfile.yaml"
+        url: "https://devspaces.${{ parameters.spokeAppsDomain }}/#https://gitlab.apps.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}/raw/branch/main/devfile.yaml"
       - title: View in Catalog
         icon: catalog
         entityRef: ${{ steps['register'].output.entityRef }}

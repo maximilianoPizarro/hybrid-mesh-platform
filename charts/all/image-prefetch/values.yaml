@@ -2,7 +2,7 @@ enabled: true
 
 images:
   - registry.connect.redhat.com/hashicorp/vault:1.21.4-ubi
-  - docker.gitea.com/gitea:1.25.4-rootless
+  - registry.gitlab.com/gitlab-org/build/cng/gitlab-webservice-ee:v17.9.0
   - quay.io/kubecost1/kubecost-cost-model:latest
   - registry.redhat.io/openshift4/ose-cli:latest
   - registry.redhat.io/rhdh/rhdh-hub-rhel9@sha256:60be744e3e34e14da8505030d0223f35234d5bbfe1dd0f4332aa0dadc23d3b8f

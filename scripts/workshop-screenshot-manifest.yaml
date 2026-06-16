@@ -125,7 +125,7 @@ screenshots:
 
   - filename: 22-openshift-ai.png
     dest: docs/assets/images/workshop/22-openshift-ai.png
-    url: "https://rhods-dashboard-redhat-ods-applications.{hub_domain}/projects/maas-workshop"
+    url: "https://rh-ai.apps.{hub_domain}/projects/maas-workshop"
     wait_for: "Projects"
     notes: ODS dashboard → maas-workshop project
 
@@ -222,7 +222,7 @@ screenshots:
 
   - filename: 22-openshift-ia-stack.png
     dest: docs/assets/images/openshift-ia.png
-    url: "https://rhods-dashboard-redhat-ods-applications.{hub_domain}/"
+    url: "https://rh-ai.apps.{hub_domain}/"
     wait_for: "DataScienceCluster"
     notes: ODS DSC / cluster status
 

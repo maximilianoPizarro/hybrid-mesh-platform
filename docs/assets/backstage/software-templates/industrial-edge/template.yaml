@@ -99,7 +99,7 @@ spec:
       name: Publish to Gitea
       action: publish:github
       input:
-        repoUrl: "gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"
+        repoUrl: "gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"
         description: "Industrial Edge ${{ parameters.name }} (${{ parameters.environment }}) on ${{ parameters.targetCluster }}"
         defaultBranch: main
         repoVisibility: public
@@ -126,7 +126,7 @@ spec:
           spec:
             project: default
             source:
-              repoURL: "https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"
+              repoURL: "https://gitlab.apps.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"
               targetRevision: main
               path: manifests
             destination:
@@ -138,22 +138,18 @@ spec:
                 prune: true
               syncOptions:
                 - CreateNamespace=true
-    - id: create-gitea-webhook
-      name: Create Gitea Webhook
+    - id: create-gitlab-webhook
+      name: Create GitLab Webhook
       action: http:backstage:request
       input:
         method: POST
-        path: /api/proxy/gitea/repos/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}/hooks
+        path: /api/proxy/gitlab/projects/ws-${{ parameters.owner }}%2F${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}/hooks
         headers:
           Content-Type: application/json
         body:
-          type: gitea
-          active: true
-          config:
-            content_type: json
-            url: https://developer-hub.${{ parameters.clusterDomain }}/api/events/gitea
-          events:
-            - push
+          url: https://developer-hub.${{ parameters.clusterDomain }}/api/events/gitlab
+          push_events: true
+          enable_ssl_verification: true
       continueOnError: true
     - id: notify
       name: Notify Owner
@@ -181,4 +177,4 @@ spec:
         entityRef: ${{ steps['register'].output.entityRef }}
       - title: Open in DevSpaces
         icon: chat
-        url: "https://devspaces.${{ parameters.spokeAppsDomain }}/#https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"
+        url: "https://devspaces.${{ parameters.spokeAppsDomain }}/#https://gitlab.apps.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"

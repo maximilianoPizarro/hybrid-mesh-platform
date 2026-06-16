@@ -55,7 +55,7 @@ spec:
     name: ${{ values.uniqueName }}-build
   params:
     - name: git-url
-      value: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}.git
+      value: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}.git
     - name: image
       value: quay-registry.${{ values.clusterDomain }}/workshop/${{ values.uniqueName }}:latest
   workspaces:

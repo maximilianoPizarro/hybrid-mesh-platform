@@ -42,7 +42,7 @@ Sign-in uses **Keycloak**, not GitHub:
 
 - Realm: `backstage` at `https://sso.<hub-apps-domain>`
 - Client: `developer-hub`
-- Secret: `developer-hub-oidc-auth` (`OIDC_CLIENT_SECRET`, `GITEA_TOKEN`, `SESSION_SECRET`)
+- Secret: `developer-hub-oidc-auth` (`OIDC_CLIENT_SECRET`, `GITLAB_TOKEN`, `SESSION_SECRET`)
 - Config split: `app-config-rhdh` + `app-config-auth-rhdh` (avoids YAML merge bugs on resolvers)
 
 Platform users are defined in `charts/all/developer-hub/templates/catalog-users.yaml` (mounted as `/opt/app-root/src/users.yaml`).
@@ -85,10 +85,10 @@ oc get job -n developer-hub | grep spoke-token
 
 ## Scaffolding walkthrough (platformadmin)
 
-1. Sign in to Developer Hub as **`platformadmin`** (catalog user + Gitea `ws-platformadmin` org).
+1. Sign in to Developer Hub as **`platformadmin`** (catalog user + GitLab `ws-platformadmin` org).
 2. **Create** → **Industrial Edge** → set **Target Cluster** to `east` or `west`.
 3. After success, open the registered entity → **Topology** (spoke workloads) and **Kubernetes** (pods).
-4. **Open in DevSpaces** link opens the Gitea repo in DevSpaces.
+4. **Open in DevSpaces** link opens the GitLab repo in DevSpaces.
 5. To remove: **Create** → **Industrial Edge Delete** with the same name and cluster.
 
 See **[Scaffolding]({{ site.baseurl }}/scaffolding.html)** for prerequisites and troubleshooting.
@@ -102,7 +102,7 @@ Focus points for this platform:
 - keep both **Topology** and **Kubernetes** tabs working for Industrial Edge entities,
 - validate full scaffolder flow (`fetch`, `publish`, `register`, ArgoCD create),
 - use `catalogInfoPath: /catalog-info.yaml` in templates,
-- keep Gitea bootstrap hook recreatable so `ws-<owner>` orgs exist for `publish:github`.
+- keep GitLab bootstrap hook recreatable so `ws-<owner>` orgs exist for `publish:github`.
 
 ## Software templates
 
@@ -110,10 +110,10 @@ Templates are published as **GitHub Pages** static assets under `docs/assets/bac
 
 | Template | Description |
 | -------- | ----------- |
-| Industrial Edge | IoT instance on east/west → Gitea + ArgoCD + catalog |
+| Industrial Edge | IoT instance on east/west → GitLab + ArgoCD + catalog |
 | Camel Kaoto | Camel routes, DevSpaces, Continue AI |
-| Industrial Edge Delete | Remove ArgoCD app + Gitea repo + notification |
-| **CNV VM Workshop** | Hub KubeVirt VM → Gitea + catalog (+ optional Argo CD app) |
+| Industrial Edge Delete | Remove ArgoCD app + GitLab repo + notification |
+| **CNV VM Workshop** | Hub KubeVirt VM → GitLab + catalog (+ optional Argo CD app) |
 | **OpenShift AI Workspace** | Data Science project metadata on hub |
 
 Catalog location (in `app-config-rhdh`):
@@ -125,12 +125,12 @@ https://maximilianopizarro.github.io/hybrid-mesh-platform/assets/backstage/softw
 Scaffolding flow (after template run):
 
 1. `fetch:template` — skeleton from GitHub Pages
-2. `publish:github` — push to Gitea org `ws-<owner>`
+2. `publish:github` — push to GitLab group `ws-<owner>`
 3. `catalog:register` — entity in Developer Hub
 4. `http:backstage:request` — create ArgoCD Application on spoke
 5. `http:backstage:request` — notify owner
 
-Entity links include **Source Code**, **Documentation** (Gitea README), and **Open in DevSpaces**.
+Entity links include **Source Code**, **Documentation** (GitLab README), and **Open in DevSpaces**.
 
 ### clusterDomain in templates
 
@@ -148,20 +148,20 @@ On-prem **Quay** (`charts/all/quay-registry/`) stores images in hub MinIO via `R
 
 Quay push credentials are optional on the hub (`quayDockerConfigJson` via Helm `--set`, never committed). Helper: `scripts/generate-quay-dockerconfig.sh`.
 
-## Gitea and app-of-apps org
+## GitLab and app-of-apps org
 
 | Org | Created by | Use |
 | --- | ---------- | --- |
-| `ws-<user>` | `gitea-admin-setup` PostSync Job | Scaffolder `publish:github` repos |
-| `app-of-apps` | same Job | ApplicationSet Gitea generator repos — delete repo → ArgoCD prune |
+| `ws-<user>` | `gitlab-workshop-bootstrap` PostSync Job | Scaffolder `publish:github` repos |
+| `app-of-apps` | same Job | ApplicationSet GitLab generator repos — delete repo → ArgoCD prune |
 
-Gitea route: `https://gitea-gitea.<hub-apps-domain>`. Integration token: `GITEA_TOKEN` in `developer-hub-oidc-auth`.
+GitLab route: `https://gitlab.apps.<hub-apps-domain>`. Integration token: `GITLAB_TOKEN` in `developer-hub-oidc-auth`.
 
 ## Proxies for scaffolder
 
 | Proxy | Purpose |
 | ----- | ------- |
-| `/api/proxy/gitea` | Delete Gitea repositories |
+| `/api/proxy/gitlab` | Delete GitLab projects |
 | `/api/proxy/k8s-api` | Create/delete ArgoCD Applications |
 
 ## Deployment components
@@ -225,7 +225,7 @@ Catalog entities and plugin routes ship in-chart (`catalog-workshop-kuadrant-api
 | Kuadrant create API key fails | Backstage permission or RBAC | `rbac-policy.csv`: `kuadrant.apikey.create`, `kuadrant.apikey.list`; routes `/kuadrant/api-products/...` |
 | No **Request API key** / Kuadrant tab on API entities | Corrupt catalog ConfigMap (Helm `$var = replace` bug) | ConfigMap `developer-hub-catalog-workshop-kuadrant-apis` must contain full YAML (4× `kind: API`), not only the hub domain string; fixed in chart templates v1.5.1+ — re-sync `field-content-developer-hub` |
 | Lightspeed chat 401 | Missing MaaS key | `bash scripts/apply-maas-secrets.sh` |
-| TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to Gitea repo |
+| TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to GitLab repo |
 
 See also [Backstage assets README]({{ site.baseurl }}/assets/backstage/README.html) and the **developer-hub-scaffolder** Cursor skill.
 

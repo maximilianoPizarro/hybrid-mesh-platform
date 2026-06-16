@@ -21,7 +21,7 @@
   "camel-dashboard"
   "kafka-console"
   "stackrox"
-  "gitea"
+  "gitlab"
   "kubecost"
   "kairos-system"
   "quay-registry"

@@ -4,7 +4,7 @@ description: >-
   Hub-spoke multi-cluster GitOps on OpenShift with ACM, ambient Service Mesh,
   Service Interconnect (Skupper), Red Hat Connectivity Link (RHCL/Kuadrant),
   Industrial Edge, OpenShift AI, ACS, and observability — Validated Patterns layout.
-pattern_version: "1.4.0"
+pattern_version: "1.7.0"
 display_name: Hybrid Mesh Platform
 repo_url: https://github.com/maximilianoPizarro/hybrid-mesh-platform
 docs_repo_url: https://github.com/validatedpatterns/docs
@@ -22,21 +22,27 @@ requirements:
       memory_gib: 16
       openshift: "4.17"
     recommended:
-      workers: 3
-      vcpu: 8
-      memory_gib: 32
+      workers: 4
+      vcpu: 16
+      memory_gib: 64
       openshift: "4.17+"
+    workshop_50:
+      workers: 4
+      vcpu: 16
+      memory_gib: 64
+      openshift: "4.17+"
+      notes: "GitLab standard + OpenShift AI 3.4; facilitator mode (~10-15 concurrent notebooks)"
     compute:
       platform:
         aws:
-          replicas: 3
-          type: m5.2xlarge  # 8 vCPU, 32 GiB
+          replicas: 4
+          type: m5.4xlarge  # 16 vCPU, 64 GiB
         azure:
-          replicas: 3
-          type: Standard_D8s_v3  # 8 vCPU, 32 GiB
+          replicas: 4
+          type: Standard_D16s_v3  # 16 vCPU, 64 GiB
         gcp:
-          replicas: 3
-          type: n1-standard-8  # 8 vCPU, 30 GiB
+          replicas: 4
+          type: n1-standard-16  # 16 vCPU, 60 GiB
     controlPlane:
       platform:
         aws:

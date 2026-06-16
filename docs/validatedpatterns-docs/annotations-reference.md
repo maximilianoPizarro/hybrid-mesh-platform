@@ -43,7 +43,7 @@ These labels are applied via `charts/all/namespaces` (sync-wave 0) and control w
 | `industrial-edge-tst-all` | ztunnel/istiod auth issues break hub→spoke gateway and WebSocket dashboard traffic |
 | `spoke-gateway-system` | Same — use direct TCP + Gateway API ReferenceGrant instead of ambient HBONE |
 | `stackrox` | ACS Central ↔ PostgreSQL TLS breaks under ambient interception |
-| `gitea` | Gitea init container → PostgreSQL via ClusterIP conflicts with ztunnel |
+| `gitlab` | GitLab PostgreSQL/Gitaly — stays off ambient mesh |
 | `industrial-edge-data-lake` | MinIO / data lake in-namespace patterns |
 
 ### OpenShift AI / RHOAI dashboard
@@ -120,7 +120,7 @@ Applied on `catalog-info.yaml` entities (static catalog or scaffolder-generated)
 | `backstage.io/kubernetes-namespace` | `industrial-edge-tst-all` | Namespace to query on the target cluster |
 | `backstage.io/kubernetes-cluster` | `east`, `west`, or `hub` | **Which cluster** the Kubernetes plugin uses — required for spoke visibility |
 | `janus-idp.io/tekton` | `industrial-edge-ci` or target namespace | Enables **Tekton CI** tab for PipelineRuns in that namespace |
-| `backstage.io/source-location` | `url:https://gitea-gitea.../owner/repo` | Links entity to Gitea repository |
+| `backstage.io/source-location` | `url:https://gitlab.apps.../owner/repo` | Links entity to GitLab repository |
 | `quay.io/repository-slug` | `maximilianopizarro/my-app` | Public Quay repo reference for catalog |
 | `argocd/app-name` | `field-content-industrial-edge-tst` | Argo CD application hint (when ArgoCD plugin enabled) |
 | `kairos.io/environment` | `dev`, `qa`, or `prod` | Documents scaffold tier on the catalog entity (see [Kairos](community/kairos.html)) |
@@ -130,8 +130,8 @@ Applied on `catalog-info.yaml` entities (static catalog or scaffolder-generated)
 | Link title | Purpose |
 | ---------- | ------- |
 | Source Code (Gitea) | Repository browser |
-| Documentation | Raw `README.md` on Gitea |
-| Open in DevSpaces | `https://devspaces.<domain>/#<gitea-repo-url>` |
+| Documentation | Raw `README.md` on GitLab |
+| Open in DevSpaces | `https://devspaces.<domain>/#<gitlab-repo-url>` |
 
 ---
 

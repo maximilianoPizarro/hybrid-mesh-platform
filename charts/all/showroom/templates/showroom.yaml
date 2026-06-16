@@ -257,10 +257,10 @@ spec:
         resources:
           requests:
             cpu: {{ .Values.showroom.terminal.resources.requests.cpu | quote }}
-            memory: "1Gi"
+            memory: {{ .Values.showroom.terminal.resources.requests.memory | quote }}
           limits:
-            cpu: "1"
-            memory: "2Gi"
+            cpu: {{ .Values.showroom.terminal.resources.limits.cpu | quote }}
+            memory: {{ .Values.showroom.terminal.resources.limits.memory | quote }}
         env:
         - name: CLUSTER_DOMAIN
           value: {{ .Values.deployer.domain | quote }}

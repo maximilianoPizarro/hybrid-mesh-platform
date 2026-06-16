@@ -1,4 +1,4 @@
-apiVersion: datasciencecluster.opendatahub.io/v1
+apiVersion: datasciencecluster.opendatahub.io/v2
 kind: DataScienceCluster
 metadata:
   name: default-dsc
@@ -6,19 +6,28 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   components:
+    aipipelines:
+      managementState: Removed
     dashboard:
       managementState: Managed
-    datasciencepipelines:
-      managementState: Managed
+    feastoperator:
+      managementState: Removed
     kserve:
       managementState: Managed
-      # Edge spokes: RawDeployment avoids OpenShift Serverless + deprecated ModelMesh.
       defaultDeploymentMode: RawDeployment
       serving:
         managementState: Removed
-    modelmeshserving:
+    kueue:
+      managementState: Removed
+    llamastackoperator:
+      managementState: Removed
+    modelregistry:
       managementState: Removed
     ray:
+      managementState: Removed
+    trainingoperator:
+      managementState: Removed
+    trustyai:
       managementState: Removed
     workbenches:
       managementState: Managed

@@ -116,16 +116,16 @@ spec:
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
 metadata:
-  name: platform-gitea
+  name: platform-gitlab
   annotations:
     argocd.argoproj.io/sync-wave: "10"
 spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "gitea.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://gitea-gitea.{{ $domain }}"
+  href: "https://gitlab.apps.{{ $domain }}"
   location: ApplicationMenu
-  text: "Gitea (SCM)"
+  text: "GitLab (SCM)"
 ---
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
@@ -207,7 +207,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://rhods-dashboard-redhat-ods-applications.{{ $domain }}"
+  href: "https://rh-ai.apps.{{ $domain }}"
   location: ApplicationMenu
   text: "OpenShift AI"
 ---

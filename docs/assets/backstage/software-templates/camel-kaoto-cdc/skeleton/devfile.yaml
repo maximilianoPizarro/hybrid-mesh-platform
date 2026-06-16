@@ -32,7 +32,7 @@ projects:
   - name: ${{ values.name }}
     git:
       remotes:
-        origin: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}.git
+        origin: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}.git
 components:
   - name: tools
     container:

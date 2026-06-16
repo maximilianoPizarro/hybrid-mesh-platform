@@ -28,8 +28,6 @@ bash "$ROOT/scripts/apply-istio-monitoring.sh"
 bash "$ROOT/scripts/apply-workshop-kuadrant-apis.sh"
 bash "$ROOT/scripts/sync-kuadrant-apiproduct-plans.sh"
 bash "$ROOT/scripts/apply-hub-resource-relief.sh"
-bash "$ROOT/scripts/apply-gitea-postgres-fix.sh"
-bash "$ROOT/scripts/apply-gitea-root-url.sh"
 
 if [[ -f /tmp/east-kubeconfig || -f /tmp/west-kubeconfig ]]; then
   bash "$ROOT/scripts/apply-ie-anomaly-alerter.sh" || true

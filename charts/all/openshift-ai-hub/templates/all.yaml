@@ -7,7 +7,7 @@
 {{- $serverless := $ms.serverlessEnabled | default false -}}
 {{- $deployMode := $ms.defaultDeploymentMode | default "RawDeployment" -}}
 ---
-apiVersion: dscinitialization.opendatahub.io/v1
+apiVersion: dscinitialization.opendatahub.io/v2
 kind: DSCInitialization
 metadata:
   name: default-dsci
@@ -23,7 +23,7 @@ spec:
   devFlags:
     logLevel: INFO
 ---
-apiVersion: datasciencecluster.opendatahub.io/v1
+apiVersion: datasciencecluster.opendatahub.io/v2
 kind: DataScienceCluster
 metadata:
   name: default-dsc
@@ -31,18 +31,28 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   components:
+    aipipelines:
+      managementState: Removed
     dashboard:
       managementState: Managed
-    datasciencepipelines:
-      managementState: Managed
+    feastoperator:
+      managementState: Removed
     kserve:
       managementState: Managed
       defaultDeploymentMode: {{ $deployMode | quote }}
       serving:
         managementState: {{ if $serverless }}Managed{{ else }}Removed{{ end }}
-    modelmeshserving:
-      managementState: {{ if $modelMesh }}Managed{{ else }}Removed{{ end }}
+    kueue:
+      managementState: Removed
+    llamastackoperator:
+      managementState: Removed
+    modelregistry:
+      managementState: Removed
     ray:
+      managementState: Removed
+    trainingoperator:
+      managementState: Removed
+    trustyai:
       managementState: Removed
     workbenches:
       managementState: Managed

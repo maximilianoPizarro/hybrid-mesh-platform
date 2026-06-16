@@ -20,7 +20,7 @@ Applications are grouped by **AppProject** for filtered views in OpenShift GitOp
 | `security` | acs-operator, kairos |
 | `mesh` | servicemesh, rhcl, hub-gateway, service-interconnect |
 | `observability` | grafana, kiali, kafka-console, kubecost |
-| `workshop` | developer-hub, showroom, gitea |
+| `workshop` | developer-hub, showroom, gitlab-operator |
 | `ai` | openshift-ai-hub, neuroface |
 | `external-secrets` | vault, ESO |
 

@@ -8,7 +8,7 @@ Apache Camel CDC route with Kaoto visual designer — consumes Change Data Captu
    Alternatively, open this URL directly:
 
    ```
-   https://devspaces.<cluster-domain>/#https://gitea-gitea.<cluster-domain>/ws-<user>/${{ values.name }}
+   https://devspaces.<cluster-domain>/#https://gitlab.apps.<cluster-domain>/ws-<user>/${{ values.name }}
    ```
 
 2. Wait for the workspace to start (~2 min on first launch). The `devfile.yaml` automatically:

@@ -81,7 +81,7 @@ check mcp-gateway "https://mcp-gateway.$HUB/mcp"
 check_expect_one_of workshop-apis-no-key "https://workshop-apis.$HUB/httpbin/get" "401" "200"
 check vault-ui "https://vault-vault.$HUB/ui/"
 check grafana "https://grafana.$HUB/"
-check ods-dashboard "https://rhods-dashboard-redhat-ods-applications.$HUB/" token
+check ods-dashboard "https://rh-ai.apps.$HUB/" token
 
 EAST="${EAST_DOMAIN:-$(cluster_apps_domain east)}"
 WEST="${WEST_DOMAIN:-$(cluster_apps_domain west)}"

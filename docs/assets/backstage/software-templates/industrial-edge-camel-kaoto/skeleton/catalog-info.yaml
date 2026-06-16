@@ -10,17 +10,17 @@ metadata:
     backstage.io/kubernetes-cluster: ${{ values.targetCluster }}
     backstage.io/techdocs-ref: dir:.
     janus-idp.io/tekton: ${{ values.namespace }}
-    backstage.io/source-location: url:https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
+    backstage.io/source-location: url:https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
     kairos.io/environment: ${{ values.environment }}
     quay.io/repository-slug: workshop/${{ values.uniqueName }}
   links:
-    - url: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
+    - url: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
       title: Source Code (Gitea)
       icon: code
-    - url: https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}/raw/branch/main/README.md
+    - url: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}/raw/branch/main/README.md
       title: Documentation
       icon: docs
-    - url: https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
+    - url: https://devspaces.${{ values.spokeAppsDomain }}/#https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
       title: Open in DevSpaces (Kaoto)
       icon: chat
   tags:

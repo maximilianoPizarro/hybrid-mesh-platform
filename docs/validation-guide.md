@@ -145,7 +145,7 @@ The script skips operator-created duplicate **`rhodslink`** ConsoleLinks and sen
 | `platform-acm-clusters` | ACM fleet inventory |
 | `platform-acs-central` | ACS Central |
 | `platform-developer-hub` | Developer Hub (Backstage) |
-| `platform-gitea` | Gitea SCM |
+| `platform-gitlab` | GitLab SCM |
 | `platform-grafana` | Fleet Grafana |
 | `platform-hybrid-mesh-workshop` | Workshop registration |
 | `platform-industrial-edge` | Industrial Edge hub-gateway ingress |

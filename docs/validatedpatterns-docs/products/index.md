@@ -30,7 +30,7 @@ Keep **[Discover workloads consistently](../architecture.md#components-on-the-hu
 | [Quay Registry](quay.md) | Hub container registry, workshop org | `charts/all/quay-registry/` |
 | [Dev Spaces](devspaces.md) | Spoke IDEs (Kaoto + Continue AI) | `charts/all/devspaces/` |
 | [OpenShift Virtualization](cnv.md) | Workshop VM + CNV template | `charts/all/cnv-example/` |
-| [Gitea](gitea.md) | Hub Git for scaffolder repos | `charts/all/gitea/` |
+| [GitLab](gitlab.md) | Hub Git for scaffolder repos + Runner | `charts/all/gitlab-operator/` |
 | [HashiCorp Vault & External Secrets](vault.md) | Central secrets store + ESO sync to K8s | `charts/all/hashicorp-vault/`, `vault-demo-auth/`, `openshift-external-secrets/` |
 | [Kafka Console](kafka-console.md) | Hub UI for spoke Kafka clusters | `charts/all/kafka-console/` |
 
@@ -44,7 +44,7 @@ Most visibility comes from **CRDs**, but namespaces carry mesh/policy hints when
 | [Developer Hub](developer-hub.md) | Catalog / plugins / Topology | **`Backstage`** CR + `app-config-*`; OCM + **Kubernetes** (hub/east/west via MSA tokens); catalog annotation **`backstage.io/kubernetes-cluster`**. |
 | [ACS](acs.md) | Central clusters UI | **`SecuredCluster`** in each cluster's **`stackrox`** namespace + TLS Secrets from **init bundles**. |
 | [GitOps](openshift-gitops.md) | Argo CD Applications | **`Application`** / **`ApplicationSet`** — paths/branches define drift detection targets. |
-| [Service Mesh](service-mesh.md) | Ambient dataplane | Namespace **`istio.io/dataplane-mode: ambient`** (see **`charts/all/namespaces`**); exceptions **`stackrox`**, **`gitea`**, **`industrial-edge-data-lake`**, … stay **off mesh**. |
+| [Service Mesh](service-mesh.md) | Ambient dataplane | Namespace **`istio.io/dataplane-mode: ambient`** (see **`charts/all/namespaces`**); exceptions **`stackrox`**, **`gitlab`**, **`industrial-edge-data-lake`**, … stay **off mesh**. |
 | [Connectivity Link](connectivity-link.md) | Gateway exposure | Gateway API **`Gateway`** / **`HTTPRoute`** CRDs Kuadrant/DNS controllers reconcile (explicit refs). |
 | [OpenShift AI](openshift-ai.md) | DS pipelines / serving | **`DataScienceCluster`** operator provisioning — namespaces created/managed by operator CRs. |
 | [AMQ Streams](amq-streams.md) | Kafka Console UI | This repo: **`Console`** CR (`kafkaClusters[].namespace` + bootstrap URL). Strimzi **`Kafka`** CRs live in those namespaces. |
@@ -53,7 +53,7 @@ Most visibility comes from **CRDs**, but namespaces carry mesh/policy hints when
 | [Quay](quay.md) | Image registry (hub) | **`QuayRegistry`** CR + org setup Job — catalog uses **`quay.io/repository-slug`** annotation. |
 | [Dev Spaces](devspaces.md) | Spoke dev environments | **`CheCluster`** on east/west — catalog entity **links** to devfile URL on spoke domain. |
 | [CNV](cnv.md) | Virtual machines | **`VirtualMachine`** CRs — catalog **`backstage.io/kubernetes-*`** on hub. |
-| [Gitea](gitea.md) | Source repos (hub) | PostSync org Job — scaffolder **`backstage.io/source-location`** URLs. |
+| [GitLab](gitlab.md) | Source repos (hub) | PostSync bootstrap Job — scaffolder **`backstage.io/source-location`** URLs. |
 | [Kafka Console](kafka-console.md) | Fleet Kafka UI | **`Console`** CR `spec.kafkaClusters[]` — explicit bootstrap list. |
 | [Service Interconnect](../service-interconnect.md) | Cross-cluster Services | **`Site`**, **`Listener`**, **`Connector`** Skupper CRs — **not** workload Deployment annotations. |
 

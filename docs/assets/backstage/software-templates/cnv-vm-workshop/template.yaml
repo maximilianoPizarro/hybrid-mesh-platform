@@ -78,7 +78,7 @@ spec:
       name: Publish to Gitea
       action: publish:github
       input:
-        repoUrl: gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-cnv
+        repoUrl: gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-cnv
         description: KubeVirt VM ${{ parameters.name }}
         defaultBranch: main
         repoVisibility: public
@@ -105,7 +105,7 @@ spec:
           spec:
             project: ai
             source:
-              repoURL: "https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-cnv"
+              repoURL: "https://gitlab.apps.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}-cnv"
               targetRevision: main
               path: manifests
             destination:

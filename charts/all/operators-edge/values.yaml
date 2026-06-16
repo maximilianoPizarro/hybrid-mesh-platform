@@ -14,7 +14,7 @@ subscriptions:
     source: redhat-operators
   - name: rhods-operator
     namespace: redhat-ods-operator
-    channel: stable-2.25
+    channel: stable-3.4
     source: redhat-operators
   # Merged from operators-ci (CI/CD + DevSpaces)
   - name: camel-k

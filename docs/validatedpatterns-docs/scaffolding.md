@@ -13,12 +13,12 @@ Developer Hub **Create** templates deploy new Industrial Edge instances to **eas
 | ----------- | ------------- |
 | Developer Hub reachable | `https://developer-hub.<hub-apps-domain>` |
 | Signed in as `platformadmin` (or your catalog user) | Keycloak OIDC; user in `catalog-users.yaml` |
-| Gitea org `ws-platformadmin` exists | PostSync Job `gitea-admin-setup` in namespace `gitea` |
+| GitLab group `ws-platformadmin` exists | PostSync Job `gitlab-workshop-bootstrap` in namespace `gitlab` |
 | Spoke tokens synced | `oc get secret developer-hub-spoke-tokens -n developer-hub` |
 | Templates catalog loaded | **Create** shows templates (after GitHub Pages deploy) |
 | Dev Spaces on target spoke | `oc get checluster -n devspaces` on east/west |
 
-`platformadmin` is the Gitea root-equivalent user (`gitea_admin` is the admin account). Workshop users get orgs `ws-user1`, `ws-user2`, …; `platformadmin` uses **`ws-platformadmin`**.
+`platformadmin` is the GitLab root-equivalent user (root PAT for scaffolder). Workshop users get groups `ws-user1`, `ws-user2`, …; `platformadmin` uses **`ws-platformadmin`**.
 
 ## Software templates
 
@@ -33,8 +33,8 @@ https://maximilianopizarro.github.io/hybrid-mesh-platform/assets/backstage/softw
 | **Industrial Edge** | east or west | IoT namespace, sensors, Kafka, deployment, Tekton pipeline |
 | **Camel Kaoto** | east or west | Camel routes, DevSpaces devfile, Continue AI config |
 | **Camel CDC (Kaoto + Continue AI)** | east or west | Standalone CDC route; DevSpaces on **spoke** (`spokeAppsDomain`) |
-| **Industrial Edge Delete** | east or west | Removes ArgoCD Application + Gitea repo + notification |
-| **CNV VM Workshop** | hub | Virtual machine manifests in Gitea |
+| **Industrial Edge Delete** | east or west | Removes ArgoCD Application + GitLab repo + notification |
+| **CNV VM Workshop** | hub | Virtual machine manifests in GitLab |
 
 ## Step-by-step — deploy on east
 
@@ -66,7 +66,7 @@ oc get managedserviceaccount -n east
 oc logs -n developer-hub -l app.kubernetes.io/name=backstage --tail=20 | grep -i kubernetes
 ```
 
-## Gitea organizations
+## GitLab groupanizations
 
 | Org | Purpose |
 | --- | ------- |
@@ -74,7 +74,7 @@ oc logs -n developer-hub -l app.kubernetes.io/name=backstage --tail=20 | grep -i
 | `ws-<username>` | Per-user scaffold repos (e.g. `ws-platformadmin`) |
 | `app-of-apps` | ApplicationSet-managed GitOps repos — delete repo to trigger ArgoCD prune |
 
-The `app-of-apps` org is created by the Gitea PostSync Job. Use it when wiring an **ApplicationSet** with a Gitea generator: each generated repo maps to one Argo CD Application; removing the repo lets prune clean up spoke resources.
+The `app-of-apps` org is created by the GitLab PostSync Job. Use it when wiring an **ApplicationSet** with a GitLab generator: each generated repo maps to one Argo CD Application; removing the repo lets prune clean up spoke resources.
 
 ## Quay vs internal registry
 
@@ -91,7 +91,7 @@ On-prem **Quay** (`quay-registry.<hub-domain>`) is for public catalog metadata a
 DevSpaces runs on **spokes only** — not the hub. Template output links use:
 
 ```text
-https://devspaces.<spokeAppsDomain>/#https://gitea-gitea.<hub-domain>/ws-<user>/<repo>/raw/branch/main/devfile.yaml
+https://devspaces.<spokeAppsDomain>/#https://gitlab.apps.<hub-domain>/ws-<user>/<repo>/raw/branch/main/devfile.yaml
 ```
 
 Continue AI credentials are synced into `{username}-devspaces` by PostSync job `devspaces-continue-ai-sync` (reads `kairos-system/kairos-ai-credentials` on the spoke). Devfile `setup-continue` substitutes `CONTINUE_API_KEY` from the auto-mounted secret.
@@ -102,7 +102,7 @@ See [Dev Spaces](products/devspaces.md).
 
 1. **Create** → **Industrial Edge — Delete Instance**.
 2. Enter the same name, owner, and target cluster.
-3. Template deletes the ArgoCD Application and Gitea repo; unregister the catalog entity manually if it still appears.
+3. Template deletes the ArgoCD Application and GitLab repo; unregister the catalog entity manually if it still appears.
 
 ---
 

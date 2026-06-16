@@ -36,7 +36,7 @@ Workshop users have **cluster-reader** on all clusters (view namespaces, workloa
 
 ## Gitea
 
-- URL: `https://gitea-gitea.<hub-apps-domain>`
+- URL: `https://gitlab.apps.<hub-apps-domain>`
 - User: `user1` (your workshop id)
 - Password: `Welcome123!`
 - Your org: `ws-user1` (repos created by the scaffolder land here)

@@ -31,7 +31,7 @@ Workshop and Industrial Edge teams need **model serving**, **notebooks/workbench
 ### How to reach your project (userN)
 
 1. OpenShift Console → **OpenShift AI** (Platform Hub-Spoke menu)  
-   Or: `https://rhods-dashboard-redhat-ods-applications.<hub-domain>`
+   Or: `https://rh-ai.apps.<hub-domain>`
 2. **Applications** → **Enabled** → ensure dashboard is enabled
 3. **Data Science Projects** → select **`ai-userN`** (matches workshop login `userN`)
 4. **Workbenches** → start **`neuroface-ml-lab`**
@@ -61,7 +61,7 @@ Endpoint: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` — keys via RHDP 
 ## Console
 
 - **ConsoleLink:** Platform Hub-Spoke → OpenShift AI
-- URL: `https://rhods-dashboard-redhat-ods-applications.<hub-apps-domain>`
+- URL: `https://rh-ai.apps.<hub-apps-domain>`
 
 ## Developer Hub
 

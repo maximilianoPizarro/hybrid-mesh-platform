@@ -51,7 +51,7 @@ This document lists all Red Hat and community products/operators consumed by the
 | clustergroup | charts.validatedpatterns.io | 0.9.* | VP framework bootstrap |
 | hashicorp-vault | charts.validatedpatterns.io | 0.1.* | Secrets management |
 | openshift-external-secrets | charts.validatedpatterns.io | 0.0.* | ESO configuration |
-| gitea | dl.gitea.com/charts | 12.5.0 | Git server for demos |
+| gitlab-operator | OperatorHub (community) | stable | GitLab + Runner for scaffolder/Tekton |
 | network-observer | quay.io/skupper/helm | 2.1.3 | Skupper network visualization |
 
 ## Industrial Edge Components

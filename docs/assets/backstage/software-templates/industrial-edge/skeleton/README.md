@@ -22,5 +22,5 @@ IoT edge instance scaffolded from Developer Hub.
 
 ## Links
 
-- [Gitea repo](https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }})
-- [Open in DevSpaces](https://devspaces.${{ values.spokeAppsDomain }}/#https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }})
+- [Gitea repo](https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }})
+- [Open in DevSpaces](https://devspaces.${{ values.spokeAppsDomain }}/#https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }})

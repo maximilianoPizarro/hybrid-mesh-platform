@@ -61,7 +61,7 @@ spec:
       name: Publish to Gitea
       action: publish:github
       input:
-        repoUrl: "gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-api"
+        repoUrl: "gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-api"
         description: "Kuadrant API Product ${{ parameters.name }}"
         defaultBranch: main
         repoVisibility: public

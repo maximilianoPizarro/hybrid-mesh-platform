@@ -6,7 +6,7 @@ metadata:
   description: Industrial Edge API exposed via Kuadrant APIProduct
   annotations:
     kuadrant.io/api-product: ${{ values.uniqueName }}
-    backstage.io/source-location: url:https://gitea-gitea.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-api
+    backstage.io/source-location: url:https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-api
 spec:
   type: openapi
   lifecycle: experimental

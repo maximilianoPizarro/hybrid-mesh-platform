@@ -1,0 +1,107 @@
+{{- $count := int (.Values.userCount | default 50) -}}
+{{- $host := include "gitlab-operator.host" . -}}
+{{- $api := include "gitlab-operator.apiUrl" . -}}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitlab-workshop-bootstrap
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded,HookFailed
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: bootstrap
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          env:
+            - name: GITLAB_URL
+              value: {{ include "gitlab-operator.webUrl" . | quote }}
+            - name: GITLAB_API
+              value: {{ $api | quote }}
+            - name: ROOT_SECRET
+              value: {{ .Values.gitlab.rootPasswordSecret | quote }}
+            - name: RUNNER_SECRET
+              value: gitlab-runner-token
+            - name: USER_COUNT
+              value: {{ $count | quote }}
+            - name: DEFAULT_PASS
+              value: "Welcome123!"
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              ROOT_PASS=$(oc get secret "${ROOT_SECRET}" -n {{ .Values.namespace }} \
+                -o jsonpath='{.data.password}' | base64 -d)
+              AUTH="root:${ROOT_PASS}"
+
+              echo "Waiting for GitLab API at ${GITLAB_API}..."
+              for attempt in $(seq 1 90); do
+                if curl -skf -H "PRIVATE-TOKEN: ${ROOT_PASS}" "${GITLAB_API}/version" >/dev/null 2>&1; then break; fi
+                echo "  attempt ${attempt}/90 ..."
+                sleep 10
+              done
+              curl -skf -H "PRIVATE-TOKEN: ${ROOT_PASS}" "${GITLAB_API}/version" || { echo "GitLab API unavailable" >&2; exit 1; }
+              echo "GitLab API ready."
+
+              api() {
+                curl -skS -H "PRIVATE-TOKEN: ${ROOT_PASS}" -H "Content-Type: application/json" "$@"
+              }
+
+              create_group() {
+                local path="$1" name="$2" desc="${3:-Workshop group}"
+                local code
+                code=$(api -o /dev/null -w "%{http_code}" -X POST "${GITLAB_API}/groups" \
+                  -d "{\"path\":\"${path}\",\"name\":\"${name}\",\"visibility\":\"public\",\"description\":\"${desc}\"}" || echo 000)
+                echo "  group ${path}: HTTP ${code}"
+              }
+
+              create_user() {
+                local u="$1" email="$2"
+                local code
+                code=$(api -o /dev/null -w "%{http_code}" -X POST "${GITLAB_API}/users" \
+                  -d "{\"username\":\"${u}\",\"email\":\"${email}\",\"password\":\"${DEFAULT_PASS}\",\"skip_confirmation\":true,\"can_create_group\":true}" || echo 000)
+                echo "  user ${u}: HTTP ${code}"
+              }
+
+              echo "Creating platform groups..."
+              create_group "{{ .Values.bootstrap.workshopDemosGroup }}" "{{ .Values.bootstrap.workshopDemosGroup }}" "Hybrid Mesh AI shared Plan B repos"
+              create_group "{{ .Values.bootstrap.developerHubGroup }}" "Developer Hub" "Developer Hub scaffolder repos"
+              create_group "{{ .Values.bootstrap.appOfAppsGroup }}" "App of Apps" "ApplicationSet GitOps repos"
+              create_group "ws-admin" "ws-admin" "DevSpaces Camel Kaoto repos for admin"
+              create_group "ws-platformadmin" "ws-platformadmin" "Workshop repos for platformadmin"
+
+              echo "Creating workshop users and groups..."
+              for i in $(seq 1 "${USER_COUNT}"); do
+                U="user${i}"
+                G="ws-${U}"
+                create_user "${U}" "${U}@developer-hub.local"
+                create_group "${G}" "${G}" "Workshop repos for ${U}"
+              done
+              create_user "admin" "admin@developer-hub.local"
+              create_user "platformadmin" "platformadmin@developer-hub.local"
+              echo "Users and groups bootstrap complete."
+
+              echo "Ensuring GitLab Runner token secret..."
+              if ! oc get secret "${RUNNER_SECRET}" -n {{ .Values.runnerNamespace }} &>/dev/null; then
+                RESP=$(api -X POST "${GITLAB_API}/user/runners" \
+                  -d '{"runner_type":"instance_type","description":"workshop-openshift","tag_list":["openshift","kubernetes"]}')
+                RUNNER_TOKEN=$(echo "${RESP}" | sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+                if [ -z "${RUNNER_TOKEN}" ]; then
+                  echo "Runner token response: ${RESP}" >&2
+                  echo "WARN: could not create instance runner — create manually and secret ${RUNNER_SECRET}" >&2
+                else
+                  oc create secret generic "${RUNNER_SECRET}" -n {{ .Values.runnerNamespace }} \
+                    --from-literal=runner-token="${RUNNER_TOKEN}" --dry-run=client -o yaml | oc apply -f -
+                  echo "Created ${RUNNER_SECRET} in {{ .Values.runnerNamespace }}."
+                fi
+              else
+                echo "Runner secret already exists — skipping."
+              fi
+              echo "gitlab-workshop-bootstrap complete."

@@ -4,9 +4,10 @@ userProjects:
   enabled: true
   notebook:
     enabled: true
+    deployCr: false
     image: quay.io/opendatahub-contrib/workbench-images:jupyter-minimal-elyra-py311-ubi9
-    cpu: "500m"
-    memory: 2Gi
+    cpu: "250m"
+    memory: 1Gi
   # Example KServe InferenceService on ModelMesh (shared sklearn model on hub MinIO).
   inferenceService:
     enabled: true

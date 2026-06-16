@@ -1,11 +1,9 @@
 clusterDomain: ""
 hubClusterDomain: ""
 eastClusterDomain: ""
-gitea:
+gitlab:
   url: ""
-  adminUser: gitea_admin
-  adminPassword: openshift
-  org: workshop-demos
+  group: workshop-demos
 demos:
   catalog:
     enabled: true

@@ -39,7 +39,7 @@ data:
         backstage.io/kubernetes-cluster: hub
         maas.redhat.com/default-model: llama-scout-17b
       links:
-        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
+        - url: https://rh-ai.apps.{{ $hub }}
           title: OpenShift AI Dashboard
           icon: dashboard
     spec:
@@ -65,10 +65,10 @@ data:
         backstage.io/kubernetes-cluster: hub
         maas.redhat.com/default-model: llama-scout-17b
       links:
-        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
+        - url: https://rh-ai.apps.{{ $hub }}
           title: OpenShift AI Dashboard
           icon: dashboard
-        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}/projects/{{ $project }}
+        - url: https://rh-ai.apps.{{ $hub }}/projects/{{ $project }}
           title: Data Science Project ({{ $user }})
           icon: dashboard
         - url: https://developer-hub.{{ $hub }}/catalog/default/component/{{ $project }}

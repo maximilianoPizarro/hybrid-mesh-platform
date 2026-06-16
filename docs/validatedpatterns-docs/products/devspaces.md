@@ -18,7 +18,7 @@ Red Hat **OpenShift Dev Spaces** (Eclipse Che) runs on **each spoke** — not on
 | Kubernetes Image Puller operator | Pre-pulls UDI images (`CheCluster.components.imagePuller`) |
 | `CheCluster` `devspaces` | Controller in namespace `devspaces` |
 | Per-user namespace | `{username}-devspaces` (e.g. `user1-devspaces`) |
-| PostSync `devspaces-gitea-credentials` | Git credentials for Gitea on hub |
+| PostSync `devspaces-gitlab-credentials` | Git credentials for GitLab on hub |
 | PostSync `devspaces-continue-ai-sync` | Continue AI env secrets from `kairos-system/kairos-ai-credentials` |
 
 OpenShift Console link (spokes only): **DevSpaces (Kaoto + Continue AI)** → `https://devspaces.<spoke-apps-domain>`.
@@ -28,7 +28,7 @@ OpenShift Console link (spokes only): **DevSpaces (Kaoto + Continue AI)** → `h
 Templates link to DevSpaces with the spoke apps domain:
 
 ```
-https://devspaces.<spokeAppsDomain>/#https://gitea-gitea.<hub-domain>/ws-<user>/<repo>/raw/branch/main/devfile.yaml
+https://devspaces.<spokeAppsDomain>/#https://gitlab.apps.<hub-domain>/ws-<user>/<repo>/raw/branch/main/devfile.yaml
 ```
 
 | Template | DevSpaces use |
@@ -44,7 +44,7 @@ DevSpaces **does not** use Keycloak. Each spoke uses the cluster **htpasswd** id
 
 | User | Password (default) | Notes |
 | ---- | ------------------ | ----- |
-| `user1` … `userN` | `Welcome123!` | Same username as Developer Hub / Gitea |
+| `user1` … `userN` | `Welcome123!` | Same username as Developer Hub / GitLab |
 | `admin` | `Welcome123!` | Workshop admin |
 | `platformadmin` | `Welcome123!` | Platform engineer |
 
@@ -55,7 +55,7 @@ Developer Hub login remains **Keycloak OIDC on the hub**; DevSpaces login on eas
 When a user scaffolds with `targetCluster: east` or `west`, template output links use `spokeAppsDomain` so **Open in DevSpaces** opens the IDE on **that spoke** (same Kubernetes context as deployed workloads):
 
 ```
-https://devspaces.<spokeAppsDomain>/#https://gitea-gitea.<hub-domain>/ws-<owner>/<repo>/...
+https://devspaces.<spokeAppsDomain>/#https://gitlab.apps.<hub-domain>/ws-<owner>/<repo>/...
 ```
 
 Catalog entities carry `backstage.io/kubernetes-cluster: east|west` for Topology/Kubernetes tabs on the matching spoke.
@@ -87,7 +87,7 @@ oc get secret continue-ai-config -n user1-devspaces
 | DevSpaces login fails | Use **workshop-users** on the spoke console login (not Keycloak); same `userN` / `Welcome123!` |
 | Wrong spoke DevSpaces | Template must set `targetCluster` + `spokeAppsDomain`; link uses `devspaces.<spokeAppsDomain>` |
 | Continue AI no API key | Ensure `kairos-system/kairos-ai-credentials` exists on spoke; re-run sync job |
-| Gitea clone fails in workspace | Check `devspaces-gitea-credentials` job and `{user}-devspaces` secret |
+| GitLab clone fails in workspace | Check `devspaces-gitlab-credentials` job and `{user}-devspaces` secret |
 
 ## Documentation
 

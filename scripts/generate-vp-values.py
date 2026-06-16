@@ -55,7 +55,7 @@ APP_ARGO_PROJECT: dict[str, str] = {
     "workshop-demos": "workshop",
     "workshop-registration": "workshop",
     "showroom": "workshop",
-    "gitea": "workshop",
+    "gitlab-operator": "workshop",
     "console-links": "workshop",
     "devspaces": "workshop",
     "vault": "external-secrets",

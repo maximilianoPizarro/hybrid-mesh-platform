@@ -13,7 +13,8 @@ clusterGroup:
     hub-gateway-system: {}
     workshop-kuadrant-apis: {}
     mcp-system: {}
-    gitea: {}
+    gitlab: {}
+    gitlab-runner: {}
     service-interconnect: {}
     mailpit: {}
     mailpit-templates: {}
@@ -63,7 +64,7 @@ clusterGroup:
     rhods-operator:
       name: rhods-operator
       namespace: redhat-ods-operator
-      channel: stable-2.25
+      channel: stable-3.4
       source: redhat-operators
     serverless-operator:
       name: serverless-operator
@@ -194,11 +195,11 @@ clusterGroup:
       path: charts/all/fleet-pull-overview
       syncWave: '1'
     # --- Wave 2: Stateful services + secrets ---
-    gitea:
-      name: gitea
-      namespace: gitea
+    gitlab-operator:
+      name: gitlab-operator
+      namespace: gitlab
       argoProject: workshop
-      path: charts/all/gitea
+      path: charts/all/gitlab-operator
       syncWave: '2'
     quay-registry:
       name: quay-registry
@@ -351,7 +352,7 @@ clusterGroup:
       namespace: maas-workshop
       argoProject: ai
       path: charts/all/openshift-ai-hub
-      syncWave: '5'
+      syncWave: '7'
     showroom:
       name: showroom
       namespace: showroom

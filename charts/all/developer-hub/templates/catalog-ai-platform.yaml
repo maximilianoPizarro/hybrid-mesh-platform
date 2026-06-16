@@ -87,7 +87,7 @@ data:
         - url: https://neuroface.{{ $hub }}
           title: NeuroFace UI
           icon: dashboard
-        - url: https://rhods-dashboard-redhat-ods-applications.{{ $hub }}
+        - url: https://rh-ai.apps.{{ $hub }}
           title: OpenShift AI Dashboard
           icon: catalog
     spec:

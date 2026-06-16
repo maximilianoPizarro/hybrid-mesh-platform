@@ -2,8 +2,9 @@
 {{- $up := .Values.userProjects -}}
 {{- $nb := $up.notebook | default dict -}}
 {{- $img := $nb.image | default "quay.io/opendatahub-contrib/workbench-images:jupyter-minimal-elyra-py311-ubi9" -}}
-{{- $cpu := $nb.cpu | default "500m" -}}
-{{- $mem := $nb.memory | default "2Gi" -}}
+{{- $cpu := $nb.cpu | default "250m" -}}
+{{- $mem := $nb.memory | default "1Gi" -}}
+{{- $deployCr := $nb.deployCr | default false -}}
 {{- $count := int (.Values.userCount | default 50) -}}
 {{- $maasKey := include "openshift-ai-hub.maasApiKey" . -}}
 {{- $endpoint := include "openshift-ai-hub.maasApiUrl" . -}}
@@ -104,6 +105,7 @@ data:
       "nbformat_minor": 5
     }
 ---
+{{- if $deployCr }}
 apiVersion: kubeflow.org/v1
 kind: Notebook
 metadata:
@@ -142,5 +144,6 @@ spec:
         - name: notebook-src
           configMap:
             name: neuroface-ml-lab-src
+{{- end }}
 {{- end }}
 {{- end }}

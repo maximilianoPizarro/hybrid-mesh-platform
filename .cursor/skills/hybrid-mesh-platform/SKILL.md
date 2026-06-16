@@ -113,8 +113,8 @@ See `docs/validatedpatterns-docs/gitops-push-vs-pull.md`.
 | NeuroFace | `neuroface.<domain>` | Requires clustergroup override `neuroface.route.host` — default subchart Route is `neuroface-neuroface.<domain>` |
 | Kafka Console | `kafka-console.<domain>` | Console CR `spec.hostname` |
 | Industrial Edge (hub GW) | `industrial-edge.<hubDomain>` | `charts/all/hub-gateway` — link 200 when Route exists; full factory UI needs spoke Skupper connectors + mesh |
-| Gitea | `gitea-gitea.<domain>` | **`privileged` SCC**; Route → **`gitea-http`** |
-| OpenShift AI | `rhods-dashboard-redhat-ods-applications.<domain>` | AllNamespaces OG; bearer token for verify |
+| Gitea | `gitlab.apps.<domain>` | **`privileged` SCC**; Route → **`gitea-http`** |
+| OpenShift AI | `rh-ai.apps.<domain>` | AllNamespaces OG; bearer token for verify |
 | Kubecost | `kubecost.<domain>` | OG **`kubecost-operator-group`** |
 | Vault | `vault.<domain>/ui/` | Root route returns 307 |
 | Workshop login | OAuth IdP **`workshop-users`** | `platform-users` chart; `grantClusterReader: true` for console middleware menu |

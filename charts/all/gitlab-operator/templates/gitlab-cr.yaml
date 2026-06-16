@@ -1,0 +1,57 @@
+{{- $domain := include "gitlab-operator.clusterDomain" . -}}
+apiVersion: apps.gitlab.com/v1beta1
+kind: GitLab
+metadata:
+  name: gitlab
+  namespace: {{ .Values.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  chart:
+    version: {{ .Values.gitlab.chartVersion | quote }}
+    values:
+      global:
+        hosts:
+          domain: {{ $domain | quote }}
+          hostSuffix: gitlab
+          https: true
+        ingress:
+          configureCertmanager: false
+          class: openshift-default
+          tls:
+            enabled: false
+        openshift:
+          enabled: true
+          route:
+            enabled: true
+            tls:
+              termination: edge
+        minio:
+          enabled: false
+      certmanager:
+        install: false
+      installCertmanager: false
+      nginx-ingress:
+        enabled: false
+      prometheus:
+        install: false
+      registry:
+        enabled: {{ .Values.gitlab.registryEnabled }}
+      gitlab:
+        webservice:
+          resources:
+            requests:
+              cpu: 200m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+        gitaly:
+          persistence:
+            size: {{ .Values.gitlab.gitalyStorage | quote }}
+        toolbox:
+          backups:
+            cron:
+              enabled: false
+      postgresql:
+        persistence:
+          size: {{ .Values.gitlab.postgresStorage | quote }}

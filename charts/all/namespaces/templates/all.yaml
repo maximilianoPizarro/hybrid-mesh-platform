@@ -18,7 +18,7 @@
 }}
 {{- /* RHCL dns-operator: no ambient — CrashLoopBackOff on spokes when meshed */ -}}
 {{- $noMeshNamespaces := list
-  "gitea"
+  "gitlab"
   "stackrox"
   "redhat-connectivity-link-operator"
 }}

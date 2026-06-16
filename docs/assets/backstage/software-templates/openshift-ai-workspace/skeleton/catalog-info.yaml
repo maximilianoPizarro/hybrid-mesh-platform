@@ -8,7 +8,7 @@ metadata:
     openshift.ai/project: ${{ values.name }}
     maas.redhat.com/default-model: ${{ values.model }}
   links:
-    - url: https://rhods-dashboard-redhat-ods-applications.${{ values.clusterDomain }}
+    - url: https://rh-ai.apps.${{ values.clusterDomain }}
       title: OpenShift AI Dashboard
       icon: dashboard
 spec:

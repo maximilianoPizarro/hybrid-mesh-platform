@@ -24,7 +24,8 @@ This guide bootstraps the **hub** with one Helm install, registers **east** and 
 
 ## Prerequisites
 
-- OpenShift **4.14+** on hub + two spokes
+- OpenShift **4.17+** on hub + two spokes
+- **Hub workshop 50:** **4 workers × 16 vCPU × 64 GiB** (GitLab + OpenShift AI 3.4). Spokes: **3 × 4 vCPU × 16 GiB**.
 - **Helm 3** and **`oc`** (cluster-admin on hub for ACM import)
 - Fork of this repository; RHDP injects `deployer.domain` / `deployer.apiUrl` per cluster — see [RHDP field content](rhdp-field-content.md)
 

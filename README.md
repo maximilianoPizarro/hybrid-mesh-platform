@@ -80,7 +80,7 @@ hybrid-mesh-platform/
 
 | Cluster | Bootstrap Path | Description |
 |---------|----------------|-------------|
-| **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, Gitea, Quay |
+| **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, GitLab, Quay |
 | **East** | `charts/region/east` | Industrial Edge, ACS Secured, Skupper |
 | **West** | `charts/region/west` | Industrial Edge, ACS Secured, Skupper |
 
@@ -88,10 +88,18 @@ See [Region Strategy](docs/validatedpatterns-docs/region-strategy.md) for detail
 
 ## Cluster sizing
 
-| Role | Workers | vCPU | Memory | OpenShift |
-|------|---------|------|--------|-----------|
-| Hub | 3+ | 8 | 32 GiB | 4.17+ |
-| Spoke | 3+ | 4 | 16 GiB | 4.17+ |
+| Role | Workers | vCPU / worker | Memory / worker | OpenShift | Notes |
+|------|---------|---------------|-----------------|-----------|-------|
+| **Hub (workshop 50)** | **4** | **16** | **64 GiB** | 4.17+ | GitLab standard + OpenShift AI 3.4; allocatable ≥ 20 CPU / 80 GiB |
+| Hub (minimum demo) | 3 | 8 | 32 GiB | 4.17+ | Insufficient for GitLab + 50 AI namespaces — expect Evicted pods |
+| **Spoke** | **3** | **4** | **16 GiB** | 4.17+ | Industrial Edge + DevSpaces |
+
+Verify hub capacity after cluster provision:
+
+```bash
+bash scripts/verify-node-capacity.sh
+ROLE=spoke bash scripts/verify-node-capacity.sh
+```
 
 ## Verification
 

@@ -250,11 +250,11 @@ data:
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
             Authorization: Bearer ${RHACS_API_TOKEN}
-        '/gitea':
-          target: https://gitea-gitea.{{ include "developer-hub.clusterDomain" . }}/api/v1
+        '/gitlab':
+          target: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
-            Authorization: token ${GITEA_TOKEN}
+            PRIVATE-TOKEN: ${GITLAB_TOKEN}
         '/quay':
           target: https://quay-registry.{{ include "developer-hub.clusterDomain" . }}/api/v1
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
@@ -266,13 +266,17 @@ data:
             Authorization: Bearer ${K8S_SA_TOKEN}
           changeOrigin: true
     integrations:
+      gitlab:
+        - host: gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
+          apiBaseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
+          token: ${GITLAB_TOKEN}
       github:
         - host: github.com
           apiBaseUrl: https://api.github.com
           rawBaseUrl: https://raw.githubusercontent.com
-        - host: gitea-gitea.{{ include "developer-hub.clusterDomain" . }}
-          apiBaseUrl: https://gitea-gitea.{{ include "developer-hub.clusterDomain" . }}/api/v1
-          token: ${GITEA_TOKEN}
+        - host: gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
+          apiBaseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
+          token: ${GITLAB_TOKEN}
     # -- Azure DevOps integration (uncomment when AZURE_TOKEN and AZURE_ORG are set) --
     # integrations:
     #   azure:

@@ -113,17 +113,24 @@ Full detail: [Troubleshooting → ArgoCD Unknown sync status](troubleshooting.md
 
 ---
 
-## Gitea (SCM for Developer Hub)
+## GitLab (SCM for Developer Hub)
 
-The upstream Gitea chart’s PostgreSQL/Valkey pods need **`privileged` SCC** on OpenShift (not `anyuid` — upstream sets seccomp annotations that `anyuid` rejects).
+**v1.7.0** replaces GitLab with **GitLab Operator** (standard profile: webservice, gitaly, PostgreSQL, Container Registry) plus **GitLab Runner Operator** on the hub.
 
-Chart binding: `charts/all/gitea/templates/clusterrolebinding-gitea-privileged.yaml`.
+Chart: `charts/all/gitlab-operator/` — Subscriptions in `gitlab` and `gitlab-runner` namespaces, `GitLab` CR with OpenShift routes at `https://gitlab.apps.<hub-domain>/`.
 
-Route must target Service **`gitea-http`** (not `field-content-gitea-chart-http`).
+PostSync jobs:
 
-Without Gitea, Developer Hub scaffolding and local SCM integration are degraded — the **Gitea console link** stays 503.
+- `gitlab-workshop-bootstrap` — groups `ws-user1` … `ws-userN`, `developer-hub`, `app-of-apps`, `workshop-demos`
+- `gitlab-token-setup` (Developer Hub) — PAT → `GITLAB_TOKEN` in `developer-hub-oidc-auth`
 
-**PostgreSQL HA on small hubs:** chart defaults to **1 replica** + PostSync PVC ownership job (`job-gitea-postgres-fix-perms.yaml`). Day-2: `bash scripts/apply-gitea-postgres-fix.sh` (scales STS to 0, chown `1000910000`, restarts pgpool).
+**Hub sizing (workshop 50):** GitLab standard consumes **8–16 GiB RAM** steady state. Use **4 workers × 16 vCPU × 64 GiB** — the old **3×8/32** tier causes **Evicted** pods during sync (kubelet memory pressure). Verify:
+
+```bash
+bash scripts/verify-node-capacity.sh
+```
+
+**OpenShift AI 3.4:** subscription channel `stable-3.4`; dashboard URL `https://rh-ai.apps.<hub-domain>/`. Notebooks are **opt-in** (`notebook.deployCr: false`); PostSync scales `neuroface-ml-lab` StatefulSets to 0 until the AI module.
 
 ---
 
@@ -384,7 +391,7 @@ bash scripts/apply-post-install-day2.sh
 | MCP Gateway | `apply-mcp-gateway.sh` | CRDs + MCPServerRegistration when `/mcp` returns 503 |
 | Istio/Kafka monitoring | `apply-istio-monitoring.sh` | PodMonitors + UWM on hub/spokes (Grafana panels) |
 | Kuadrant public APIs | `apply-workshop-kuadrant-apis.sh` | workshop-apis gateway + APIProducts |
-| Gitea route/assets | `apply-gitea-root-url.sh` | ROOT_URL, service selector, route host (idempotent; PostSync jobs cover fresh install) |
+| Hub resource relief | `apply-hub-resource-relief.sh` | Scale ODS dashboard, ACS, notebooks; run after undersized hub sync |
 | MaaS secrets | `apply-maas-secrets.sh` | Lightspeed / NeuroFace / ODS keys (env vars, optional) |
 | HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
 

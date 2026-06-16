@@ -3,7 +3,7 @@ name: hybrid-mesh-platform-west
 description: RHDP bootstrap for west cluster (clustergroup Application)
 type: application
 version: 0.1.0
-appVersion: "1.5.1"
+appVersion: "1.7.0"
 maintainers:
   - name: Maximiliano Pizarro
     email: developer@redhat.com

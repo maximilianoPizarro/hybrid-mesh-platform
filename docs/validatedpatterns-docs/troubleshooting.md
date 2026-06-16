@@ -38,7 +38,7 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | MCP Gateway **503** / `/mcp` 404 | Argo Unknown — CRDs never applied | `bash scripts/apply-mcp-gateway.sh` |
 | Developer Hub **/lightspeed** chat 401 | Missing MaaS key or wrong vLLM URL | `bash scripts/apply-maas-secrets.sh`; default model `granite-3-2-8b-instruct` via MaaS |
 | NeuroFace **/api/chat** 401 | Secret `neuroface-maas-api-key` placeholder | RHDP `litemaas.apiKey` or `apply-maas-secrets.sh`; PostSync `neuroface-maas-key-sync` |
-| Gitea assets **503/500** | Wrong `ROOT_URL` or service selector | PostSync `gitea-fix-*` jobs; `bash scripts/apply-gitea-root-url.sh` |
+| GitLab UI **503/500** | GitLab still starting or hub undersized | Wait for `GitLab` CR Ready; verify hub **4×16/64**; `bash scripts/verify-node-capacity.sh` |
 | Orphan apps in **`default`** | `helm template \| oc apply` without `-n` | Delete orphan stack; always sync via Argo CD (namespace in Application spec) |
 | workshop-apis **401** without key | Expected (Kuadrant AuthPolicy) | Request key at Developer Hub `/kuadrant` |
 | Developer Hub Kuadrant tab missing / catalog parse error | Catalog ConfigMap truncated to hub domain only | Re-sync `developer-hub` chart ≥ v1.5.1; verify `oc get cm developer-hub-catalog-workshop-kuadrant-apis -n developer-hub -o yaml \| grep 'kind: API'` returns 4 lines |

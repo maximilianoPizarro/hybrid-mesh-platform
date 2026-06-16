@@ -21,13 +21,13 @@ Red Hat **OpenShift Virtualization** (KubeVirt) runs virtual machines alongside 
 | -------- | ------- |
 | **`operators-platform`** | `kubevirt-hyperconverged` Subscription + `HyperConverged` CR on hub |
 | Example VM `workshop-cnv-demo` | Cirros-based demo in **`cnv-workshop`** namespace (`cnv-example` chart) |
-| Software template **CNV VM Workshop** | Scaffolds VM manifests into user Gitea org |
+| Software template **CNV VM Workshop** | Scaffolds VM manifests into user GitLab group |
 
 The example VM uses cloud-init with user `cirros` for console login (see [`charts/all/cnv-example/templates/all.yaml`](https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/cnv-example/templates/all.yaml)).
 
 ## Software template
 
-**CNV VM Workshop** (`docs/assets/backstage/software-templates/cnv-vm-workshop/`) publishes VM YAML to Gitea and registers a catalog Component. Form fields: **name**, **owner**, **hub apps domain**, **memory**, **vCPU**, **guest username/password**. Optional Argo CD Application on hub syncs `manifests/` from the new repo.
+**CNV VM Workshop** (`docs/assets/backstage/software-templates/cnv-vm-workshop/`) publishes VM YAML to GitLab and registers a catalog Component. Form fields: **name**, **owner**, **hub apps domain**, **memory**, **vCPU**, **guest username/password**. Optional Argo CD Application on hub syncs `manifests/` from the new repo.
 
 ## Operator discovery
 
