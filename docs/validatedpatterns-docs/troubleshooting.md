@@ -35,9 +35,9 @@ Production lessons from fleet GitOps, ambient mesh, and centralized observabilit
 | TechDocs tab 404 / builder not local | `techdocs.builder: external` or missing mkdocs | Set `builder: local` in app-config; scaffolded repos need `mkdocs.yml` + `backstage.io/techdocs-ref: dir:.` |
 | Quay org-setup Job failing | `/version` redirect, CSRF, or duplicate robot | Use GitOps `setup.py` with `/discovery` + bearer token; see [Quay](products/quay.md) |
 | DevSpaces link on hub 404 | DevSpaces is spoke-only | Open `https://devspaces.<east-or-west-domain>` from template output |
-| MCP Gateway **503** / `/mcp` 404 | Argo Unknown — CRDs never applied | `bash scripts/apply-mcp-gateway.sh` |
-| Developer Hub **/lightspeed** chat 401 | Missing MaaS key or wrong vLLM URL | `bash scripts/apply-maas-secrets.sh`; default model `granite-3-2-8b-instruct` via MaaS |
-| NeuroFace **/api/chat** 401 | Secret `neuroface-maas-api-key` placeholder | RHDP `litemaas.apiKey` or `apply-maas-secrets.sh`; PostSync `neuroface-maas-key-sync` |
+| MCP Gateway **503** / `/mcp` 404 | PostSync not run | Refresh `hub-post-install-bootstrap`; check job `hub-post-install-workshop-surfaces` |
+| Developer Hub **/lightspeed** chat 401 | Missing MaaS key | `maas-facilitator-seed` in `vault` + refresh `vault-maas-external-secrets` |
+| NeuroFace **/api/chat** 401 | ESO secret placeholder | RHDP `litemaas.apiKey` or `maas-facilitator-seed`; PostSync `neuroface-maas-key-sync` |
 | GitLab UI **503/500** | GitLab still starting or hub undersized | Wait for `GitLab` CR Ready; verify hub **4×16/64**; `bash scripts/verify-node-capacity.sh` |
 | Orphan apps in **`default`** | `helm template \| oc apply` without `-n` | Delete orphan stack; always sync via Argo CD (namespace in Application spec) |
 | workshop-apis **401** without key | Expected (Kuadrant AuthPolicy) | Request key at Developer Hub `/kuadrant` |
@@ -362,7 +362,7 @@ oc get kafka -n industrial-edge-tst-all -o yaml | grep -A2 advertisedHost
 **Fix:**
 
 ```bash
-bash scripts/apply-mcp-gateway.sh
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 curl -sk -o /dev/null -w '%{http_code}\n' https://mcp-gateway.<hub-domain>/mcp
 # Expect 200
 ```
@@ -392,7 +392,7 @@ curl -sk -o /dev/null -w '%{http_code}\n' https://mcp-gateway.<hub-domain>/mcp
 ```bash
 export MAAS_KEY_LLAMA='sk-...'
 export MAAS_KEY_GRANITE='sk-...'
-bash scripts/apply-maas-secrets.sh
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
 oc rollout restart deployment/developer-hub -n developer-hub
 oc rollout restart deployment/neuroface -n neuroface
 ```

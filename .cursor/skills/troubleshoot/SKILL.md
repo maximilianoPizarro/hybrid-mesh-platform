@@ -164,7 +164,7 @@ oc get routes -n neuroface
 
 **Symptom:** GitLab pods Pending/Evicted; console link `platform-gitlab` returns 503.
 
-**Fix:** Approve **Manual** InstallPlans in `gitlab` and `gitlab-runner`. Hub workshop tier: **4 workers × 16 vCPU × 64 GiB**. Run `bash scripts/verify-node-capacity.sh` and `bash scripts/apply-gitlab-bootstrap.sh`.
+**Fix:** Approve **Manual** InstallPlans in `gitlab` and `gitlab-runner`. Hub workshop tier: **4 workers × 16 vCPU × 64 GiB**. Run `bash scripts/verify-node-capacity.sh`; refresh Argo app `hub-post-install-bootstrap`.
 
 ```bash
 oc get gitlab -n gitlab
@@ -183,7 +183,8 @@ curl -skI "https://gitlab.apps.$(oc get ingresses.config cluster -o jsonpath='{.
 
 ```bash
 export ROX_ADMIN_PASSWORD='...'
-bash scripts/apply-acs-init-bundle-sync.sh
+oc create secret generic acs-init-credentials -n stackrox --from-literal=ROX_ADMIN_PASSWORD='...'
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 oc logs job/acs-init-bundle-sync-hook -n stackrox
 oc get securedcluster -n stackrox
 ```
@@ -328,7 +329,7 @@ oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditio
 **Fix:**
 
 1. Sync `rhcl-operator` (subscription sets `istio.io/gateway-controller,openshift.io/gateway-controller/v1`)
-2. Restart operator after mesh ready: `bash scripts/apply-workshop-kuadrant-apis.sh` or delete kuadrant operator pod
+2. Restart operator after mesh ready: refresh Argo app `hub-post-install-bootstrap` or delete kuadrant operator pod
 3. Verify AuthPolicy **Enforced=True**; curl httpbin returns **401** without key, **200** with `Authorization: APIKEY …`
 
 **Developer Hub:** `/kuadrant` empty → sync `developer-hub` (ClusterRole `developer-hub-kuadrant`).

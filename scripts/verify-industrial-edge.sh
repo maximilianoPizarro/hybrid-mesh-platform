@@ -33,7 +33,7 @@ oc get gateway hub-gateway -n hub-gateway-system 2>/dev/null || echo "WARN: Gate
 oc get svc hub-gateway-istio -n hub-gateway-system 2>/dev/null || echo "WARN: Service hub-gateway-istio missing (Istio not reconciled?)"
 GW_EP="$(oc get endpoints hub-gateway-istio -n hub-gateway-system -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null || true)"
 if [[ -z "$GW_EP" ]]; then
-  echo "WARN: hub-gateway-istio has no endpoints (stale nginx Service selector? re-run apply-fleet-mesh.sh)"
+  echo "WARN: hub-gateway-istio has no endpoints — refresh hub-post-install-bootstrap PostSync job"
   fail=1
 else
   echo "hub-gateway-istio endpoint: ${GW_EP}"

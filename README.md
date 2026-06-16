@@ -44,6 +44,7 @@ Technical detail: 50+ Helm charts, decoupled Argo AppProjects (`operators-platfo
 - **`oc`** logged in as **cluster-admin** on the hub
 - **Helm 3** and Git
 - **RHDP workshop:** three separate catalog orders (hub, east, west) — see [RHDP field content](docs/validatedpatterns-docs/rhdp-field-content.md) and the [RHDP install playbook](docs/validatedpatterns-docs/install-improvements.md). Allow **60–90 minutes** for full fleet sync and console links to converge.
+- **Day-2:** automatic via Argo app `hub-post-install-bootstrap` (PostSync Jobs, sync wave 9) — [playbook](docs/validatedpatterns-docs/install-improvements.md#post-install-day-2-gitops-postsync-jobs)
 - **Standalone:** fork this repo, copy secrets template, run install below on the hub only; import spokes via ACM
 
 ```bash

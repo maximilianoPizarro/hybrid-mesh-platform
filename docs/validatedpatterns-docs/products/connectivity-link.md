@@ -44,7 +44,7 @@ spec.config.env:
     value: istio.io/gateway-controller,openshift.io/gateway-controller/v1
 ```
 
-Kuadrant detects the gateway provider **only at operator pod startup**. After mesh is ready, `workshop-kuadrant-apis` runs a PostSync Job to restart `kuadrant-operator-controller-manager` (or use `bash scripts/apply-workshop-kuadrant-apis.sh`).
+Kuadrant detects the gateway provider **only at operator pod startup**. PostSync Job in `workshop-kuadrant-apis` and `hub-post-install-bootstrap` restart `kuadrant-operator-controller-manager` after mesh is ready.
 
 **Symptom:** AuthPolicy / PlanPolicy **Invalid (Not Accepted)** — `MissingDependency: Gateway API provider (istio / envoy gateway) is not installed`. Fix subscription env + restart operator; verify `oc get kuadrant kuadrant -n kuadrant-system` → **Ready=True**.
 

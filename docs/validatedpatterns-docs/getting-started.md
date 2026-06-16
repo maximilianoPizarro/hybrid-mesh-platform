@@ -170,7 +170,7 @@ Confirm the **product surfaces** you installed are reachable — not only that A
 | ----- | -------------- | --------------- |
 | Console links (hub) | `oc login` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` | **19** fleet menu surfaces HTTP 200 — see [Validation guide](../validation-guide.md#hub-console-links-19-expected) |
 | Workshop + AI (strict 200) | `bash scripts/verify-workshop-http200.sh` | Showroom, MCP, DevSpaces spokes, ODS with token |
-| Day-2 bootstrap (ACM 2.16 Unknown) | `bash scripts/apply-post-install-day2.sh` | Mesh, showroom, MCP when Argo sync blocked — [install playbook](install-improvements.md#post-install-day-2-automated) |
+| Day-2 bootstrap | Argo app `hub-post-install-bootstrap` PostSync Jobs | Mesh, showroom, MCP, ACS, MaaS — [playbook](install-improvements.md#post-install-day-2-gitops-postsync-jobs) |
 | ACM clusters | Console → **Infrastructure → Clusters** | Fleet inventory |
 | Spoke app tree | ACM **Applications** or hub Argo CD | Dual GitOps (PUSH + PULL) |
 | Skupper | `oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'` | Private hub↔spoke connectivity (`3`) |
@@ -221,21 +221,14 @@ Enabled by default in hub `values.yaml` (sync waves 4–7). Antora content: [sho
 SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh
 ```
 
-1. After hub sync, create ACS init bundle credentials (clusters empty in ACS UI until this runs):
-
-```bash
-export ROX_ADMIN_PASSWORD='<central-admin-password>'
-bash scripts/apply-acs-init-bundle-sync.sh
-```
-
-Or manually:
+1. After hub sync, create ACS credentials (clusters empty in ACS UI until this runs):
 
 ```bash
 oc create secret generic acs-init-credentials -n stackrox \
   --from-literal=ROX_ADMIN_PASSWORD='<central-admin-password>'
+oc annotate application hub-post-install-bootstrap -n openshift-gitops \
+  argocd.argoproj.io/refresh=hard --overwrite
 ```
-
-Re-sync Argo app `acs-init-bundle-sync` (or run the script above).
 
 2. Verify workshop routes:
 
@@ -251,9 +244,25 @@ Detail: [Workshop guide](workshop/index.md) (heroes, sync, verify) · Cursor ski
 
 ---
 
-## Phase 6: Day-two
+## Phase 6: Day-two (GitOps)
 
-- [RHDP install playbook](install-improvements.md) — parallel orders, console links, token anti-patterns
+Post-install runs automatically when Argo syncs **`hub-post-install-bootstrap`** (wave 9). Facilitator one-time secrets:
+
+```bash
+oc create secret generic acs-init-credentials -n stackrox --from-literal=ROX_ADMIN_PASSWORD='...'
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
+```
+
+| Follow-up | Command |
+| --------- | ------- |
+| Watch Jobs | `oc get jobs -n openshift-gitops \| grep hub-post-install` |
+| Console links (19) | `oc login --token=...` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` |
+| Showroom content | `SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh` |
+| GitLab InstallPlan | Console → Operators → GitLab → **Approve** |
+
+See [Post-install day-2](install-improvements.md#post-install-day-2-gitops-postsync-jobs).
+
 - [Troubleshooting](troubleshooting.md) — ApplicationSet SSA, HBONE, Kiali tokens, Kafka Console API route
 - [Architecture](architecture.md) — sync-wave reference
 - [Deploy with ACM and GitOps](deploy-acm-gitops.md) — placement and GitOpsCluster detail

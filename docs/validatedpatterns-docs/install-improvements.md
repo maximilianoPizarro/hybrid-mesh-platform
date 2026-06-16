@@ -40,7 +40,7 @@ Expect **60–90 minutes** after hub sync for all **19** hub console links to re
 2. **East / West** — `charts/region/east` and `charts/region/west` (parallel is fine).
 3. **Import spokes** — ACM UI or `auto-import-secret` (see [Getting started → Phase 3](getting-started.md#phase-3-register-spokes-acm--tokens)).
 4. **Sync domains** — trigger `fleet-values-sync` once (domains only; see below).
-5. **Day-2 bootstrap** — when spokes are **Available**, run `bash scripts/apply-post-install-day2.sh` (mesh, showroom, MCP gateway, HTTP 200 gate).
+5. **Day-2 bootstrap** — automatic PostSync Jobs via Argo app `hub-post-install-bootstrap` (sync wave 9) when spokes are **Available**. Create facilitator secrets for ACS and MaaS — see [Post-install day-2](install-improvements.md#post-install-day-2-gitops-postsync-jobs).
 6. **Verify** — console links + Skupper VAN (`sitesInNetwork: 3`).
 
 ### Option B — Three RHDP orders in parallel
@@ -143,7 +143,7 @@ Central + Central DB default requests (~5.5 CPU) exceed small RHDP hub capacity 
 **Day-2 (before expecting ACS console 200):**
 
 ```bash
-bash scripts/apply-hub-resource-relief.sh
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 # wait 60–120s; central-db must be Running 2/2
 curl -skI "https://central-stackrox.$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')/"
 ```
@@ -238,7 +238,7 @@ Per-spoke direct check: `https://line-dashboard-industrial-edge-tst-all.<spoke-d
 If Argo sync is **Unknown**, bootstrap mesh + Skupper manually:
 
 ```bash
-bash scripts/apply-fleet-mesh.sh
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
 ---
@@ -302,7 +302,7 @@ helm template skupper-network-observer charts/all/skupper-network-observer \
 **Mitigation** (after ManagedClusters **Available**):
 
 ```bash
-bash scripts/apply-fleet-mesh.sh
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
 Installs OSSM 3.2 (`stable-3.2`), applies `spoke-interconnect` + `spoke-gateway` + `industrial-edge-tst` on east/west, re-runs Skupper token sync, and validates IE + Prometheus paths.
@@ -352,7 +352,7 @@ Hub apps **`workshop-registration`** (wave 4) and **`showroom`** (wave 5) live i
 **Mitigation** (after `fleet-values-sync` has east/west domains, or once ManagedClusters are **Available**):
 
 ```bash
-bash scripts/apply-workshop-showroom.sh
+oc logs -n openshift-gitops job/hub-post-install-workshop-surfaces
 ```
 
 The script reads hub/east/west domains from the cluster, runs `helm template | oc apply`, and waits for the pod (Antora build init can take ~3 min).
@@ -375,29 +375,59 @@ bash scripts/sync-showroom-content.sh
 
 ---
 
-## Post-install day-2 (automated)
+## Post-install day-2 (GitOps PostSync Jobs)
 
-When ACM import and `fleet-values-sync` are done but Argo CD shows **Unknown** sync (ACM 2.16), run one script from the hub:
+Day-2 automation is **in-cluster** — no facilitator shell scripts. Argo CD app **`hub-post-install-bootstrap`** (sync wave **9**) runs phased **PostSync Jobs** in `openshift-gitops`:
+
+| Sync wave | Job | Purpose |
+| --------- | --- | ------- |
+| 10 | `hub-post-install-resource-relief` | Scale ODS/ACS/notebooks for tight hubs |
+| 11 | `hub-post-install-fleet-mesh` | Hub mesh/gateway, refresh ApplicationSet, Skupper `sitesInNetwork=3` |
+| 12 | `hub-post-install-workshop-surfaces` | Showroom, MCP, workshop-kuadrant-apis (+ Argo refresh) |
+| 13 | `hub-post-install-istio-monitoring` | Hub PodMonitors + UWM |
+| 14 | `hub-post-install-gitlab-bootstrap` | Re-trigger GitLab PostSync if route up |
+| 15 | `hub-post-install-acs-init-bundle` | Re-trigger ACS bundles when `acs-init-credentials` exists |
+| 16 | `hub-post-install-kuadrant-plans` | Sync APIProduct `discoveredPlans` |
+| 17 | `hub-post-install-workshop-verify` | HTTP smoke (showroom, MCP, workshop-apis) |
+
+**Wave 99:** `platform-validation` initial validation Job.
 
 ```bash
-export KUBECONFIG=/tmp/hub-kubeconfig   # or oc login
-bash scripts/apply-post-install-day2.sh
+# Watch post-install Jobs (after hub Argo sync)
+oc get jobs -n openshift-gitops | grep hub-post-install
+oc logs -n openshift-gitops job/hub-post-install-fleet-mesh -f
+
+# Re-run a phase: refresh the bootstrap app
+oc annotate application hub-post-install-bootstrap -n openshift-gitops \
+  argocd.argoproj.io/refresh=hard --overwrite
 ```
 
-| Step | Script | What it fixes |
-| ---- | ------ | ------------- |
-| Fleet mesh + Skupper | `apply-fleet-mesh.sh` | OSSM 3.2, spoke-interconnect, IE listeners, `sitesInNetwork=3` |
-| Workshop showroom | `apply-workshop-showroom.sh` | Registration + Antora pod when `showroom` app never synced |
-| MCP Gateway | `apply-mcp-gateway.sh` | CRDs + MCPServerRegistration when `/mcp` returns 503 |
-| Istio/Kafka monitoring | `apply-istio-monitoring.sh` | PodMonitors + UWM on hub/spokes (Grafana panels) |
-| Kuadrant public APIs | `apply-workshop-kuadrant-apis.sh` | workshop-apis gateway + APIProducts |
-| Hub resource relief | `apply-hub-resource-relief.sh` | Scale ODS dashboard, ACS, notebooks; run after undersized hub sync |
-| GitLab bootstrap | `apply-gitlab-bootstrap.sh` | Wait for GitLab route; re-trigger bootstrap job if PostSync failed |
-| ACS init bundles | `apply-acs-init-bundle-sync.sh` | Secret `acs-init-credentials`; register hub/east/west in Central |
-| MaaS secrets | `apply-maas-secrets.sh` | Lightspeed / NeuroFace / ODS keys (env vars, optional) |
-| HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
+### Facilitator secrets (once per cluster — not in Git)
 
-Skip mesh if already healthy: `SKIP_MESH=1 bash scripts/apply-post-install-day2.sh`.
+| Secret | Namespace | Keys | Triggers |
+| ------ | --------- | ---- | -------- |
+| `acs-init-credentials` | `stackrox` | `ROX_ADMIN_PASSWORD` | ACS PostSync jobs (wave 15 + `acs-init-bundle-sync`) |
+| `maas-facilitator-seed` | `vault` | `api-key`, optional `granite-api-key`, `deepseek-api-key` | `maas-facilitator-vault-seed` PostSync → Vault + ESO |
+
+```bash
+# ACS (before or after sync — Job skips until secret exists)
+oc create secret generic acs-init-credentials -n stackrox \
+  --from-literal=ROX_ADMIN_PASSWORD='...'
+
+# MaaS via Vault+ESO (v1.7.1+)
+oc create secret generic maas-facilitator-seed -n vault \
+  --from-literal=api-key='sk-...'
+oc annotate application vault-maas-external-secrets -n openshift-gitops \
+  argocd.argoproj.io/refresh=hard --overwrite
+```
+
+RHDP `litemaas.apiKey` in field-content still propagates to Kuadrant/NeuroFace charts when `enable_litemaas_keys: true`.
+
+### Manual steps (not automatable in Git)
+
+1. **GitLab Operator** — approve pending **InstallPlan** in Console → Operators → GitLab.
+2. **Showroom content** — push [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai), then `bash scripts/sync-showroom-content.sh`.
+3. **Console links verify** — `oc login --token=...` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh`.
 
 ---
 
@@ -418,7 +448,7 @@ Skip mesh if already healthy: `SKIP_MESH=1 bash scripts/apply-post-install-day2.
 
 Vault UI → **Sign in** → method **Username** (`userpass`) → `admin` / `Welcome123!`.
 
-Re-apply: `bash scripts/apply-vault-demo-auth.sh`
+Re-apply: sync Argo app `vault-demo-auth` (PostSync Job `vault-demo-auth-hook`)
 
 ```bash
 oc get route -n vault
@@ -426,21 +456,17 @@ oc get pods -n vault
 oc get cm vault-demo-login -n vault -o yaml
 ```
 
-**Vault + ESO (hub pilot):** After `vault-maas-external-secrets` syncs, `apply-maas-secrets.sh` seeds Vault and triggers ExternalSecret refresh (see [Vault product page](products/vault.md)). Legacy direct `oc create secret` still works when `ClusterSecretStore` is absent or `USE_VAULT_ESO=0`.
+**Vault + ESO (hub):** PostSync Job `maas-facilitator-vault-seed` runs when Secret `maas-facilitator-seed` exists in namespace `vault` (see [Vault product page](products/vault.md)).
 
 ---
 
 ## MaaS API keys (Lightspeed, NeuroFace, OpenShift AI)
 
-Never commit `sk-*` keys. Inject after hub sync:
+Never commit `sk-*` keys. RHDP `litemaas.apiKey` or facilitator Secret:
 
 ```bash
-export MAAS_KEY_LLAMA='sk-...'
-export MAAS_KEY_GRANITE='sk-...'   # optional — Lightspeed default model
-export MAAS_KEY_DEEPSEEK='sk-...'  # optional
-bash scripts/apply-maas-secrets.sh   # Vault+ESO when ClusterSecretStore present; else legacy K8s secrets
-# Vault-only seed:
-bash scripts/seed-maas-vault.sh
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc annotate application vault-maas-external-secrets -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
 | Secret | Namespace | Consumers |
@@ -450,7 +476,7 @@ bash scripts/seed-maas-vault.sh
 | `neuroface-maas-api-key` | `neuroface` | NeuroFace `/api/chat` |
 | `maas-granite-credentials` | `maas-workshop` | ODS connection (optional) |
 
-**Symptom:** Developer Hub `/lightspeed` or NeuroFace chat **401** — run `apply-maas-secrets.sh` and restart `developer-hub` / `neuroface`.
+**Symptom:** Developer Hub `/lightspeed` or NeuroFace chat **401** — create `maas-facilitator-seed` in `vault` and refresh `vault-maas-external-secrets`.
 
 RHDP can inject `litemaas.apiKey` into clustergroup values (wired to `workshop-kuadrant-apis`, `openshift-ai-hub`, `neuroface` charts).
 
@@ -478,7 +504,7 @@ Public APIs via **ExternalName** + Istio **ServiceEntry** → hub **Gateway API*
 **RHCL + mesh order:** `rhcl-operator` syncWave `1`, `hub-gateway` / mesh syncWave `5`, `workshop-kuadrant-apis` syncWave `6`. If policies stay **Not Accepted**, verify `ISTIO_GATEWAY_CONTROLLER_NAMES` on the Kuadrant operator deployment and restart the pod (see [Connectivity Link](products/connectivity-link.md#rhcl--sailistio-mesh-required)).
 
 ```bash
-bash scripts/apply-workshop-kuadrant-apis.sh
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 curl -sk -o /dev/null -w '%{http_code}\n' https://workshop-apis.<hub-domain>/httpbin/get
 # Expect 401 without key
 ```
@@ -494,7 +520,7 @@ Console link: `https://mcp-gateway.<hub-domain>/mcp` (expect **HTTP 200** on `/m
 When Argo app `mcp-gateway` stays **Unknown** and the route returns **503**:
 
 ```bash
-bash scripts/apply-mcp-gateway.sh
+oc logs -n openshift-gitops job/hub-post-install-workshop-surfaces
 ```
 
 Requires hub OpenShift AI / Lightspeed stack for MCPServerRegistration backends.

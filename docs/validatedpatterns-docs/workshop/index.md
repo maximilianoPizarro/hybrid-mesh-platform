@@ -76,7 +76,7 @@ oc rollout restart deployment/showroom -n showroom
 oc rollout status deployment/showroom -n showroom --timeout=120s
 ```
 
-Or run `bash scripts/apply-workshop-showroom.sh` when the Argo app never synced (503 on showroom route).
+Refresh Argo app `hub-post-install-bootstrap` when the showroom app never synced (503 on showroom route).
 
 ## Verify workshop surfaces
 

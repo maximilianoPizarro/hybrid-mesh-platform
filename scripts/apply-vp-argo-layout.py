@@ -70,6 +70,7 @@ APP_ARGO_PROJECT: dict[str, str] = {
     "openshift-external-secrets": "external-secrets",
     "vault-maas-external-secrets": "external-secrets",
     "vault-demo-auth": "external-secrets",
+    "hub-post-install-bootstrap": "platform",
 }
 
 HUB_ARGO_PROJECTS = [
@@ -126,6 +127,7 @@ HUB_ONLY = {
     "distributed-tracing",
     "vault",
     "vault-maas-external-secrets",
+    "hub-post-install-bootstrap",
 }
 
 

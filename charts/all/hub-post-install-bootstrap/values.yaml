@@ -1,0 +1,46 @@
+enabled: true
+namespace: openshift-gitops
+
+image:
+  repository: registry.redhat.io/openshift4/ose-cli
+  tag: latest
+  pullPolicy: IfNotPresent
+
+git:
+  repoUrl: https://github.com/maximilianoPizarro/hybrid-mesh-platform
+  revision: main
+
+helmVersion: v3.14.4
+
+serviceAccount:
+  name: hub-post-install-bootstrap
+
+phases:
+  hubResourceRelief:
+    enabled: true
+    syncWave: "10"
+  fleetMesh:
+    enabled: true
+    syncWave: "11"
+    skupperSitesTarget: 3
+  workshopSurfaces:
+    enabled: true
+    syncWave: "12"
+  istioMonitoring:
+    enabled: true
+    syncWave: "13"
+  gitlabBootstrap:
+    enabled: true
+    syncWave: "14"
+  acsInitBundle:
+    enabled: true
+    syncWave: "15"
+    credentialsSecret: acs-init-credentials
+    acsNamespace: stackrox
+  kuadrantPlans:
+    enabled: true
+    syncWave: "16"
+  workshopVerify:
+    enabled: true
+    syncWave: "17"
+    failOnError: false

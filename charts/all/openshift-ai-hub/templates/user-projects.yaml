@@ -82,7 +82,7 @@ stringData:
   {{- if $maasKey }}
   api-key: {{ $maasKey | quote }}
   {{- else }}
-  api-key: "CHANGEME-run-apply-maas-secrets"
+  api-key: "CHANGEME-maas-facilitator-seed-or-litemaas"
   {{- end }}
   OPENAI_API_BASE: {{ printf "%s/v1" $endpoint | quote }}
 ---

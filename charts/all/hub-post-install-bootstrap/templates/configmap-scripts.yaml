@@ -1,0 +1,294 @@
+{{- if include "hub-post-install-bootstrap.enabled" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hub-post-install-scripts
+  namespace: {{ include "hub-post-install-bootstrap.ns" . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+data:
+  common.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    export GIT_REPO="${GIT_REPO:?}"
+    export GIT_REVISION="${GIT_REVISION:?}"
+    export HELM_VERSION="${HELM_VERSION:-v3.14.4}"
+
+    install_helm() {
+      [[ -x /tmp/helm ]] && return 0
+      curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp
+      mv /tmp/linux-amd64/helm /tmp/helm && chmod +x /tmp/helm
+    }
+
+    clone_pattern() {
+      rm -rf /tmp/pattern
+      git clone --depth 1 -b "${GIT_REVISION}" "${GIT_REPO}" /tmp/pattern
+    }
+
+    hub_domain() {
+      oc get ingresses.config cluster -o jsonpath='{.spec.domain}'
+    }
+
+    cluster_apps_domain() {
+      local mc=$1 console
+      console="$(oc get managedcluster "$mc" -o jsonpath='{.status.clusterClaims[?(@.name=="consoleurl.cluster.open-cluster-management.io")].value}' 2>/dev/null || true)"
+      if [[ -n "$console" && "$console" =~ apps\.[^/]+ ]]; then
+        echo "${BASH_REMATCH[0]}"
+      fi
+    }
+
+    cluster_api_url() {
+      oc get managedcluster "$1" -o jsonpath='{.status.clusterClaims[?(@.name=="apiserverurl.openshift.io")].value}' 2>/dev/null || true
+    }
+
+    argo_refresh() {
+      oc annotate application "$1" -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite 2>/dev/null || true
+    }
+
+  hub-resource-relief.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    echo "== Hub resource relief =="
+    for isvc in $(oc get isvc -n maas-workshop -o name 2>/dev/null || true); do
+      oc patch "$isvc" -n maas-workshop --type merge \
+        -p '{"spec":{"predictor":{"minReplicas":0,"maxReplicas":0}}}' 2>/dev/null || true
+    done
+    oc scale deploy --replicas=0 -n maas-workshop --all 2>/dev/null || true
+    for ns in $(oc get ns -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep '^ai-user' || true); do
+      oc scale statefulset neuroface-ml-lab -n "$ns" --replicas=0 2>/dev/null || true
+    done
+    oc scale deploy rhods-operator -n redhat-ods-operator --replicas=1 2>/dev/null || true
+    oc scale deploy rhods-dashboard odh-dashboard -n redhat-ods-applications --replicas=1 2>/dev/null || true
+    oc scale deploy scanner-v4-indexer scanner-v4-matcher -n stackrox --replicas=1 2>/dev/null || true
+    oc scale deploy yolo-ppe-serving -n neuroface --replicas=0 2>/dev/null || true
+    oc delete pod -n openshift-storage -l noobaa-operator=noobaa --field-selector=status.phase=Pending --force --grace-period=0 2>/dev/null || true
+    oc scale deploy noobaa-endpoint noobaa-core -n openshift-storage --replicas=0 2>/dev/null || true
+    oc scale deploy scanner-v4-indexer scanner-v4-matcher scanner-v4-db scanner config-controller \
+      -n stackrox --replicas=0 2>/dev/null || true
+    echo "OK: hub resource relief"
+
+  fleet-mesh.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    install_helm
+    clone_pattern
+    HUB_DOMAIN="$(hub_domain)"
+    EAST_DOMAIN="$(cluster_apps_domain east || true)"
+    WEST_DOMAIN="$(cluster_apps_domain west || true)"
+    [[ -n "$HUB_DOMAIN" ]] || { echo "ERROR: hub domain"; exit 1; }
+
+    SUB='apiVersion: operators.coreos.com/v1alpha1
+    kind: Subscription
+    metadata:
+      name: servicemeshoperator3
+      namespace: openshift-operators
+    spec:
+      channel: stable-3.2
+      installPlanApproval: Automatic
+      name: servicemeshoperator3
+      source: redhat-operators
+      sourceNamespace: openshift-marketplace'
+
+    echo "== Refresh fleet ApplicationSet + spoke apps =="
+    argo_refresh fleet-spoke-push
+    for app in east-spoke-components west-spoke-components servicemeshoperator3 hub-gateway service-interconnect; do
+      argo_refresh "$app"
+    done
+
+    echo "== Hub Service Mesh + gateway =="
+    echo "$SUB" | oc apply -f -
+    /tmp/helm template sm /tmp/pattern/charts/all/servicemeshoperator3 --set clusterRole=hub | oc apply -f -
+    oc delete deployment hub-gateway-istio -n hub-gateway-system --ignore-not-found
+    oc delete configmap hub-gateway-proxy-config -n hub-gateway-system --ignore-not-found
+    oc delete svc hub-gateway-istio -n hub-gateway-system --ignore-not-found
+    /tmp/helm template hg /tmp/pattern/charts/all/hub-gateway \
+      --set clusterDomain="$HUB_DOMAIN" \
+      --set clusters.east.domain="${EAST_DOMAIN}" \
+      --set clusters.west.domain="${WEST_DOMAIN}" \
+      | oc apply -f -
+
+    echo "== Skupper token sync =="
+    oc delete job skupper-accesstoken-sync-manual -n service-interconnect --ignore-not-found
+    oc create job --from=cronjob/skupper-accesstoken-sync skupper-accesstoken-sync-manual -n service-interconnect 2>/dev/null || true
+
+    TARGET="${SKUPPER_SITES_TARGET:-3}"
+    echo "Waiting for sitesInNetwork=${TARGET}..."
+    for _ in $(seq 1 30); do
+      SITES="$(oc get site hub -n service-interconnect -o jsonpath='{.status.sitesInNetwork}' 2>/dev/null || echo 0)"
+      echo "  sitesInNetwork=${SITES}"
+      [[ "$SITES" == "$TARGET" ]] && break
+      sleep 20
+    done
+    echo "OK: fleet mesh bootstrap"
+
+  workshop-surfaces.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    install_helm
+    clone_pattern
+    HUB_DOMAIN="$(hub_domain)"
+    HUB_API="$(cluster_api_url local-cluster)"
+    [[ -n "$HUB_DOMAIN" ]] || exit 1
+    [[ -n "$HUB_API" ]] || HUB_API="https://api.${HUB_DOMAIN#apps.}:6443"
+    EAST_DOMAIN="$(cluster_apps_domain east || true)"
+    WEST_DOMAIN="$(cluster_apps_domain west || true)"
+    EAST_API="$(cluster_api_url east || true)"
+    WEST_API="$(cluster_api_url west || true)"
+
+    MAAS_KEY=""
+    MAAS_KEY="$(oc get application field-content -n openshift-gitops \
+      -o jsonpath='{.spec.source.helm.valuesObject.litemaas.apiKey}' 2>/dev/null || true)"
+
+    for app in showroom workshop-registration mcp-gateway workshop-kuadrant-apis; do
+      argo_refresh "$app"
+    done
+    sleep 30
+
+    /tmp/helm template showroom /tmp/pattern/charts/all/showroom \
+      --set deployer.domain="$HUB_DOMAIN" --set deployer.apiUrl="$HUB_API" \
+      --set clusters.hub.domain="$HUB_DOMAIN" --set clusters.hub.apiUrl="$HUB_API" \
+      --set clusters.east.domain="${EAST_DOMAIN}" --set clusters.east.apiUrl="${EAST_API}" \
+      --set clusters.west.domain="${WEST_DOMAIN}" --set clusters.west.apiUrl="${WEST_API}" \
+      --set registration.url="https://workshop-registration.${HUB_DOMAIN}" \
+      | oc apply -f -
+
+    /tmp/helm template mcp /tmp/pattern/charts/all/mcp-gateway \
+      --set deployer.domain="$HUB_DOMAIN" --set clusterDomain="$HUB_DOMAIN" \
+      | oc apply -f -
+
+    WKA_ARGS=(--set "deployer.domain=$HUB_DOMAIN" --set "clusterDomain=$HUB_DOMAIN")
+    [[ -n "$MAAS_KEY" ]] && WKA_ARGS+=(--set "apis.maas.apiKey=$MAAS_KEY")
+    /tmp/helm template wka /tmp/pattern/charts/all/workshop-kuadrant-apis "${WKA_ARGS[@]}" | oc apply -f -
+
+    oc rollout restart deployment/kuadrant-operator-controller-manager -n redhat-connectivity-link-operator 2>/dev/null || true
+    echo "OK: workshop surfaces"
+
+  istio-monitoring.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    install_helm
+    clone_pattern
+    echo "== Hub istio-monitoring + UWM =="
+    /tmp/helm template obs /tmp/pattern/charts/all/observability | oc apply -f - || true
+    /tmp/helm template im /tmp/pattern/charts/all/istio-monitoring --set workshopGateways.enabled=true | oc apply -f -
+    for app in istio-monitoring observability; do
+      argo_refresh "$app"
+    done
+    echo "OK: istio monitoring (hub)"
+
+  gitlab-bootstrap.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    HUB_DOMAIN="$(hub_domain)"
+    GITLAB_URL="https://gitlab.apps.${HUB_DOMAIN}"
+    NS="${GITLAB_NS:-gitlab}"
+    echo "== GitLab bootstrap (${GITLAB_URL}) =="
+    oc get gitlab -n "$NS" 2>/dev/null || { echo "SKIP: no GitLab CR"; exit 0; }
+    for attempt in $(seq 1 30); do
+      code=$(curl -skI -o /dev/null -w '%{http_code}' --connect-timeout 10 "${GITLAB_URL}/" 2>/dev/null || echo 000)
+      echo "  route attempt ${attempt}/30 HTTP ${code}"
+      [[ "$code" =~ ^(200|302|303)$ ]] && break
+      sleep 20
+    done
+    if ! oc get job gitlab-workshop-bootstrap -n "$NS" -o jsonpath='{.status.succeeded}' 2>/dev/null | grep -q 1; then
+      oc delete job gitlab-workshop-bootstrap -n "$NS" --ignore-not-found
+      argo_refresh gitlab-operator
+    fi
+    echo "OK: gitlab bootstrap check"
+
+  acs-init-bundle.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    NS="${ACS_NAMESPACE:-stackrox}"
+    SECRET="${ACS_CREDENTIALS_SECRET:-acs-init-credentials}"
+    if ! oc get secret "$SECRET" -n "$NS" &>/dev/null; then
+      echo "SKIP: create Secret ${SECRET} in ${NS} (ROX_ADMIN_PASSWORD) — RHDP or facilitator"
+      exit 0
+    fi
+    HUB_DOMAIN="$(hub_domain)"
+    if [[ -n "$HUB_DOMAIN" ]]; then
+      for attempt in $(seq 1 20); do
+        code=$(curl -skI -o /dev/null -w '%{http_code}' --connect-timeout 10 \
+          "https://central-stackrox.${HUB_DOMAIN}/" 2>/dev/null || echo 000)
+        echo "  central attempt ${attempt}/20 HTTP ${code}"
+        [[ "$code" =~ ^(200|302|303)$ ]] && break
+        sleep 20
+      done
+    fi
+    oc delete job acs-init-bundle-sync-hook -n "$NS" --ignore-not-found
+    for app in acs-init-bundle-sync field-content-acs-init-bundle-sync; do
+      if oc get application "$app" -n openshift-gitops &>/dev/null; then
+        argo_refresh "$app"
+        break
+      fi
+    done
+    echo "OK: ACS init bundle re-triggered"
+
+  kuadrant-plans.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    python3 <<'PY'
+    import json, subprocess
+
+    def oc(*args):
+        return subprocess.check_output(["oc", *args], text=True)
+
+    products = json.loads(oc("get", "apiproducts.devportal.kuadrant.io", "-A", "-o", "json")).get("items", [])
+    policies = json.loads(oc("get", "planpolicies.extensions.kuadrant.io", "-A", "-o", "json")).get("items", [])
+    by_route = {}
+    for p in policies:
+        ref = p.get("spec", {}).get("targetRef") or {}
+        if ref.get("kind") == "HTTPRoute" and ref.get("name"):
+            by_route[(p["metadata"]["namespace"], ref["name"])] = p
+    synced = 0
+    for prod in products:
+        meta = prod["metadata"]
+        ns, name = meta["namespace"], meta["name"]
+        ref = prod.get("spec", {}).get("targetRef") or {}
+        route = ref.get("name")
+        if not route:
+            continue
+        pol = by_route.get((ns, route))
+        if not pol:
+            continue
+        plans = []
+        for plan in pol.get("spec", {}).get("plans") or []:
+            entry = {"tier": plan.get("tier")}
+            if plan.get("limits"):
+                entry["limits"] = plan["limits"]
+            plans.append(entry)
+        patch = json.dumps({"status": {"discoveredPlans": plans}})
+        subprocess.run(
+            ["oc", "patch", "apiproduct", name, "-n", ns, "--type=merge", "--subresource=status", "-p", patch],
+            check=True,
+        )
+        synced += 1
+    print(f"Synced {synced} APIProduct(s)")
+    PY
+
+  workshop-verify.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    HUB_DOMAIN="$(hub_domain)"
+    FAIL=0
+    check() {
+      local url=$1 expect=$2 label=$3
+      code=$(curl -sk -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || echo 000)
+      echo "${label}: HTTP ${code} (expect ${expect})"
+      [[ "$code" == "$expect" ]] || FAIL=$((FAIL + 1))
+    }
+    check "https://showroom-showroom.${HUB_DOMAIN}/" "200" "showroom"
+    check "https://mcp-gateway.${HUB_DOMAIN}/mcp" "200" "mcp-gateway"
+    check "https://workshop-apis.${HUB_DOMAIN}/httpbin/get" "401" "workshop-apis"
+    if [[ "${FAIL_ON_ERROR:-false}" == "true" && "$FAIL" -gt 0 ]]; then
+      exit 1
+    fi
+    echo "Workshop verify complete (failures=${FAIL})"
+{{- end }}

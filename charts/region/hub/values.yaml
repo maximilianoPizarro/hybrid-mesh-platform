@@ -425,6 +425,12 @@ clusterGroup:
       argoProject: workshop
       path: charts/all/console-links
       syncWave: '10'
+    hub-post-install-bootstrap:
+      name: hub-post-install-bootstrap
+      namespace: openshift-gitops
+      argoProject: platform
+      path: charts/all/hub-post-install-bootstrap
+      syncWave: '9'
     # --- Wave 99: Validation ---
     platform-validation:
       name: platform-validation

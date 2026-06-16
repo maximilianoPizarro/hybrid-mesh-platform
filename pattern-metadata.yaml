@@ -4,7 +4,7 @@ description: >-
   Hub-spoke multi-cluster GitOps on OpenShift with ACM, ambient Service Mesh,
   Service Interconnect (Skupper), Red Hat Connectivity Link (RHCL/Kuadrant),
   Industrial Edge, OpenShift AI, ACS, and observability — Validated Patterns layout.
-pattern_version: "1.7.1"
+pattern_version: "1.7.2"
 display_name: Hybrid Mesh Platform
 repo_url: https://github.com/maximilianoPizarro/hybrid-mesh-platform
 docs_repo_url: https://github.com/validatedpatterns/docs

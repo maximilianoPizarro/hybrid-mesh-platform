@@ -1,0 +1,74 @@
+{{- if include "hub-post-install-bootstrap.enabled" . }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+  namespace: {{ include "hub-post-install-bootstrap.ns" . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces", "secrets", "configmaps", "pods"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "replicasets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale", "statefulsets/scale"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: ["operators.coreos.com"]
+    resources: ["subscriptions", "installplans"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications", "applicationsets"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+  - apiGroups: ["serving.kserve.io"]
+    resources: ["inferenceservices"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: ["kuadrant.io", "extensions.kuadrant.io", "devportal.kuadrant.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: ["networking.istio.io", "gateway.networking.k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: ["skupper.io"]
+    resources: ["sites", "links", "accesstokens"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["route.openshift.io"]
+    resources: ["routes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["config.openshift.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list"]
+  - apiGroups: ["cluster.open-cluster-management.io"]
+    resources: ["managedclusters"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.serviceAccount.name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ include "hub-post-install-bootstrap.ns" . }}
+{{- end }}

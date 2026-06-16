@@ -1,0 +1,64 @@
+{{- if include "vault-maas-external-secrets.enabled" . }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: maas-facilitator-vault-seed
+  namespace: {{ .Values.vault.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: vault-maas-k8s-auth
+      containers:
+        - name: seed
+          image: {{ .Values.authPolicySync.image | quote }}
+          env:
+            - name: VAULT_NAMESPACE
+              value: {{ .Values.vault.namespace | quote }}
+            - name: VAULT_POD
+              value: {{ .Values.vault.pod | quote }}
+            - name: SEED_SECRET
+              value: maas-facilitator-seed
+            - name: MAAS_PATH
+              value: {{ .Values.vault.maasPath | quote }}
+            - name: MAAS_BASE
+              value: {{ .Values.maas.openAiApiBase | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              if ! oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" &>/dev/null; then
+                echo "SKIP: create Secret ${SEED_SECRET} in ${VAULT_NAMESPACE} with keys api-key, granite-api-key, deepseek-api-key (facilitator)"
+                exit 0
+              fi
+              LLAMA="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.api-key}' | base64 -d)"
+              [[ -n "${LLAMA}" ]] || { echo "ERROR: ${SEED_SECRET} missing api-key"; exit 1; }
+              ROOT="$(oc get secret vaultkeys -n imperative -o jsonpath='{.data.vault_data_json}' \
+                | python3 -c "import sys,json,base64; print(json.loads(base64.b64decode(sys.stdin.read()))['root_token'])")"
+              GRANITE="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.granite-api-key}' 2>/dev/null | base64 -d || true)"
+              DEEPSEEK="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.deepseek-api-key}' 2>/dev/null | base64 -d || true)"
+              ARGS=(api-key="${LLAMA}" openai-api-base="${MAAS_BASE}")
+              [[ -n "${GRANITE}" ]] && ARGS+=(granite-api-key="${GRANITE}")
+              [[ -n "${DEEPSEEK}" ]] && ARGS+=(deepseek-api-key="${DEEPSEEK}")
+              oc exec -n "${VAULT_NAMESPACE}" "${VAULT_POD}" -- env \
+                VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="${ROOT}" \
+                vault kv put "secret/${MAAS_PATH}" "${ARGS[@]}"
+              echo "Seeded Vault secret/${MAAS_PATH}; ESO will sync on refresh"
+              for NS in ai-gateway-system kairos-system maas-workshop neuroface developer-hub; do
+                for ES in $(oc get externalsecret -n "${NS}" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true); do
+                  oc annotate externalsecret "${ES}" -n "${NS}" \
+                    "reconcile.external-secrets.io/request-id=$(date +%s)" --overwrite 2>/dev/null || true
+                done
+              done
+              oc delete job maas-authpolicy-sync-once -n ai-gateway-system --ignore-not-found 2>/dev/null || true
+              if oc get cronjob maas-authpolicy-sync -n ai-gateway-system &>/dev/null; then
+                oc create job maas-authpolicy-sync-once --from=cronjob/maas-authpolicy-sync -n ai-gateway-system 2>/dev/null || true
+              fi
+{{- end }}

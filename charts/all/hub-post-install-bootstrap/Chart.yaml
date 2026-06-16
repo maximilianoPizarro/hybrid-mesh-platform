@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hub-post-install-bootstrap
+description: Hub post-install PostSync Jobs (replaces day-2 shell scripts)
+type: application
+version: 0.1.0
+appVersion: "1.7.1"

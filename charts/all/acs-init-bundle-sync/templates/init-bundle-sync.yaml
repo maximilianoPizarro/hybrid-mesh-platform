@@ -289,7 +289,7 @@ data:
         if not password:
             print(
                 "ROX_ADMIN_PASSWORD not set — create Secret acs-init-credentials in stackrox "
-                "(bash scripts/apply-acs-init-bundle-sync.sh)",
+                "(create Secret acs-init-credentials in stackrox and refresh hub-post-install-bootstrap)",
                 file=sys.stderr,
             )
             sys.exit(1)

@@ -96,7 +96,7 @@ spec:
                 echo "neuroface-maas-api-key placeholder — copying from kairos-ai-credentials"
                 KEY=$(oc get secret kairos-ai-credentials -n kairos-system -o jsonpath='{.data.api-key}' | base64 -d)
                 if [ -z "${KEY}" ]; then
-                  echo "kairos-ai-credentials missing — run scripts/apply-maas-secrets.sh" >&2
+                  echo "kairos-ai-credentials missing — create maas-facilitator-seed in vault and refresh vault-maas-external-secrets" >&2
                   exit 1
                 fi
                 oc patch secret neuroface-maas-api-key -n neuroface --type=merge \

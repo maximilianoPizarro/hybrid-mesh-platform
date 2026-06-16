@@ -169,34 +169,18 @@ oc get application field-content -n openshift-gitops -o jsonpath='{.status.condi
 
 ## MaaS API keys (hub — after sync)
 
-Inject via RHDP `litemaas.apiKey` in `field-content` helm.values (propagates to `workshop-kuadrant-apis`, `openshift-ai-hub`, `neuroface`), or create secrets manually:
+RHDP `litemaas.apiKey` in field-content (`enable_litemaas_keys: true`) propagates to charts. For Vault+ESO (v1.7.1+), create facilitator Secret — PostSync Job seeds Vault and ESO syncs consumers:
 
 ```bash
-export MAAS_KEY_LLAMA='sk-...'
-export MAAS_KEY_GRANITE='sk-...'
-export MAAS_KEY_DEEPSEEK='sk-...'
-bash scripts/apply-maas-secrets.sh
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc annotate application vault-maas-external-secrets -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
-Manual equivalent:
+Day-2 mesh/workshop/ACS: Argo app **`hub-post-install-bootstrap`** (PostSync Jobs). ACS:
 
 ```bash
-# Kairos + Developer Hub Lightspeed (llama key)
-oc create secret generic kairos-ai-credentials -n kairos-system \
-  --from-literal=api-key='sk-...' --dry-run=client -o yaml | oc apply -f -
-
-# OpenShift AI playground / InferenceService proxies
-oc create secret generic openshift-ai-maas-credentials -n maas-workshop \
-  --from-literal=api-key='sk-...' \
-  --from-literal=OPENAI_API_BASE='https://maas-rhdp.apps.maas.redhatworkshops.io/v1' \
-  --dry-run=client -o yaml | oc apply -f -
-
-# NeuroFace chat (secret name must match chart)
-oc create secret generic neuroface-maas-api-key -n neuroface \
-  --from-literal=api-key='sk-...' --dry-run=client -o yaml | oc apply -f -
-
-oc rollout restart deployment/neuroface -n neuroface
-oc rollout restart deployment/developer-hub -n developer-hub
+oc create secret generic acs-init-credentials -n stackrox --from-literal=ROX_ADMIN_PASSWORD='...'
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
 | Model (RHDP MaaS alias) | Typical use |

@@ -184,7 +184,7 @@ Continue AI for DevSpaces is provisioned on **spokes** via `charts/all/devspaces
 
 With `plugins.rbac.enabled: true`, Backstage uses **deny-by-default**. The platform mounts `rbac-policy.csv` for all authenticated users (catalog, scaffolder, kubernetes, ocm, argocd, adoption-insights, techdocs, lightspeed). Admin policy user: `platformadmin`.
 
-**Lightspeed** (`plugins.lightspeed.enabled`): OCI plugins `bs_1.45.3__1.2.3`, sidecars for Llama Stack + LCS. Default backend: **RHDP MaaS** `granite-3-2-8b-instruct` at `plugins.lightspeed.aiModel.apiURL`. API key syncs from `kairos-system/kairos-ai-credentials` (PostSync Job) or `scripts/apply-maas-secrets.sh`.
+**Lightspeed** (`plugins.lightspeed.enabled`): API key syncs from `kairos-system/kairos-ai-credentials` (PostSync Job + ESO) or RHDP `litemaas.apiKey`.
 
 **TechDocs:** `techdocs.builder: local` builds from entity repos (Gitea) on demand. Onboarding mkdocs lives under `files/onboarding/`; scaffolded entities include `mkdocs.yml` and `backstage.io/techdocs-ref: dir:.` in skeletons.
 
@@ -207,7 +207,7 @@ curl -sk -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
   -d '{"model":"granite-3-2-8b-instruct","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
 ```
 
-Catalog entities and plugin routes ship in-chart (`catalog-workshop-kuadrant-apis.yaml`, `dynamic-plugins-rhdh`). Post-install: `bash scripts/apply-workshop-kuadrant-apis.sh` and `bash scripts/verify-workshop-kuadrant-curl.sh` (set `KUADRANT_API_KEY`).
+Post-install: Argo app `hub-post-install-bootstrap` PostSync Jobs + `bash scripts/verify-workshop-kuadrant-curl.sh` (set `KUADRANT_API_KEY`).
 
 ## Troubleshooting
 
@@ -224,7 +224,7 @@ Catalog entities and plugin routes ship in-chart (`catalog-workshop-kuadrant-api
 | Kuadrant API Products empty | K8s RBAC or CRD group | ClusterRole `developer-hub-kuadrant`: `devportal.kuadrant.io` apiproducts/apikeys + `gateway.networking.k8s.io` gateways/httproutes; sync `developer-hub` |
 | Kuadrant create API key fails | Backstage permission or RBAC | `rbac-policy.csv`: `kuadrant.apikey.create`, `kuadrant.apikey.list`; routes `/kuadrant/api-products/...` |
 | No **Request API key** / Kuadrant tab on API entities | Corrupt catalog ConfigMap (Helm `$var = replace` bug) | ConfigMap `developer-hub-catalog-workshop-kuadrant-apis` must contain full YAML (4× `kind: API`), not only the hub domain string; fixed in chart templates v1.5.1+ — re-sync `field-content-developer-hub` |
-| Lightspeed chat 401 | Missing MaaS key | `bash scripts/apply-maas-secrets.sh` |
+| Lightspeed chat 401 | Missing MaaS key | `maas-facilitator-seed` in `vault` or RHDP litemaas |
 | TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to GitLab repo |
 
 See also [Backstage assets README]({{ site.baseurl }}/assets/backstage/README.html) and the **developer-hub-scaffolder** Cursor skill.

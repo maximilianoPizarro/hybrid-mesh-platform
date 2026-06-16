@@ -1,0 +1,213 @@
+{{- if include "hub-post-install-bootstrap.enabled" . }}
+{{- $ns := include "hub-post-install-bootstrap.ns" . -}}
+{{- $sa := .Values.serviceAccount.name -}}
+{{- $hook := include "hub-post-install-bootstrap.hookAnnotations" . -}}
+
+{{- if .Values.phases.hubResourceRelief.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-resource-relief
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.hubResourceRelief.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/hub-resource-relief.sh") "extraEnv" (list)) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.fleetMesh.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-fleet-mesh
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.fleetMesh.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 7200
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/fleet-mesh.sh") "extraEnv" (list (dict "name" "SKUPPER_SITES_TARGET" "value" (.Values.phases.fleetMesh.skupperSitesTarget | toString)))) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.workshopSurfaces.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-workshop-surfaces
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.workshopSurfaces.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 7200
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/workshop-surfaces.sh") "extraEnv" (list)) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.istioMonitoring.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-istio-monitoring
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.istioMonitoring.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/istio-monitoring.sh") "extraEnv" (list)) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.gitlabBootstrap.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-gitlab-bootstrap
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.gitlabBootstrap.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 7200
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/gitlab-bootstrap.sh") "extraEnv" (list)) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.acsInitBundle.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-acs-init-bundle
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.acsInitBundle.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/acs-init-bundle.sh") "extraEnv" (list (dict "name" "ACS_NAMESPACE" "value" .Values.phases.acsInitBundle.acsNamespace) (dict "name" "ACS_CREDENTIALS_SECRET" "value" .Values.phases.acsInitBundle.credentialsSecret))) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.kuadrantPlans.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-kuadrant-plans
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.kuadrantPlans.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/kuadrant-plans.sh") "extraEnv" (list)) | nindent 8 }}
+{{- end }}
+
+{{- if .Values.phases.workshopVerify.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-workshop-verify
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.workshopVerify.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/workshop-verify.sh") "extraEnv" (list (dict "name" "FAIL_ON_ERROR" "value" (.Values.phases.workshopVerify.failOnError | toString)))) | nindent 8 }}
+{{- end }}
+{{- end }}

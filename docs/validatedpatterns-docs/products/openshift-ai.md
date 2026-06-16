@@ -49,7 +49,7 @@ Developer Hub: **Catalog** → System **openshift-ai-workshop** → Component **
 
 ## MaaS models (external)
 
-Endpoint: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` — keys via RHDP `litemaas.apiKey` or `bash scripts/apply-maas-secrets.sh`.
+Endpoint: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` — keys via RHDP `litemaas.apiKey` or Secret `maas-facilitator-seed` (Vault+ESO).
 
 | Model | Use case |
 |-------|----------|

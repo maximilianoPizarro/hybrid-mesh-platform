@@ -57,5 +57,5 @@ curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
 ## GitOps
 
 - Chart: `charts/all/workshop-kuadrant-apis/`
-- Day-2: `bash scripts/apply-workshop-kuadrant-apis.sh`
+- Day-2: Argo app `hub-post-install-bootstrap` (PostSync Jobs)
 - Catalog: System **workshop-kuadrant-apis** (Components + OpenAPI for Swagger)

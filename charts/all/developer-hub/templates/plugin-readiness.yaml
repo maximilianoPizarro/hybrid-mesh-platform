@@ -52,7 +52,7 @@ spec:
               fi
               KEY="$(oc get secret llama-stack-secrets -n developer-hub -o jsonpath='{.data.VLLM_API_KEY}' 2>/dev/null | base64 -d 2>/dev/null || true)"
               if [ -z "$KEY" ] || [ "$KEY" = "CHANGEME-inject-via-RHDP" ]; then
-                echo "WARNING: llama-stack-secrets missing valid VLLM_API_KEY — run scripts/apply-maas-secrets.sh"
+                echo "WARNING: llama-stack-secrets missing valid VLLM_API_KEY — create maas-facilitator-seed in vault"
               else
                 echo "Lightspeed MaaS key present in llama-stack-secrets"
               fi

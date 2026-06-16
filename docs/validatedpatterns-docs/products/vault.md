@@ -19,7 +19,7 @@ Workshop AI demos (MaaS LLM, NeuroFace, Lightspeed, Kuadrant upstream auth) need
 | Shared MaaS Bearer in every deployment | One leak compromises all consumers | Upstream key in Vault; users get scoped Kuadrant **APIKEY** only |
 | Copy-paste secrets across hub + spokes | Inconsistent versions, audit gaps | Hub Vault + ESO `ClusterSecretStore` (target state) |
 
-Without Vault + ESO, facilitators rely on day-2 scripts (`scripts/apply-maas-secrets.sh`). That works for RHDP workshops but does not scale to production: no audit trail, no policy tiers, no automatic refresh when keys rotate.
+Without Vault + ESO, facilitators create a one-time **`maas-facilitator-seed`** Secret (not in Git) and PostSync Jobs seed Vault + sync ESO.
 
 ## What ships on the hub
 
@@ -43,7 +43,7 @@ Workshop users (`userN`) receive **view** RBAC on namespace `vault` via `platfor
 
 Vault UI → **Sign in** → method **Username** (`userpass`).
 
-Re-apply: `bash scripts/apply-vault-demo-auth.sh`
+Re-apply: sync Argo app `vault-demo-auth` (PostSync Job `vault-demo-auth-hook`).
 
 Facilitator init/unseal tokens live in local `values-secret.yaml` (gitignored) — never commit root tokens.
 
@@ -90,18 +90,18 @@ Chart `charts/all/vault-maas-external-secrets/` (hub Argo app, sync wave 4) ship
 | `ClusterSecretStore` `vault-workshop-maas` | ESO → Vault KV `secret/workshop/maas` |
 | `ExternalSecret` (×5) | Syncs to `ai-gateway-system`, `kairos-system`, `maas-workshop`, `neuroface`, `developer-hub` |
 | CronJob `maas-authpolicy-sync` | Patches Kuadrant `AuthPolicy` `ai-maas-auth` Bearer header from ESO secret |
+| PostSync Job `maas-facilitator-vault-seed` | Seeds Vault from Secret `maas-facilitator-seed` (facilitator, namespace `vault`) |
+
 | CronJob `maas-secret-rollout-sync` | Restarts NeuroFace / Developer Hub when ESO refresh time changes |
 
 Facilitator flow (keys never in Git):
 
 ```bash
-export MAAS_KEY_LLAMA='sk-...'
-bash scripts/apply-maas-secrets.sh   # auto-detects ClusterSecretStore; seeds Vault + triggers ESO
-# or explicitly:
-bash scripts/seed-maas-vault.sh
+oc create secret generic maas-facilitator-seed -n vault \
+  --from-literal=api-key='sk-...'
+oc annotate application vault-maas-external-secrets -n openshift-gitops \
+  argocd.argoproj.io/refresh=hard --overwrite
 ```
-
-Set `USE_VAULT_ESO=0` to fall back to direct `oc create secret` (legacy workshops).
 
 Do **not** set `maasApiKey` in Helm when using ESO — upstream Bearer comes from Vault via `ExternalSecret` + AuthPolicy sync.
 
@@ -130,16 +130,9 @@ spec:
 
 Downstream workloads (NeuroFace backend, OpenShift AI `maas-workshop`, Lightspeed `llama-stack-secrets`) follow the same model with namespace-scoped `ExternalSecret` resources pointing at path-specific keys.
 
-### Without ExternalSecret (workshop day-2)
+### Without ExternalSecret (RHDP litemaas)
 
-Facilitators inject keys after hub sync — keys are never printed or committed:
-
-```bash
-export MAAS_KEY_LLAMA='sk-...'
-bash scripts/apply-maas-secrets.sh
-```
-
-This creates/patches Secrets in `ai-gateway-system`, `neuroface`, `maas-workshop`, `developer-hub`, etc. Use for RHDP labs when Vault/ESO is not yet wired; migrate to `ExternalSecret` for repeatable GitOps.
+RHDP can inject `litemaas.apiKey` via field-content. Otherwise create `maas-facilitator-seed` in namespace `vault` and refresh `vault-maas-external-secrets`.
 
 ## Secret flow (hub AI stack)
 
@@ -200,8 +193,8 @@ oc get cm workshop-api-vault-paths -n workshop-kuadrant-apis
 | Symptom | Fix |
 | ------- | --- |
 | Vault link HTTP 307 | Use `/ui/` in ConsoleLink href |
-| `userpass` login fails | Re-run `bash scripts/apply-vault-demo-auth.sh` |
-| NeuroFace chat 401 | Confirm `neuroface-maas-api-key` or run `apply-maas-secrets.sh` |
+| `userpass` login fails | Re-sync Argo app `vault-demo-auth` |
+| NeuroFace chat 401 | Confirm ESO synced `neuroface-maas-api-key` or create `maas-facilitator-seed` |
 | ExternalSecret `SecretSyncedError` | Check Vault policy, `ClusterSecretStore` auth, path spelling |
 | Keys in Git | Remove from history; rotate keys; use Vault + ESO only |
 

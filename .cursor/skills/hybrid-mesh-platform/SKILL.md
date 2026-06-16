@@ -22,10 +22,6 @@ hybrid-mesh-platform/
 ├── scripts/
 │   ├── verify-console-links.sh     # curl all ConsoleLink hrefs
 │   ├── verify-workshop-http200.sh  # console links + workshop/AI strict 200
-│   ├── apply-post-install-day2.sh  # day-2 bootstrap (mesh, showroom, MCP)
-│   ├── apply-fleet-mesh.sh
-│   ├── apply-workshop-showroom.sh
-│   ├── apply-mcp-gateway.sh
 │   ├── verify-fleet.sh
 │   ├── sync-showroom-content.sh          # PNGs → showroom-hybrid-mesh-ai
 │   ├── workshop-screenshot-manifest.yaml # live hub URL per hero
@@ -166,8 +162,9 @@ bash scripts/verify-industrial-edge.sh   # IE dashboard chain
 oc get managedclusters
 oc get applicationset fleet-spoke-push -n openshift-gitops
 
-# Day-2 bootstrap (after RHDP install + ACM import)
-bash scripts/apply-post-install-day2.sh
+# Day-2: PostSync Jobs (Argo app hub-post-install-bootstrap, sync wave 9)
+oc get jobs -n openshift-gitops | grep hub-post-install
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 
 # Force refresh one app
 oc annotate application <app-name> -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
@@ -240,7 +237,7 @@ Workshop default `llama-scout-17b` is RHDP MaaS alias; upstream model is `meta-l
 **Day-2:**
 
 ```bash
-bash scripts/apply-workshop-kuadrant-apis.sh
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 oc get authpolicy,planpolicy -A -o custom-columns='NAME:.metadata.name,ACCEPTED:.status.conditions[?(@.type=="Accepted")].status,ENFORCED:.status.conditions[?(@.type=="Enforced")].status'
 oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditions[?(@.type=="Ready")].status}{"\n"}'
 ```

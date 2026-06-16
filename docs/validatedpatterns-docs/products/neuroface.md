@@ -38,7 +38,7 @@ Day-2 fallback:
 
 ```bash
 export MAAS_KEY_LLAMA='sk-...'
-bash scripts/apply-maas-secrets.sh
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
 ```
 
 ## Verify
@@ -54,7 +54,7 @@ curl -sk -X POST "https://neuroface.<hub-domain>/api/chat" \
 | Symptom | Fix |
 | ------- | --- |
 | PPE not enabled | Chart `neuroface.ppe.enabled: true`; check `yolo-ppe-serving` pod |
-| Chat **401** | Run `apply-maas-secrets.sh` or ensure RHDP `litemaas.apiKey`; PostSync `neuroface-maas-key-sync` |
+| Chat **401** | `maas-facilitator-seed` or RHDP `litemaas.apiKey`; PostSync `neuroface-maas-key-sync` |
 | Backend CrashLoop | Orphan deploy in `default` — use namespace `neuroface` only |
 | PVC Multi-Attach | Scale backend `0→1`: `oc scale deploy/neuroface-backend -n neuroface --replicas=0 && sleep 10 && oc scale --replicas=1` |
 

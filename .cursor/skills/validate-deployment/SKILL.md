@@ -163,16 +163,17 @@ oc get application acm-hub-spoke -n openshift-gitops \
 oc get routes -n developer-hub 2>/dev/null   # empty = sync never applied chart
 ```
 
-## Post-install day-2 (ACM 2.16 Unknown sync)
+## Post-install day-2 (GitOps PostSync Jobs)
 
-When Argo shows **Unknown** but spokes are **Available**:
+Argo app **`hub-post-install-bootstrap`** (sync wave 9) runs phased Jobs in `openshift-gitops`. Facilitator secrets:
 
 ```bash
-bash scripts/apply-post-install-day2.sh
-# SKIP_MESH=1 if mesh already healthy
+oc create secret generic acs-init-credentials -n stackrox --from-literal=ROX_ADMIN_PASSWORD='...'
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
-Individual scripts: `apply-fleet-mesh.sh`, `apply-workshop-showroom.sh`, `apply-mcp-gateway.sh`, `apply-istio-monitoring.sh`, `apply-workshop-kuadrant-apis.sh`, `apply-maas-secrets.sh`, `sync-showroom-content.sh`, `capture-workshop-screenshots.mjs`.
+See `install-improvements.md#post-install-day-2-gitops-postsync-jobs`.
 
 ### Showroom content + heroes
 
@@ -192,10 +193,8 @@ Spot-check module heroes in Showroom UI (live captures, not placeholders): **13*
 After hub sync, inject keys (never commit `sk-*` to Git):
 
 ```bash
-export MAAS_KEY_LLAMA='sk-...'
-export MAAS_KEY_GRANITE='sk-...'   # optional — Lightspeed granite model
-export MAAS_KEY_DEEPSEEK='sk-...'  # optional — DevSpaces Continue
-bash scripts/apply-maas-secrets.sh
+oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc annotate application vault-maas-external-secrets -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
 Verify:
@@ -229,7 +228,7 @@ oc get deployment kuadrant-operator-controller-manager -n redhat-connectivity-li
   -o jsonpath='ISTIO_GATEWAY_CONTROLLER_NAMES={.spec.template.spec.containers[0].env[?(@.name=="ISTIO_GATEWAY_CONTROLLER_NAMES")].value}{"\n"}'
 ```
 
-Expect **Ready=True**, all AuthPolicies **Enforced=True**, controller names include `istio.io/gateway-controller`. If **Not Accepted**, run `bash scripts/apply-workshop-kuadrant-apis.sh`.
+Expect **Ready=True**, all AuthPolicies **Enforced=True**, controller names include `istio.io/gateway-controller`. If **Not Accepted**, refresh `hub-post-install-bootstrap` or restart kuadrant operator pod.
 
 ## Offline validation
 

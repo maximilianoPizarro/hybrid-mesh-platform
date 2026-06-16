@@ -29,5 +29,5 @@ data:
     vault kv get secret/workshop/maas
     ```
 
-    Re-apply demo auth: `bash scripts/apply-vault-demo-auth.sh`
+    Re-apply demo auth: sync Argo app `vault-demo-auth`
 {{- end }}
