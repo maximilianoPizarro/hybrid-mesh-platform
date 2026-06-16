@@ -20,8 +20,8 @@ MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 | Link | Blocker |
 |------|---------|
 | Developer Hub | Missing `developer-hub-catalog-demos`; TechDocs CM keys with `/`; Backstage still Init |
-| Gitea | PostgreSQL/Valkey blocked by SCC — need **`privileged`** (not `anyuid`); Route must target **`gitea-http`** |
-| OpenShift AI | RHODS OG must be **AllNamespaces** (`spec: {}`); needs DSCInitialization; **403** without `oc login` |
+| GitLab | Pending InstallPlans or GitLab CR not Ready; undersized hub (need 4×16/64) |
+| OpenShift AI | RHODS OG must be **AllNamespaces** (`spec: {}`); needs DSCInitialization v2; **403** without `oc login` |
 | Kubecost | Duplicate OG or wrong domain (`example.com`) — OG name **`kubecost-operator-group`** |
 | Kairos | Duplicate OperatorGroup in namespace |
 | Skupper observer | OCI chart in `default`; missing wrapper Route **passthrough** — use `charts/all/skupper-network-observer` in **`service-interconnect`** |
@@ -160,16 +160,17 @@ oc get routes -n neuroface
 
 ---
 
-### 3c. Gitea 503 — SCC denied or wrong Route
+### 3c. GitLab 503 — InstallPlan pending or hub undersized
 
-**Symptom:** Gitea postgres/valkey pods fail; Gitea console link 503.
+**Symptom:** GitLab pods Pending/Evicted; console link `platform-gitlab` returns 503.
 
-**Fix:** Use **`privileged` SCC** — `charts/all/gitea/templates/clusterrolebinding-gitea-privileged.yaml` (not `anyuid`; upstream seccomp annotations reject anyuid). Route must target Service **`gitea-http`**, not `field-content-gitea-chart-http`.
+**Fix:** Approve **Manual** InstallPlans in `gitlab` and `gitlab-runner`. Hub workshop tier: **4 workers × 16 vCPU × 64 GiB**. Run `bash scripts/verify-node-capacity.sh` and `bash scripts/apply-gitlab-bootstrap.sh`.
 
 ```bash
-oc get pods -n gitea
-oc get route -n gitea -o jsonpath='{.items[0].spec.to.name}{"\n"}'
-oc adm policy who-can use scc privileged -n gitea
+oc get gitlab -n gitlab
+oc get installplan -n gitlab
+oc get pods -n gitlab
+curl -skI "https://gitlab.apps.$(oc get ingresses.config cluster -o jsonpath='{.spec.domain}')/"
 ```
 
 ---

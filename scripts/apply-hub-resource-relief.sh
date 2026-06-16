@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Free hub CPU/memory for ACS Central + Gitea on constrained RHDP fleets.
+# Free hub CPU/memory for ACS Central + GitLab on constrained RHDP fleets.
 # Idempotent — safe to re-run after Argo sync or notebook scale-up.
 set -euo pipefail
 
-echo "== Hub resource relief (ACS / Gitea priority) =="
+echo "== Hub resource relief (ACS / GitLab / OpenShift AI priority) =="
 
 if ! oc whoami &>/dev/null; then
   echo "ERROR: log in to hub (export KUBECONFIG=/tmp/hub-kubeconfig)" >&2
@@ -22,9 +22,9 @@ for ns in $(oc get ns -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
   oc scale statefulset neuroface-ml-lab -n "$ns" --replicas=0 2>/dev/null || true
 done
 
-echo "-- RHODS operator + dashboard → 1 replica"
+echo "-- OpenShift AI operator + dashboard → 1 replica (3.4: rhods-dashboard or odh-dashboard)"
 oc scale deploy rhods-operator -n redhat-ods-operator --replicas=1 2>/dev/null || true
-oc scale deploy rhods-dashboard -n redhat-ods-applications --replicas=1 2>/dev/null || true
+oc scale deploy rhods-dashboard odh-dashboard -n redhat-ods-applications --replicas=1 2>/dev/null || true
 
 echo "-- ACS scanner duplicates → 1"
 oc scale deploy scanner-v4-indexer scanner-v4-matcher -n stackrox --replicas=1 2>/dev/null || true

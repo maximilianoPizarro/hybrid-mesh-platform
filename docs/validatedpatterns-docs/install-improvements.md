@@ -392,6 +392,7 @@ bash scripts/apply-post-install-day2.sh
 | Istio/Kafka monitoring | `apply-istio-monitoring.sh` | PodMonitors + UWM on hub/spokes (Grafana panels) |
 | Kuadrant public APIs | `apply-workshop-kuadrant-apis.sh` | workshop-apis gateway + APIProducts |
 | Hub resource relief | `apply-hub-resource-relief.sh` | Scale ODS dashboard, ACS, notebooks; run after undersized hub sync |
+| GitLab bootstrap | `apply-gitlab-bootstrap.sh` | Wait for GitLab route; re-trigger bootstrap job if PostSync failed |
 | MaaS secrets | `apply-maas-secrets.sh` | Lightspeed / NeuroFace / ODS keys (env vars, optional) |
 | HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
 

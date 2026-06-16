@@ -74,7 +74,7 @@ Script behavior: uses `oc whoami -t` for OAuth routes; excludes operator duplica
 | `platform-acm-clusters` | ACM fleet |
 | `platform-acs-central` | ACS Central |
 | `platform-developer-hub` | Developer Hub |
-| `platform-gitea` | Gitea |
+| `platform-gitlab` | GitLab SCM |
 | `platform-grafana` | Grafana |
 | `platform-hybrid-mesh-workshop` | Workshop registration |
 | `platform-industrial-edge` | IE hub-gateway |
@@ -105,8 +105,8 @@ Interpret results:
 - Skupper: wrapper `charts/all/skupper-network-observer`; host `skupper-network-observer-service-interconnect.<domain>`; Route **TLS passthrough**; namespace **`service-interconnect`**
 - NeuroFace: Route host `neuroface.<domain>` via clustergroup `overrides` on hub `neuroface` app
 - Vault: ConsoleLink href **`/ui/`** (root returns 307)
-- Gitea: **`privileged` SCC** (`clusterrolebinding-gitea-privileged.yaml`); Route → **`gitea-http`**
-- OpenShift AI: AllNamespaces OG; DSCInitialization + RawDeployment; bearer token for curl
+- GitLab: approve Manual InstallPlans; verify `oc get gitlab -n gitlab`; scaffolder uses `GITLAB_TOKEN`
+- OpenShift AI: AllNamespaces OG; DSC v2 + RawDeployment; URL `rh-ai.apps.<domain>`; bearer token for curl
 - Kubecost: OG **`kubecost-operator-group`**; Route from `global.localClusterDomain`
 - Developer Hub: `developer-hub-catalog-demos`; TechDocs CM keys without `/`; mounts `.../ie` vs `.../ie/techdocs`
 

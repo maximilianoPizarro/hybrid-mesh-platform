@@ -113,8 +113,8 @@ See `docs/validatedpatterns-docs/gitops-push-vs-pull.md`.
 | NeuroFace | `neuroface.<domain>` | Requires clustergroup override `neuroface.route.host` — default subchart Route is `neuroface-neuroface.<domain>` |
 | Kafka Console | `kafka-console.<domain>` | Console CR `spec.hostname` |
 | Industrial Edge (hub GW) | `industrial-edge.<hubDomain>` | `charts/all/hub-gateway` — link 200 when Route exists; full factory UI needs spoke Skupper connectors + mesh |
-| Gitea | `gitlab.apps.<domain>` | **`privileged` SCC**; Route → **`gitea-http`** |
-| OpenShift AI | `rh-ai.apps.<domain>` | AllNamespaces OG; bearer token for verify |
+| GitLab | `gitlab.apps.<domain>` | GitLab Operator standard profile; approve Manual InstallPlans |
+| OpenShift AI | `rh-ai.apps.<domain>` | AllNamespaces OG; legacy `rhods-dashboard-*` redirects to rh-ai |
 | Kubecost | `kubecost.<domain>` | OG **`kubecost-operator-group`** |
 | Vault | `vault.<domain>/ui/` | Root route returns 307 |
 | Workshop login | OAuth IdP **`workshop-users`** | `platform-users` chart; `grantClusterReader: true` for console middleware menu |
@@ -135,9 +135,9 @@ bash scripts/verify-industrial-edge.sh   # IE dashboard chain
 | `charts/all/acm-hub-spoke/` | Placement, ApplicationSet `fleet-spoke-push`, GitOpsCluster |
 | `charts/all/openshift-gitops/templates/argocd.yaml` | ArgoCD CR + ACM 2.16 resourceExclusions |
 | `charts/all/acm-operator/` | ACM subscription + MCE `cluster-proxy-addon: false` automation |
-| `charts/all/gitea/` | Gitea + `clusterrolebinding-gitea-privileged.yaml` + Route → `gitea-http` |
+| `charts/all/gitlab-operator/` | GitLab Operator + Runner + PostSync bootstrap |
 | `charts/all/skupper-network-observer/` | OCI network-observer wrapper + passthrough Route |
-| `charts/all/openshift-ai-hub/` | DSCInitialization, DataScienceCluster RawDeployment |
+| `charts/all/openshift-ai-hub/` | DSCInitialization v2, DataScienceCluster v2 RawDeployment |
 | `charts/all/console-links/templates/all.yaml` | ConsoleLink hrefs |
 | `charts/all/rhcl-operator/` | RHCL subscription + `ISTIO_GATEWAY_CONTROLLER_NAMES` for Sail/Istio |
 | `charts/all/workshop-kuadrant-apis/` | Workshop Gateway API + Kuadrant APIProducts, AuthPolicy, PlanPolicy |

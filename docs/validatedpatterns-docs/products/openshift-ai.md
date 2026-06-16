@@ -62,6 +62,7 @@ Endpoint: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` — keys via RHDP 
 
 - **ConsoleLink:** Platform Hub-Spoke → OpenShift AI
 - URL: `https://rh-ai.apps.<hub-apps-domain>`
+- **Legacy (2.x):** `https://rhods-dashboard-redhat-ods-applications.<hub-apps-domain>/` — OpenShift AI 3.4 operator redirects to `rh-ai.apps.*`; bookmarks may still use the old hostname during transition.
 
 ## Developer Hub
 

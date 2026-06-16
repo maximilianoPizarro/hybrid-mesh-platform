@@ -131,7 +131,7 @@ python scripts/verify-gitops-strategies.py
 - **ACM spoke import:** Create **`ManagedCluster` before** any pre-labeled `Namespace` — see `charts/all/acm-hub-spoke/templates/managed-clusters.yaml`
 - **ACM 2.16:** New installs get `resourceExclusions` from `openshift-gitops` chart + `cluster-proxy-addon: false` from `acm-operator`
 - **OperatorGroups:** Do not set `operatorGroup: true` on `redhat-ods-operator` — RHODS needs AllNamespaces OG (`spec: {}`). Kubecost: **`kubecost-operator-group`**. Remove duplicate Kairos OG if present.
-- **Gitea:** **`privileged` SCC**; Route → `gitea-http`
+- **GitLab:** approve **Manual** InstallPlans in `gitlab` + `gitlab-runner`; Route `https://gitlab.apps.<domain>/`
 - **hub-gateway:** default **`gateway.mode: proxy`** (nginx → Skupper); syncWave **5** after `fleet-values-sync`
 - **Workshop users:** IdP **`workshop-users`**; `grantClusterReader: true`; fix job `scripts/fix-htpasswd-users-secret-job.yaml`
 - **CNV:** `cnv-example` includes Subscription + VM in **`cnv-workshop`**

@@ -21,7 +21,7 @@ This document lists all Red Hat and community products/operators consumed by the
 |----------|---------|-----------------|---------|
 | Advanced Cluster Management (ACM) | release-2.16 | 2.16.x | Multi-cluster management, GitOps fleet |
 | Red Hat Advanced Cluster Security (ACS) | stable | 4.7+ | Security scanning, policy enforcement |
-| Red Hat OpenShift AI (RHOAI) | stable-2.25 | 2.25+ | ML/AI workloads, model serving |
+| Red Hat OpenShift AI (RHOAI) | stable-3.4 | 3.4+ | ML/AI workloads, model serving (DSC API v2) |
 | Red Hat Connectivity Link (RHCL) | stable | 1.4+ | API management, Kuadrant gateway |
 | Red Hat Service Interconnect (Skupper) | stable-2 | 2.1+ | Multi-cluster service mesh |
 | Red Hat OpenShift Serverless | stable | 1.35+ | Knative serving/eventing |
@@ -43,6 +43,8 @@ This document lists all Red Hat and community products/operators consumed by the
 |----------|---------|-----------------|---------|
 | Grafana Operator | v5 | 5.24+ | Dashboard provisioning |
 | Camel K | stable-v2 | 2.10+ | Integration pipelines |
+| GitLab Operator | stable | 8.9+ | Hub SCM (webservice, gitaly, registry) |
+| GitLab Runner Operator | stable | 1.17+ | CI runners for Tekton/scaffolder pipelines |
 
 ## Helm Charts (External)
 
@@ -72,9 +74,9 @@ This document lists all Red Hat and community products/operators consumed by the
 
 | OCP Version | ACM | ACS | RHOAI | Status |
 |-------------|-----|-----|-------|--------|
-| 4.20 | 2.16 | 4.7 | 2.25 | Tested |
-| 4.17-4.19 | 2.15+ | 4.6+ | 2.20+ | Compatible |
-| 4.16 | 2.14+ | 4.5+ | 2.15+ | Minimum |
+| 4.20 | 2.16 | 4.7 | 3.4 | Tested |
+| 4.17-4.19 | 2.15+ | 4.6+ | 3.4+ | Compatible |
+| 4.16 | 2.14+ | 4.5+ | — | Minimum (OpenShift AI 3.4 requires 4.17+) |
 
 ## Notes
 
