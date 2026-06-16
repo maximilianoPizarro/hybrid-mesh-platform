@@ -426,7 +426,7 @@ oc get pods -n vault
 oc get cm vault-demo-login -n vault -o yaml
 ```
 
-**Target:** model keys via Vault paths + `ExternalSecret` (see [Vault & External Secrets product page](products/vault.md) and Showroom module *Vault & External Secrets*). **Today:** `scripts/apply-maas-secrets.sh` for RHDP day-2 injection.
+**Vault + ESO (hub pilot):** After `vault-maas-external-secrets` syncs, `apply-maas-secrets.sh` seeds Vault and triggers ExternalSecret refresh (see [Vault product page](products/vault.md)). Legacy direct `oc create secret` still works when `ClusterSecretStore` is absent or `USE_VAULT_ESO=0`.
 
 ---
 
@@ -438,7 +438,9 @@ Never commit `sk-*` keys. Inject after hub sync:
 export MAAS_KEY_LLAMA='sk-...'
 export MAAS_KEY_GRANITE='sk-...'   # optional — Lightspeed default model
 export MAAS_KEY_DEEPSEEK='sk-...'  # optional
-bash scripts/apply-maas-secrets.sh
+bash scripts/apply-maas-secrets.sh   # Vault+ESO when ClusterSecretStore present; else legacy K8s secrets
+# Vault-only seed:
+bash scripts/seed-maas-vault.sh
 ```
 
 | Secret | Namespace | Consumers |

@@ -1,0 +1,111 @@
+{{- if and (include "vault-maas-external-secrets.enabled" .) .Values.authPolicySync.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: maas-authpolicy-sync
+  namespace: {{ .Values.authPolicySync.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-authpolicy-sync
+  namespace: {{ .Values.authPolicySync.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+rules:
+  - apiGroups: ["kuadrant.io"]
+    resources: ["authpolicies"]
+    resourceNames: ["{{ .Values.authPolicySync.authPolicyName }}"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["{{ .Values.authPolicySync.secretName }}"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-authpolicy-sync
+  namespace: {{ .Values.authPolicySync.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: maas-authpolicy-sync
+subjects:
+  - kind: ServiceAccount
+    name: maas-authpolicy-sync
+    namespace: {{ .Values.authPolicySync.namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: maas-authpolicy-sync
+  namespace: {{ .Values.authPolicySync.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  schedule: {{ .Values.authPolicySync.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: maas-authpolicy-sync
+          containers:
+            - name: sync
+              image: {{ .Values.authPolicySync.image | quote }}
+              env:
+                - name: AUTH_POLICY
+                  value: {{ .Values.authPolicySync.authPolicyName | quote }}
+                - name: SECRET_NAME
+                  value: {{ .Values.authPolicySync.secretName | quote }}
+                - name: NAMESPACE
+                  value: {{ .Values.authPolicySync.namespace | quote }}
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  set -euo pipefail
+                  API_KEY="$(oc get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{.data.api-key}' | base64 -d)"
+                  if [[ -z "${API_KEY}" ]]; then
+                    echo "Secret ${SECRET_NAME} has no api-key yet (seed Vault or wait for ESO sync)"
+                    exit 0
+                  fi
+                  BEARER="Bearer ${API_KEY}"
+                  CURRENT="$(oc get authpolicy "${AUTH_POLICY}" -n "${NAMESPACE}" -o jsonpath='{.spec.rules.response.success.filters.headers.authorization.plain.value}' 2>/dev/null || true)"
+                  if [[ "${CURRENT}" == "${BEARER}" ]]; then
+                    echo "AuthPolicy ${AUTH_POLICY} already has current MaaS Bearer token"
+                    exit 0
+                  fi
+                  oc patch authpolicy "${AUTH_POLICY}" -n "${NAMESPACE}" --type=merge -p "$(cat <<EOF
+                  {
+                    "spec": {
+                      "rules": {
+                        "response": {
+                          "success": {
+                            "filters": {
+                              "headers": {
+                                "authorization": {
+                                  "plain": {
+                                    "value": "${BEARER}"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                  EOF
+                  )"
+                  echo "Patched AuthPolicy ${AUTH_POLICY} with MaaS Bearer from ESO secret"
+{{- end }}

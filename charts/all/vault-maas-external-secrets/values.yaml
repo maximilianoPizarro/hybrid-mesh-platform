@@ -1,0 +1,66 @@
+clusterDomain: ""
+enabled: true
+
+vault:
+  namespace: vault
+  pod: vault-0
+  server: https://vault.vault.svc.cluster.local:8200
+  kvVersion: v2
+  kvMount: secret
+  maasPath: workshop/maas
+  kubernetesAuthMount: kubernetes
+  role: external-secrets-maas
+  caSecret:
+    enabled: true
+    name: vault-server-tls
+    key: ca.crt
+
+externalSecrets:
+  namespace: external-secrets
+  serviceAccountName: external-secrets-vault
+  refreshInterval: 1h
+  storeName: vault-workshop-maas
+
+maas:
+  openAiApiBase: https://maas-rhdp.apps.maas.redhatworkshops.io/v1
+
+consumers:
+  aiGateway:
+    enabled: true
+    namespace: ai-gateway-system
+    secretName: ai-maas-upstream-credentials
+  kairos:
+    enabled: true
+    namespace: kairos-system
+    secretName: kairos-ai-credentials
+  maasWorkshop:
+    enabled: true
+    namespace: maas-workshop
+    secretName: openshift-ai-maas-credentials
+  neuroface:
+    enabled: true
+    namespace: neuroface
+    secretName: neuroface-maas-api-key
+  developerHubLightspeed:
+    enabled: true
+    namespace: developer-hub
+    secretName: llama-stack-secrets
+    mergeKey: VLLM_API_KEY
+
+authPolicySync:
+  enabled: true
+  namespace: ai-gateway-system
+  authPolicyName: ai-maas-auth
+  secretName: ai-maas-upstream-credentials
+  schedule: "*/10 * * * *"
+  image: registry.redhat.io/openshift4/ose-cli:latest
+
+rolloutSync:
+  enabled: true
+  schedule: "*/15 * * * *"
+  image: registry.redhat.io/openshift4/ose-cli:latest
+  deployments:
+    - namespace: neuroface
+      name: neuroface-backend
+    - namespace: developer-hub
+      name: developer-hub

@@ -31,7 +31,7 @@ Keep **[Discover workloads consistently](../architecture.md#components-on-the-hu
 | [Dev Spaces](devspaces.md) | Spoke IDEs (Kaoto + Continue AI) | `charts/all/devspaces/` |
 | [OpenShift Virtualization](cnv.md) | Workshop VM + CNV template | `charts/all/cnv-example/` |
 | [GitLab](gitlab.md) | Hub Git for scaffolder repos + Runner | `charts/all/gitlab-operator/` |
-| [HashiCorp Vault & External Secrets](vault.md) | Central secrets store + ESO sync to K8s | `charts/all/hashicorp-vault/`, `vault-demo-auth/`, `openshift-external-secrets/` |
+| [HashiCorp Vault & External Secrets](vault.md) | Central secrets store + ESO sync to K8s | `charts/all/hashicorp-vault/`, `vault-demo-auth/`, `vault-maas-external-secrets/`, `openshift-external-secrets/` |
 | [Kafka Console](kafka-console.md) | Hub UI for spoke Kafka clusters | `charts/all/kafka-console/` |
 
 ## Operator discovery — annotations & registrations at a glance

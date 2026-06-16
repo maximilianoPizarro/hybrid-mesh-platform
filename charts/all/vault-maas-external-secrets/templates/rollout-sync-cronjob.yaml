@@ -1,0 +1,98 @@
+{{- if and (include "vault-maas-external-secrets.enabled" .) .Values.rolloutSync.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: maas-secret-rollout-sync
+  namespace: {{ .Values.externalSecrets.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: maas-secret-rollout-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+rules:
+  - apiGroups: ["external-secrets.io"]
+    resources: ["externalsecrets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: maas-secret-rollout-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: maas-secret-rollout-sync
+subjects:
+  - kind: ServiceAccount
+    name: maas-secret-rollout-sync
+    namespace: {{ .Values.externalSecrets.namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: maas-secret-rollout-sync
+  namespace: {{ .Values.externalSecrets.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  schedule: {{ .Values.rolloutSync.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: maas-secret-rollout-sync
+          containers:
+            - name: sync
+              image: {{ .Values.rolloutSync.image | quote }}
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  set -euo pipefail
+                  RESTARTED=0
+                  {{- range .Values.rolloutSync.deployments }}
+                  NS="{{ .namespace }}"
+                  DEP="{{ .name }}"
+                  for ES in $(oc get externalsecret -n "${NS}" -o name 2>/dev/null || true); do
+                    GEN="$(oc get "${ES}" -n "${NS}" -o jsonpath='{.status.refreshTime}' 2>/dev/null || true)"
+                    ANNOT="maas-eso-sync/${NS}/${ES}"
+                    LAST="$(oc get deployment "${DEP}" -n "${NS}" -o jsonpath="{.spec.template.metadata.annotations['${ANNOT}']}" 2>/dev/null || true)"
+                    if [[ -n "${GEN}" && "${GEN}" != "${LAST}" ]]; then
+                      echo "Rolling ${DEP} in ${NS} (ExternalSecret refresh ${GEN})"
+                      oc patch deployment "${DEP}" -n "${NS}" --type=merge -p "$(cat <<EOF
+                      {
+                        "spec": {
+                          "template": {
+                            "metadata": {
+                              "annotations": {
+                                "${ANNOT}": "${GEN}"
+                              }
+                            }
+                          }
+                        }
+                      }
+                      EOF
+                      )"
+                      RESTARTED=$((RESTARTED + 1))
+                    fi
+                  done
+                  {{- end }}
+                  echo "Rollout sync complete (restarted ${RESTARTED} deployment(s))"
+{{- end }}

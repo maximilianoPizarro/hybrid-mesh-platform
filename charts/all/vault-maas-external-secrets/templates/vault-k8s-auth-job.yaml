@@ -1,0 +1,74 @@
+{{- if include "vault-maas-external-secrets.enabled" . }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-k8s-auth-eso
+  namespace: {{ .Values.vault.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: vault-maas-k8s-auth
+      containers:
+        - name: configure
+          image: {{ .Values.authPolicySync.image | quote }}
+          env:
+            - name: VAULT_NAMESPACE
+              value: {{ .Values.vault.namespace | quote }}
+            - name: VAULT_POD
+              value: {{ .Values.vault.pod | quote }}
+            - name: ESO_NS
+              value: {{ .Values.externalSecrets.namespace | quote }}
+            - name: ESO_SA
+              value: {{ .Values.externalSecrets.serviceAccountName | quote }}
+            - name: VAULT_ROLE
+              value: {{ .Values.vault.role | quote }}
+            - name: K8S_AUTH_MOUNT
+              value: {{ .Values.vault.kubernetesAuthMount | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              oc wait pod/"${VAULT_POD}" -n "${VAULT_NAMESPACE}" --for=condition=Ready --timeout=180s
+              ROOT="$(oc get secret vaultkeys -n imperative -o jsonpath='{.data.vault_data_json}' \
+                | python3 -c "import sys,json,base64; print(json.loads(base64.b64decode(sys.stdin.read()))['root_token'])")"
+              [[ -n "${ROOT}" ]] || { echo "ERROR: missing Vault root token"; exit 1; }
+
+              vault_exec() {
+                oc exec -i -n "${VAULT_NAMESPACE}" "${VAULT_POD}" -- env \
+                  VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="${ROOT}" \
+                  vault "$@"
+              }
+
+              vault_exec auth enable -path="${K8S_AUTH_MOUNT}" kubernetes 2>/dev/null || echo "kubernetes auth already enabled"
+
+              SA_JWT="$(oc create token "${ESO_SA}" -n "${ESO_NS}" --duration=600s)"
+              vault_exec write "auth/${K8S_AUTH_MOUNT}/config" \
+                kubernetes_host="https://kubernetes.default.svc:443" \
+                token_reviewer_jwt="${SA_JWT}" \
+                disable_iss_validation=true
+
+              vault_exec policy write external-secrets-maas-read - <<'EOF'
+              path "secret/data/workshop/maas" {
+                capabilities = ["read"]
+              }
+              path "secret/data/workshop/maas/*" {
+                capabilities = ["read"]
+              }
+              EOF
+
+              vault_exec write "auth/${K8S_AUTH_MOUNT}/role/${VAULT_ROLE}" \
+                bound_service_account_names="${ESO_SA}" \
+                bound_service_account_namespaces="${ESO_NS}" \
+                policies=external-secrets-maas-read \
+                ttl=1h
+
+              echo "Vault kubernetes auth configured for External Secrets (MaaS read)"
+{{- end }}

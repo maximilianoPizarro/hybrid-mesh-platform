@@ -308,6 +308,12 @@ clusterGroup:
       argoProject: external-secrets
       path: charts/all/vault-demo-auth
       syncWave: '3'
+    vault-maas-external-secrets:
+      name: vault-maas-external-secrets
+      namespace: external-secrets
+      argoProject: external-secrets
+      path: charts/all/vault-maas-external-secrets
+      syncWave: '4'
     kubecost:
       name: kubecost
       namespace: kubecost

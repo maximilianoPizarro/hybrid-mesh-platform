@@ -3,7 +3,7 @@ name: hybrid-mesh-platform-east
 description: RHDP bootstrap for east cluster (clustergroup Application)
 type: application
 version: 0.1.0
-appVersion: "1.7.0"
+appVersion: "1.7.1"
 maintainers:
   - name: Maximiliano Pizarro
     email: developer@redhat.com

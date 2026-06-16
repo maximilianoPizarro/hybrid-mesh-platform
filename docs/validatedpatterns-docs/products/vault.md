@@ -5,7 +5,7 @@ weight: 27
 
 # HashiCorp Vault & External Secrets
 
-**Git paths:** `charts/all/hashicorp-vault` (VP), `charts/all/vault-demo-auth/`, `charts/all/openshift-external-secrets/` (VP)
+**Git paths:** `charts/all/hashicorp-vault` (VP), `charts/all/vault-demo-auth/`, `charts/all/vault-maas-external-secrets/`, `charts/all/openshift-external-secrets/` (VP)
 {: .fs-3 .text-grey-dk-000 }
 
 Workshop AI demos (MaaS LLM, NeuroFace, Lightspeed, Kuadrant upstream auth) need **API keys that must never land in Git**. **HashiCorp Vault** on the hub is the central secrets store; **External Secrets Operator (ESO)** on hub and spokes syncs Vault paths into Kubernetes `Secret` objects that pods and gateways consume at runtime.
@@ -28,6 +28,7 @@ Without Vault + ESO, facilitators rely on day-2 scripts (`scripts/apply-maas-sec
 | Vault StatefulSet | VP chart `hashicorp-vault` in namespace `vault` (Argo project `external-secrets`) |
 | Route | `https://vault-vault.<hub-domain>/ui/` — use `/ui/` (route root returns HTTP 307) |
 | `vault-demo-auth` | PostSync Job: enables `userpass`, policies, demo users `admin` / `user1` |
+| `vault-maas-external-secrets` | **Pilot:** `ClusterSecretStore` + `ExternalSecret` for MaaS keys; Vault Kubernetes auth for ESO |
 | `openshift-external-secrets` | VP chart wiring ESO to cluster (hub + spokes) |
 | `workshop-api-vault-paths` ConfigMap | Documents KV paths for MaaS and Kuadrant keys (`charts/all/workshop-kuadrant-apis/`) |
 
@@ -79,9 +80,32 @@ Benefits for this platform:
 - **Fleet consistency** — same pattern on hub (`ai-gateway-system`, `neuroface`, `developer-hub`) and spokes
 - **Audit** — Vault logs who read/wrote which path; complements ACS image/runtime policies
 
-### Target pattern (MaaS upstream)
+### MaaS upstream (Vault + ESO pilot)
 
-Today the AI Gateway may receive the upstream key via Helm value or `apply-maas-secrets.sh`. Target state:
+Chart `charts/all/vault-maas-external-secrets/` (hub Argo app, sync wave 4) ships:
+
+| Resource | Purpose |
+| -------- | ------- |
+| PostSync Job `vault-k8s-auth-eso` | Enables Vault `kubernetes` auth + policy `external-secrets-maas-read` for SA `external-secrets-vault` |
+| `ClusterSecretStore` `vault-workshop-maas` | ESO → Vault KV `secret/workshop/maas` |
+| `ExternalSecret` (×5) | Syncs to `ai-gateway-system`, `kairos-system`, `maas-workshop`, `neuroface`, `developer-hub` |
+| CronJob `maas-authpolicy-sync` | Patches Kuadrant `AuthPolicy` `ai-maas-auth` Bearer header from ESO secret |
+| CronJob `maas-secret-rollout-sync` | Restarts NeuroFace / Developer Hub when ESO refresh time changes |
+
+Facilitator flow (keys never in Git):
+
+```bash
+export MAAS_KEY_LLAMA='sk-...'
+bash scripts/apply-maas-secrets.sh   # auto-detects ClusterSecretStore; seeds Vault + triggers ESO
+# or explicitly:
+bash scripts/seed-maas-vault.sh
+```
+
+Set `USE_VAULT_ESO=0` to fall back to direct `oc create secret` (legacy workshops).
+
+Do **not** set `maasApiKey` in Helm when using ESO — upstream Bearer comes from Vault via `ExternalSecret` + AuthPolicy sync.
+
+### Target pattern (reference YAML)
 
 ```yaml
 apiVersion: external-secrets.io/v1beta1

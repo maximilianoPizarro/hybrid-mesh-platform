@@ -1,0 +1,5 @@
+apiVersion: v2
+name: vault-maas-external-secrets
+description: Vault ClusterSecretStore + ExternalSecrets for MaaS API keys (ESO pilot)
+type: application
+version: 0.1.0

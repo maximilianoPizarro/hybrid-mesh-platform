@@ -68,6 +68,8 @@ APP_ARGO_PROJECT: dict[str, str] = {
     "kubecost": "observability",
     "vault": "external-secrets",
     "openshift-external-secrets": "external-secrets",
+    "vault-maas-external-secrets": "external-secrets",
+    "vault-demo-auth": "external-secrets",
 }
 
 HUB_ARGO_PROJECTS = [
@@ -123,6 +125,7 @@ HUB_ONLY = {
     "mcp-gateway",
     "distributed-tracing",
     "vault",
+    "vault-maas-external-secrets",
 }
 
 
