@@ -182,6 +182,17 @@ clusterGroup:
       argoProject: security
       path: charts/all/acs-operator
       syncWave: '1'
+    acs-secured-cluster:
+      name: acs-secured-cluster
+      namespace: stackrox
+      argoProject: security
+      path: charts/all/acs-secured-cluster
+      syncWave: '5'
+      overrides:
+        - name: clusterName
+          value: hub
+        - name: clusterRole
+          value: hub
     rhcl-operator:
       name: rhcl-operator
       namespace: redhat-connectivity-link-operator

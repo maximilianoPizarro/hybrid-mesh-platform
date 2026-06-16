@@ -87,7 +87,7 @@ SPOKE_ARGO_PROJECTS = [
     "fleet-pull",
 ]
 
-HUB_SKIP = {"spoke-components", "spoke-meta-push", "acs-secured-cluster"}
+HUB_SKIP = {"spoke-components", "spoke-meta-push"}
 
 
 def load_yaml(path: Path) -> dict:

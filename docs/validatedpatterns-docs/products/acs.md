@@ -126,7 +126,7 @@ ACS UI → **Platform Configuration → Clusters** should list `hub`, `east`, an
 | Central UI empty clusters | Init bundle secrets missing — run step 3 or 4 |
 | Spoke cannot reach Central | Wrong `hubClusterDomain`; verify route `central-stackrox.<hub-domain>` |
 | Central unreachable | `stackrox` namespace must **not** use Istio ambient |
-| MCA Job fails on spoke | Grant `default` SA in `stackrox` permission to apply secrets, or apply manually on spoke |
+| MCA Job fails on spoke | Ensure `acs-secured-cluster` synced on spoke (Role `acs-init-bundle-apply` grants secret apply to SA `acs-init-bundle-apply`) |
 
 ### Developer Hub — CVE visibility for userN
 
@@ -156,4 +156,4 @@ Avoid **`istio.io/dataplane-mode: ambient`** on **`stackrox`** — ambient inter
 
 - [Red Hat Advanced Cluster Security for Kubernetes 4.10](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_security_for_kubernetes/4.10)
 
-Chart paths: `charts/all/acs-operator` (hub central install), `charts/all/acs-secured-cluster` (spoke agents) when enabled.
+Chart paths: `charts/all/acs-operator` (hub Central), `charts/all/acs-secured-cluster` (hub + spokes), `charts/all/acs-init-bundle-sync` (hub automation).

@@ -224,11 +224,18 @@ SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh
 1. After hub sync, create ACS init bundle credentials (clusters empty in ACS UI until this runs):
 
 ```bash
+export ROX_ADMIN_PASSWORD='<central-admin-password>'
+bash scripts/apply-acs-init-bundle-sync.sh
+```
+
+Or manually:
+
+```bash
 oc create secret generic acs-init-credentials -n stackrox \
   --from-literal=ROX_ADMIN_PASSWORD='<central-admin-password>'
 ```
 
-Re-sync Argo app `field-content-acs-init-bundle-sync`.
+Re-sync Argo app `acs-init-bundle-sync` (or run the script above).
 
 2. Verify workshop routes:
 

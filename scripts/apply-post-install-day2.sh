@@ -30,6 +30,12 @@ bash "$ROOT/scripts/sync-kuadrant-apiproduct-plans.sh"
 bash "$ROOT/scripts/apply-hub-resource-relief.sh"
 bash "$ROOT/scripts/apply-gitlab-bootstrap.sh" || true
 
+if [[ -n "${ROX_ADMIN_PASSWORD:-}" ]] || oc get secret acs-init-credentials -n stackrox &>/dev/null 2>&1; then
+  bash "$ROOT/scripts/apply-acs-init-bundle-sync.sh" || true
+else
+  echo "SKIP apply-acs-init-bundle-sync.sh (export ROX_ADMIN_PASSWORD or create secret acs-init-credentials)"
+fi
+
 if [[ -f /tmp/east-kubeconfig || -f /tmp/west-kubeconfig ]]; then
   bash "$ROOT/scripts/apply-ie-anomaly-alerter.sh" || true
 fi

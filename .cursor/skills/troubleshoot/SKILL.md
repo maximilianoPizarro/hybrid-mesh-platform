@@ -175,6 +175,21 @@ curl -skI "https://gitlab.apps.$(oc get ingresses.config cluster -o jsonpath='{.
 
 ---
 
+### 3d. ACS Central empty — init bundles not applied
+
+**Symptom:** Central UI has no `hub`/`east`/`west`; `acs-init-bundle-sync-hook` failed or skipped.
+
+**Fix:** Hub now deploys `acs-secured-cluster` (`clusterName: hub`). Spokes get SA `acs-init-bundle-apply` for MCA Jobs. Run:
+
+```bash
+export ROX_ADMIN_PASSWORD='...'
+bash scripts/apply-acs-init-bundle-sync.sh
+oc logs job/acs-init-bundle-sync-hook -n stackrox
+oc get securedcluster -n stackrox
+```
+
+---
+
 ### 3e. OpenShift AI 403 in verify script
 
 **Symptom:** `platform-openshift-ai` returns 403; other links OK.

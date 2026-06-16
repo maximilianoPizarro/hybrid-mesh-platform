@@ -393,6 +393,7 @@ bash scripts/apply-post-install-day2.sh
 | Kuadrant public APIs | `apply-workshop-kuadrant-apis.sh` | workshop-apis gateway + APIProducts |
 | Hub resource relief | `apply-hub-resource-relief.sh` | Scale ODS dashboard, ACS, notebooks; run after undersized hub sync |
 | GitLab bootstrap | `apply-gitlab-bootstrap.sh` | Wait for GitLab route; re-trigger bootstrap job if PostSync failed |
+| ACS init bundles | `apply-acs-init-bundle-sync.sh` | Secret `acs-init-credentials`; register hub/east/west in Central |
 | MaaS secrets | `apply-maas-secrets.sh` | Lightspeed / NeuroFace / ODS keys (env vars, optional) |
 | HTTP 200 gate | `verify-workshop-http200.sh` | 19 console links + workshop/AI URLs |
 
