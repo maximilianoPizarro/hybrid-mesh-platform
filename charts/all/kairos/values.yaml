@@ -30,6 +30,11 @@ clusterAgent:
   dryRun: true
   hubReporting:
     enabled: true
+  namespaces:
+    - kairos-system
+    - default
+    - gitlab
+    - gitlab-runner
 
 # Watch scaffolded Industrial Edge namespaces by suffix (Developer Hub templates).
 environmentAgents:

@@ -33,8 +33,9 @@ spec:
     interval: 30s
   watch:
     namespaces:
-      - kairos-system
-      - default
+    {{- range .Values.clusterAgent.namespaces | default (list "kairos-system" "default") }}
+      - {{ . }}
+    {{- end }}
     resourceTypes:
       - Deployment
       - StatefulSet
