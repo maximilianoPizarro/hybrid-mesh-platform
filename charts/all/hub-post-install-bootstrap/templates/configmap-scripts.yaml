@@ -22,7 +22,17 @@ data:
 
     clone_pattern() {
       rm -rf /tmp/pattern
-      git clone --depth 1 -b "${GIT_REVISION}" "${GIT_REPO}" /tmp/pattern
+      local archive="/tmp/pattern.tar.gz"
+      local url="${GIT_REPO}/archive/${GIT_REVISION}.tar.gz"
+      if [[ "${GIT_REPO}" == *github.com* ]]; then
+        url="${GIT_REPO}/archive/${GIT_REVISION}.tar.gz"
+      fi
+      curl -fsSL "${url}" -o "${archive}"
+      tar xzf "${archive}" -C /tmp
+      local dir
+      dir="$(find /tmp -maxdepth 1 -type d -name 'hybrid-mesh-platform-*' | head -1)"
+      [[ -n "${dir}" ]] || { echo "ERROR: pattern archive extract failed"; exit 1; }
+      mv "${dir}" /tmp/pattern
     }
 
     hub_domain() {
