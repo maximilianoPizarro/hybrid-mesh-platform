@@ -14,6 +14,7 @@ metadata:
   name: default-dsci
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   applicationsNamespace: redhat-ods-applications
   monitoring:
@@ -30,6 +31,7 @@ metadata:
   name: default-dsc
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   components:
     aipipelines:
@@ -133,7 +135,7 @@ data:
 
     ```bash
     oc create secret generic {{ $secretName }} -n maas-workshop \
-      --from-literal={{ $secretKey }}='sk-...' \
+      --from-literal={{ $defaultSecretKey }}='sk-...' \
       --from-literal=OPENAI_API_BASE='{{ trimSuffix "/" $endpoint }}/v1' \
       --dry-run=client -o yaml | oc apply -f -
     ```
@@ -188,6 +190,7 @@ metadata:
     opendatahub.io/dashboard: "true"
   annotations:
     argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/skip-health-check: "true"
     serving.kserve.io/deploymentMode: RawDeployment
     maas.redhat.com/model-id: {{ $m.id | quote }}

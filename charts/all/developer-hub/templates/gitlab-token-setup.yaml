@@ -102,6 +102,10 @@ spec:
             - -c
             - |
               set -euo pipefail
+              if ! oc get secret "${ROOT_SECRET}" -n gitlab &>/dev/null; then
+                echo "SKIP: GitLab not deployed yet (${ROOT_SECRET} missing in gitlab namespace)"
+                exit 0
+              fi
               ROOT_PASS=$(oc get secret "${ROOT_SECRET}" -n gitlab -o jsonpath='{.data.password}' | base64 -d)
 
               echo "Waiting for GitLab API..."

@@ -94,7 +94,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  schedule: {{ .Values.acmArgocdOpenapiFix.schedule | default "*/15 * * * *" | quote }}
+  schedule: {{ .Values.acmArgocdOpenapiFix.schedule | default "*/2 * * * *" | quote }}
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
   jobTemplate:
