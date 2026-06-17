@@ -70,6 +70,10 @@ spec:
                   {{- range .Values.rolloutSync.deployments }}
                   NS="{{ .namespace }}"
                   DEP="{{ .name }}"
+                  if ! oc get deployment "${DEP}" -n "${NS}" &>/dev/null; then
+                    echo "WARN: deployment ${DEP} not found in ${NS}, skipping"
+                    continue
+                  fi
                   for ES in $(oc get externalsecret -n "${NS}" -o name 2>/dev/null || true); do
                     GEN="$(oc get "${ES}" -n "${NS}" -o jsonpath='{.status.refreshTime}' 2>/dev/null || true)"
                     ANNOT="maas-eso-sync/${NS}/${ES}"

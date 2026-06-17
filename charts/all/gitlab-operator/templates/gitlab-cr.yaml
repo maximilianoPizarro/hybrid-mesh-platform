@@ -1,4 +1,7 @@
 {{- $appsDomain := include "gitlab-operator.appsDomain" . -}}
+{{- $ws := .Values.gitlab.webservice | default dict -}}
+{{- $sk := .Values.gitlab.sidekiq | default dict -}}
+{{- $sh := .Values.gitlab.gitlabShell | default dict -}}
 apiVersion: apps.gitlab.com/v1beta1
 kind: GitLab
 metadata:
@@ -40,15 +43,24 @@ spec:
         enabled: {{ .Values.gitlab.registryEnabled }}
       gitlab:
         webservice:
-          minReplicas: 2
-          maxReplicas: 2
-          workerProcesses: 2
+          minReplicas: {{ $ws.minReplicas | default 3 }}
+          maxReplicas: {{ $ws.maxReplicas | default 4 }}
+          workerProcesses: {{ $ws.workerProcesses | default 4 }}
           resources:
             requests:
-              cpu: 500m
-              memory: 2Gi
+              cpu: {{ dig "resources" "requests" "cpu" "500m" $ws }}
+              memory: {{ dig "resources" "requests" "memory" "2Gi" $ws }}
             limits:
-              memory: 4Gi
+              memory: {{ dig "resources" "limits" "memory" "4Gi" $ws }}
+        sidekiq:
+          minReplicas: {{ $sk.minReplicas | default 2 }}
+          maxReplicas: {{ $sk.maxReplicas | default 3 }}
+          resources:
+            requests:
+              cpu: {{ dig "resources" "requests" "cpu" "500m" $sk }}
+              memory: {{ dig "resources" "requests" "memory" "2Gi" $sk }}
+            limits:
+              memory: {{ dig "resources" "limits" "memory" "4Gi" $sk }}
         gitaly:
           persistence:
             size: {{ .Values.gitlab.gitalyStorage | quote }}
@@ -56,6 +68,9 @@ spec:
           backups:
             cron:
               enabled: false
+      gitlab-shell:
+        minReplicas: {{ $sh.minReplicas | default 2 }}
+        maxReplicas: {{ $sh.maxReplicas | default 2 }}
       postgresql:
         persistence:
           size: {{ .Values.gitlab.postgresStorage | quote }}

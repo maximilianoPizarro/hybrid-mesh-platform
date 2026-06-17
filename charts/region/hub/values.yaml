@@ -1,3 +1,5 @@
+# Workshop scale — user1..userN, ws-userN GitLab groups, Developer Hub catalog, openshift-ai namespaces.
+userCount: 30
 main:
   clusterGroupName: hub
   multiSourceConfig:
@@ -166,6 +168,9 @@ clusterGroup:
       argoProject: platform
       path: charts/all/platform-users
       syncWave: '0'
+      overrides:
+        - name: userCount
+          value: "30"
     observability:
       name: observability
       namespace: openshift-cluster-observability-operator
@@ -221,6 +226,9 @@ clusterGroup:
       argoProject: workshop
       path: charts/all/gitlab-operator
       syncWave: '2'
+      overrides:
+        - name: userCount
+          value: "30"
     quay-registry:
       name: quay-registry
       namespace: quay-registry
@@ -293,6 +301,9 @@ clusterGroup:
       argoProject: workshop
       path: charts/all/developer-hub
       syncWave: '3'
+      overrides:
+        - name: userCount
+          value: "30"
     grafana-dashboards:
       name: grafana-dashboards
       namespace: openshift-cluster-observability-operator
@@ -379,12 +390,18 @@ clusterGroup:
       argoProject: ai
       path: charts/all/openshift-ai-hub
       syncWave: '7'
+      overrides:
+        - name: userCount
+          value: "30"
     showroom:
       name: showroom
       namespace: showroom
       argoProject: workshop
       path: charts/all/showroom
       syncWave: '5'
+      overrides:
+        - name: showroom.terminal.userCount
+          value: "30"
     # --- Wave 6: ACM spoke push + Kuadrant APIs + workshop demos ---
     acm-hub-spoke:
       name: acm-hub-spoke

@@ -10,6 +10,11 @@ vault:
   maasPath: workshop/maas
   kubernetesAuthMount: kubernetes
   role: external-secrets-maas
+  k8sAuth:
+    reviewerTokenDuration: 24h
+    refreshCron:
+      enabled: true
+      schedule: "*/30 * * * *"
   caSecret:
     enabled: true
     name: vault-secret
@@ -72,4 +77,6 @@ rolloutSync:
     - namespace: neuroface
       name: neuroface-backend
     - namespace: developer-hub
-      name: developer-hub
+      name: backstage-developer-hub
+    - namespace: kairos-system
+      name: kairos-controller-manager

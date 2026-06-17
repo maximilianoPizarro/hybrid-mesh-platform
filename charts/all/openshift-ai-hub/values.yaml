@@ -1,5 +1,5 @@
 clusterDomain: ""
-userCount: 50
+userCount: 30
 userProjects:
   enabled: true
   notebook:

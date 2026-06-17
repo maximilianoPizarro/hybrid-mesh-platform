@@ -19,7 +19,7 @@ showroom:
     enabled: true
     image: "quay.io/rhpds/openshift-showroom-terminal-ocp:latest"
     # Match platform-users.userCount for workshop-lab-reader bindings
-    userCount: 50
+    userCount: 30
     # Namespaces lab modules inspect with oc (Showroom SA + userN after hub-login)
     workshopNamespaces:
       - workshop-kuadrant-apis

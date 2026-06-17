@@ -1,5 +1,6 @@
 clusterDomain: ""
-userCount: 50
+# Workshop scale (profiles: 30, 50, 100). Hub overrides via charts/region/hub/values.yaml.
+userCount: 30
 namespace: gitlab
 runnerNamespace: gitlab-runner
 
@@ -21,6 +22,29 @@ gitlab:
   postgresStorage: 50Gi
   gitalyStorage: 50Gi
   registryEnabled: true
+  # Sizing for ~30 concurrent scaffolder users (HTTP + Sidekiq background jobs).
+  webservice:
+    minReplicas: 3
+    maxReplicas: 4
+    workerProcesses: 4
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        memory: 4Gi
+  sidekiq:
+    minReplicas: 2
+    maxReplicas: 3
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        memory: 4Gi
+  gitlabShell:
+    minReplicas: 2
+    maxReplicas: 2
 
 bootstrap:
   groupPrefix: ws-

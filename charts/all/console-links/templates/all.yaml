@@ -200,20 +200,6 @@ spec:
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
 metadata:
-  name: platform-openshift-ai
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"
-spec:
-  applicationMenu:
-    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
-    section: "Platform Hub-Spoke"
-  href: "https://rh-ai.{{ $domain }}"
-  location: ApplicationMenu
-  text: "OpenShift AI"
----
-apiVersion: console.openshift.io/v1
-kind: ConsoleLink
-metadata:
   name: platform-skupper-console
   annotations:
     argocd.argoproj.io/sync-wave: "10"

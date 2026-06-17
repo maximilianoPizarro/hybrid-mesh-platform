@@ -1,5 +1,5 @@
 clusterRole: hub
-userCount: 50
+userCount: 30
 
 clusters:
   hub:
