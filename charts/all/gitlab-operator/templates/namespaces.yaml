@@ -6,6 +6,7 @@ metadata:
     openshift.io/cluster-monitoring: "true"
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 ---
 apiVersion: v1
 kind: Namespace
@@ -13,3 +14,4 @@ metadata:
   name: {{ .Values.runnerNamespace }}
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: ServerSideApply=true

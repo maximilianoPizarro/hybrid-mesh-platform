@@ -11,23 +11,23 @@ clusterGroup:
   namespaces:
     stackrox: {}
     openshift-gitops: {}
-    developer-hub: {}
-    hub-gateway-system: {}
-    workshop-kuadrant-apis: {}
-    mcp-system: {}
-    gitlab: {}
-    gitlab-runner: {}
-    service-interconnect: {}
-    mailpit: {}
-    mailpit-templates: {}
-    industrial-edge-ml-workspace: {}
-    kafka-console: {}
-    quay-registry: {}
-    kubecost: {}
-    maas-workshop: {}
-    showroom: {}
-    neuroface: {}
-    cnv-workshop: {}
+#    developer-hub: {}
+#    hub-gateway-system: {}
+#    workshop-kuadrant-apis: {}
+#    mcp-system: {}
+#    gitlab: {}
+#    gitlab-runner: {}
+#    service-interconnect: {}
+#    mailpit: {}
+#    mailpit-templates: {}
+#    industrial-edge-ml-workspace: {}
+#    kafka-console: {}
+#    quay-registry: {}
+#    kubecost: {}
+#    maas-workshop: {}
+#    showroom: {}
+#    neuroface: {}
+#    cnv-workshop: {}
     # openshift-cnv OG + Subscription: operators-platform chart (avoid duplicate OG from clustergroup)
     redhat-connectivity-link-operator:
       operatorGroup: true

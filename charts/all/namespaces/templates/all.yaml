@@ -41,6 +41,7 @@ metadata:
   name: {{ . }}
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 {{- end }}
 {{- range $noMeshNamespaces }}
 ---
@@ -50,4 +51,5 @@ metadata:
   name: {{ . }}
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 {{- end }}

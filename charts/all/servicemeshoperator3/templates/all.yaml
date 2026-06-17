@@ -85,6 +85,7 @@ metadata:
   namespace: istio-system
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
   metrics:
     - providers:
@@ -127,6 +128,7 @@ metadata:
     istio.io/dataplane-mode: ambient
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 {{- end }}
 {{- $waypointNamespaces := list }}
 {{- if ne .Values.clusterRole "hub" }}
@@ -161,6 +163,7 @@ metadata:
   namespace: industrial-edge-tst-all
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
   selector:
     matchLabels:
@@ -182,6 +185,7 @@ metadata:
   namespace: industrial-edge-stormshift-messaging
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
   selector:
     matchLabels:
