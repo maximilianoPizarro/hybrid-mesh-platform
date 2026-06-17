@@ -26,7 +26,7 @@ clusterGroup:
     showroom: {}
     neuroface: {}
     cnv-workshop: {}
-    openshift-cnv: {}
+    # openshift-cnv OG + Subscription: operators-platform chart (avoid duplicate OG from clustergroup)
     redhat-connectivity-link-operator:
       operatorGroup: true
       targetNamespaces: []
