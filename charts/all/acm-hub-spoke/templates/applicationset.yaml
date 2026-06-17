@@ -9,7 +9,7 @@ metadata:
     cluster.open-cluster-management.io/placement: hub-spoke-placement
   annotations:
     argocd.argoproj.io/sync-wave: "4"
-    apps.open-cluster-management.io/source-repository: {{ .Values.gitops.repoUrl | quote }}
+    apps.open-cluster-management.io/source-repository: {{ include "acm-hub-spoke.gitopsRepoUrl" . | quote }}
 spec:
   generators:
     - clusterDecisionResource:
@@ -34,16 +34,16 @@ spec:
     spec:
       project: fleet-push
       source:
-        repoURL: {{ .Values.gitops.repoUrl }}
-        targetRevision: {{ .Values.gitops.revision | default "main" | quote }}
+        repoURL: {{ include "acm-hub-spoke.gitopsRepoUrl" . }}
+        targetRevision: {{ include "acm-hub-spoke.gitopsRevision" . | quote }}
         path: charts/all/spoke-meta-push
         helm:
           valuesObject:
             clusterName: '{{`{{name}}`}}'
             clusterRole: spoke
             gitops:
-              repoUrl: {{ .Values.gitops.repoUrl | quote }}
-              revision: {{ .Values.gitops.revision | default "main" | quote }}
+              repoUrl: {{ include "acm-hub-spoke.gitopsRepoUrl" . | quote }}
+              revision: {{ include "acm-hub-spoke.gitopsRevision" . | quote }}
             hubClusterDomain: {{ .Values.clusters.hub.domain | default (include "acm-hub-spoke.hubClusterDomain" .) | quote }}
             eastDomain: {{ .Values.clusters.east.domain | default "" | quote }}
             westDomain: {{ .Values.clusters.west.domain | default "" | quote }}

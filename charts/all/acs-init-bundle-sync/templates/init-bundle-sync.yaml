@@ -346,7 +346,7 @@ spec:
       initContainers:
         - name: copy-roxctl
           image: {{ .Values.initBundleSync.image | quote }}
-          command: ["sh", "-c", "cp $(which roxctl) /shared/roxctl && chmod +x /shared/roxctl"]
+          command: ["sh", "-c", "cp /usr/bin/roxctl /shared/roxctl && chmod +x /shared/roxctl"]
           volumeMounts:
             - name: shared
               mountPath: /shared
@@ -411,7 +411,7 @@ spec:
           initContainers:
             - name: copy-roxctl
               image: {{ .Values.initBundleSync.image | quote }}
-              command: ["sh", "-c", "cp $(which roxctl) /shared/roxctl && chmod +x /shared/roxctl"]
+              command: ["sh", "-c", "cp /usr/bin/roxctl /shared/roxctl && chmod +x /shared/roxctl"]
               volumeMounts:
                 - name: shared
                   mountPath: /shared

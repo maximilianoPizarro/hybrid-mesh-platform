@@ -5,7 +5,7 @@ initBundleSync:
   centralEndpoint: central.stackrox.svc:443
   clusters: "hub,east,west"
   schedule: "0 */12 * * *"
-  # Red Hat registry rejects :latest — must match RHACS operator version (stable ≈ 4.11.x).
-  image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.11.0
+  # rhel9 stream matches RHACS 4.11 operator (rhel8 :4.11.0 is not published on registry.redhat.io).
+  image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9:4.11.0
   maxRetries: 12
   retryInterval: 30
