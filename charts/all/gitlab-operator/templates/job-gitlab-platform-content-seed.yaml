@@ -48,17 +48,7 @@ spec:
               done
               oc get deploy gitlab-toolbox -n "${GITLAB_NS}" -o jsonpath='{.status.readyReplicas}' | grep -q '^1$' \
                 || { echo "gitlab-toolbox not ready" >&2; exit 1; }
-              RAILS_OUT=$(oc exec -n "${GITLAB_NS}" deploy/gitlab-toolbox -c toolbox -- gitlab-rails runner "
-                root = User.find_by(username: 'root') || User.admins.first
-                pat_name = 'platform-content-seed'
-                root.personal_access_tokens.where(name: pat_name).find_each(&:revoke!)
-                pat = root.personal_access_tokens.create!(
-                  name: pat_name,
-                  scopes: [:api, :read_repository, :write_repository],
-                  expires_at: 1.year.from_now
-                )
-                puts pat.token
-              ")
+              RAILS_OUT=$(oc exec -n "${GITLAB_NS}" deploy/gitlab-toolbox -c toolbox -- gitlab-rails runner 'root = User.find_by(username: "root") || User.admins.first; pat_name = "platform-content-seed"; root.personal_access_tokens.where(name: pat_name).find_each(&:revoke!); pat = root.personal_access_tokens.create!(name: pat_name, scopes: [:api, :read_repository, :write_repository], expires_at: 1.year.from_now); puts pat.token')
               echo "${RAILS_OUT}" | tail -1 | tr -d '\r' > /shared/gitlab-pat
               chmod 600 /shared/gitlab-pat
               GITLAB_PAT=$(cat /shared/gitlab-pat)
@@ -86,9 +76,21 @@ spec:
           volumeMounts:
             - name: shared
               mountPath: /shared
+        - name: clone-pattern
+          image: {{ .Values.bootstrap.platformContent.cloneImage | default "quay.io/rhpds/git-cloner:v1.1.2" | quote }}
+          env:
+            - name: GIT_REPO_URL
+              value: {{ $repoUrl | quote }}
+            - name: GIT_REPO_REF
+              value: {{ $revision | quote }}
+            - name: CLONE_DIR
+              value: /shared/pattern
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
       containers:
         - name: seed
-          image: registry.redhat.io/ubi9/git-947:latest
+          image: {{ .Values.bootstrap.platformContent.cloneImage | default "quay.io/rhpds/git-cloner:v1.1.2" | quote }}
           env:
             - name: GITLAB_WEB
               value: {{ $web | quote }}
@@ -96,37 +98,26 @@ spec:
               value: {{ $group | quote }}
             - name: PROJECT_NAME
               value: {{ $project | quote }}
-            - name: PATTERN_REPO_URL
-              value: {{ $repoUrl | quote }}
-            - name: PATTERN_REVISION
-              value: {{ $revision | quote }}
           command:
             - /bin/bash
-            - -c
+            - -ec
             - |
-              set -euo pipefail
               GITLAB_PAT=$(cat /shared/gitlab-pat)
               PROJECT_PATH="${DEVHUB_GROUP}/${PROJECT_NAME}"
-
-              WORK=/tmp/platform-content-seed
+              WORK=/shared/repo
+              ROOT_DIR=/shared/pattern
               rm -rf "${WORK}"
-              mkdir -p "${WORK}/src" "${WORK}/repo"
-              git clone --depth 1 --branch "${PATTERN_REVISION}" "${PATTERN_REPO_URL}" "${WORK}/src/pattern"
-              ROOT_DIR="${WORK}/src/pattern"
-
-              cp -a "${ROOT_DIR}/docs/assets/backstage/software-templates" "${WORK}/repo/"
-              mkdir -p "${WORK}/repo/docs"
-              cp -a "${ROOT_DIR}/charts/all/developer-hub/files/onboarding" "${WORK}/repo/docs/"
-              cp -a "${ROOT_DIR}/charts/all/developer-hub/files/techdocs/industrial-edge" "${WORK}/repo/docs/industrial-edge"
-              printf '%s\n' "# Platform content" "" "Seeded from ${PATTERN_REPO_URL} @ ${PATTERN_REVISION}." > "${WORK}/repo/README.md"
-
-              cd "${WORK}/repo"
+              mkdir -p "${WORK}/docs"
+              cp -a "${ROOT_DIR}/docs/assets/backstage/software-templates" "${WORK}/"
+              cp -a "${ROOT_DIR}/charts/all/developer-hub/files/onboarding" "${WORK}/docs/"
+              cp -a "${ROOT_DIR}/charts/all/developer-hub/files/techdocs/industrial-edge" "${WORK}/docs/industrial-edge"
+              printf '%s\n' "# Platform content" "" "Seeded from pattern repo." > "${WORK}/README.md"
+              cd "${WORK}"
               git init -b main
-              git config user.email "platform-content@developer-hub.local"
-              git config user.name "platform-content-seed"
+              git config user.email platform-content@developer-hub.local
+              git config user.name platform-content-seed
               git add .
-              git commit -m "Seed platform content from pattern ${PATTERN_REVISION}"
-
+              git commit -m "Seed platform content from pattern"
               REMOTE="https://oauth2:${GITLAB_PAT}@${GITLAB_WEB#https://}/${PROJECT_PATH}.git"
               git remote add origin "${REMOTE}"
               git push -u origin main --force

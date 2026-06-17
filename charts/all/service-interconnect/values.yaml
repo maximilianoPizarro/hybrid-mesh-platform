@@ -1,5 +1,7 @@
 clusterDomain: ""
 
+namespace: service-interconnect
+
 # Hub-only: push Skupper AccessTokens to spokes via ManagedClusterAction (sensitive
 # grant code/url/ca never committed — read from AccessGrant status at runtime).
 accessTokenSync:
@@ -9,3 +11,13 @@ accessTokenSync:
   clusters: "east,west"
   schedule: "*/30 * * * *"
   image: registry.redhat.io/ubi9/python-311:latest
+
+# Repair missing prometheus-auth-proxy + Skupper connectors on spokes (Grafana east/west).
+spokeMetricsSync:
+  enabled: true
+  schedule: "*/20 * * * *"
+  image: registry.redhat.io/ubi9/python-311:latest
+  prometheusProxyImage: quay.io/rhpds/nginx:1.25
+  clusters:
+    - east
+    - west

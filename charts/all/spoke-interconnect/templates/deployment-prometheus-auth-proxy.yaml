@@ -32,7 +32,7 @@ spec:
               mountPath: /config
       containers:
         - name: nginx
-          image: nginxinc/nginx-unprivileged:alpine
+          image: {{ .Values.prometheusProxy.image | default "quay.io/rhpds/nginx:1.25" | quote }}
           ports:
             - containerPort: 9091
           volumeMounts:

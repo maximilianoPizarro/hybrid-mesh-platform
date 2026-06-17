@@ -1,0 +1,96 @@
+{{- if .Values.spokeMetricsSync.enabled | default true }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spoke-metrics-skupper-sync
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spoke-metrics-skupper-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+rules:
+  - apiGroups: ["view.open-cluster-management.io"]
+    resources: ["managedclusterviews"]
+    verbs: ["get", "list", "create", "delete", "watch"]
+  - apiGroups: ["action.open-cluster-management.io"]
+    resources: ["managedclusteractions"]
+    verbs: ["get", "list", "create", "delete", "watch"]
+  - apiGroups: ["cluster.open-cluster-management.io"]
+    resources: ["managedclusters"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: spoke-metrics-skupper-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: spoke-metrics-skupper-sync
+subjects:
+  - kind: ServiceAccount
+    name: spoke-metrics-skupper-sync
+    namespace: service-interconnect
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spoke-metrics-skupper-sync-script
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  sync.py: |
+{{ .Files.Get "files/spoke-metrics-skupper-sync.py" | nindent 4 }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: spoke-metrics-skupper-sync
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/skip-health-check: "true"
+spec:
+  schedule: {{ .Values.spokeMetricsSync.schedule | default "*/20 * * * *" | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: spoke-metrics-skupper-sync
+          restartPolicy: OnFailure
+          containers:
+            - name: sync
+              image: {{ .Values.spokeMetricsSync.image | default "registry.redhat.io/ubi9/python-311:latest" | quote }}
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  pip install -q pyyaml 2>/dev/null || true
+                  python /scripts/sync.py
+              env:
+                - name: SPOKE_CLUSTERS
+                  value: {{ join "," (.Values.spokeMetricsSync.clusters | default (list "east" "west")) | quote }}
+                - name: PROMETHEUS_PROXY_IMAGE
+                  value: {{ .Values.spokeMetricsSync.prometheusProxyImage | default "quay.io/rhpds/nginx:1.25" | quote }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: spoke-metrics-skupper-sync-script
+                defaultMode: 0555
+{{- end }}

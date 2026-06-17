@@ -56,3 +56,5 @@ bootstrap:
     project: platform-content
     repoUrl: ""
     revision: ""
+    schedule: "*/30 * * * *"
+    cloneImage: quay.io/rhpds/git-cloner:v1.1.2
