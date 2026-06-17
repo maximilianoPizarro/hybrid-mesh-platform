@@ -30,7 +30,7 @@ data:
     ns = os.environ["ARGO_NS"]
     raw = subprocess.check_output(
         ["oc", "get", "application", app, "-n", ns, "-o", "json"],
-        text=True,
+        universal_newlines=True,
     )
     doc = json.loads(raw)
     helm = doc.get("spec", {}).get("source", {}).get("helm", {})

@@ -9,3 +9,12 @@ super-linter.log
 common/pattern-vault.init
 node_modules/
 package-lock.json
+
+# Python local env / secrets (never commit)
+.env
+.env.*
+.venv/
+.venv-*/
+venv/
+__pycache__/
+*.pyc
