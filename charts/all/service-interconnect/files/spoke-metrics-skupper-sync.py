@@ -158,6 +158,9 @@ def manifests_for(cluster: str) -> list[dict]:
         "http {\n"
         "  client_body_temp_path /tmp/client_temp;\n"
         "  proxy_temp_path /tmp/proxy_temp;\n"
+        "  fastcgi_temp_path /tmp/fastcgi_temp;\n"
+        "  uwsgi_temp_path /tmp/uwsgi_temp;\n"
+        "  scgi_temp_path /tmp/scgi_temp;\n"
         "  server {\n"
         "    listen 9091;\n"
         "    location / {\n"
@@ -225,19 +228,36 @@ def manifests_for(cluster: str) -> list[dict]:
                             {
                                 "name": "nginx",
                                 "image": PROXY_IMAGE,
+                                "command": [
+                                    "/bin/sh",
+                                    "-ec",
+                                    "mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp\n"
+                                    "exec nginx -g 'daemon off;' -c /etc/nginx/nginx.conf",
+                                ],
                                 "ports": [{"containerPort": 9091}],
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": False,
+                                    "capabilities": {"drop": ["ALL"]},
+                                    "runAsNonRoot": True,
+                                },
                                 "volumeMounts": [
                                     {
                                         "name": "config",
                                         "mountPath": "/etc/nginx/nginx.conf",
                                         "subPath": "nginx.conf",
-                                    }
+                                    },
+                                    {"name": "nginx-cache", "mountPath": "/var/cache/nginx"},
+                                    {"name": "nginx-run", "mountPath": "/var/run"},
+                                    {"name": "tmp", "mountPath": "/tmp"},
                                 ],
                             }
                         ],
                         "volumes": [
                             {"name": "config-template", "configMap": {"name": "prometheus-proxy-config"}},
                             {"name": "config", "emptyDir": {}},
+                            {"name": "nginx-cache", "emptyDir": {}},
+                            {"name": "nginx-run", "emptyDir": {}},
+                            {"name": "tmp", "emptyDir": {}},
                         ],
                     },
                 },

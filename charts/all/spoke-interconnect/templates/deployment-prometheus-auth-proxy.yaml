@@ -33,12 +33,29 @@ spec:
       containers:
         - name: nginx
           image: {{ .Values.prometheusProxy.image | default "quay.io/rhpds/nginx:1.25" | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp
+              exec nginx -g 'daemon off;' -c /etc/nginx/nginx.conf
           ports:
             - containerPort: 9091
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
           volumeMounts:
             - name: config
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 10m
@@ -51,4 +68,10 @@ spec:
           configMap:
             name: prometheus-proxy-config
         - name: config
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
