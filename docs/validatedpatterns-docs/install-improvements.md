@@ -78,6 +78,14 @@ Wait for MCH **Running** before importing spokes or enabling heavy `acm-hub-spok
 3. Optional: patch domains via `fleet-values-sync` manual job
 4. Re-enable automated sync on `acm-hub-spoke` once clusters are **Available**
 
+**Manual ACM UI import:** Chart `acm-hub-spoke` still creates `KlusterletAddonConfig` for each `managedClusters` entry (east/west) even without `apiUrl`/`token` — required for `application-manager` and Argo cluster secrets (`east-spoke-components`). Verify:
+
+```bash
+oc get klusterletaddonconfig -n east
+oc get managedclusteraddon application-manager -n east
+oc get secrets -n openshift-gitops -l argocd.argoproj.io/secret-type=cluster
+```
+
 ```bash
 oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops
 ```
@@ -86,12 +94,13 @@ oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n opens
 
 ## Argo CD + ACM 2.16
 
-New installs include `resourceExclusions` for `clusterview.open-cluster-management.io` in the `openshift-gitops` chart — avoids blocking sync on fresh hubs.
+New installs include `acmArgocdOpenapiFix` in `charts/all/openshift-gitops` (PostSync Job + CronJob every 2 min): scales `ocm-proxyserver` to 0 and removes broken clusterview APIServices so hub apps report **Synced** instead of **Unknown**.
 
-If apps show **ComparisonError** after MCH install:
+If apps show **ComparisonError** after MCH install and the CronJob is not yet applied:
 
 ```bash
-# Apply chart or patch ArgoCD — see Troubleshooting
+helm template openshift-gitops charts/all/openshift-gitops | oc apply -f -
+# or manual one-shot — see Troubleshooting
 oc rollout restart statefulset openshift-gitops-application-controller -n openshift-gitops
 ```
 
@@ -184,7 +193,7 @@ Route uses `global.localClusterDomain` — not `apps.cluster.example.com`.
 
 Backstage requires catalog ConfigMaps before the hub pod starts:
 
-- `developer-hub-catalog-demos` (from `workshop-demos` chart)
+- `developer-hub-catalog-demos` (from `workshop-demos` chart, **sync wave 2** — before `developer-hub` wave 3)
 - TechDocs ConfigMap keys must **not** contain `/` (OpenShift rejects `docs/index.md` as a key)
 
 TechDocs mount path is separate from the IE catalog entity mount (`.../ie` vs `.../ie/techdocs`) so Backstage can load both.

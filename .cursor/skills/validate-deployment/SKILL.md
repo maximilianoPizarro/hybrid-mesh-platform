@@ -37,7 +37,13 @@ oc get managedclusters -o wide
 oc get gitopscluster -A
 oc get applicationset fleet-spoke-push -n openshift-gitops
 oc get placementdecisions -n openshift-gitops -l cluster.open-cluster-management.io/placement=hub-spoke-placement
+oc get klusterletaddonconfig -n east
+oc get klusterletaddonconfig -n west
+oc get secrets -n openshift-gitops -l argocd.argoproj.io/secret-type=cluster
+oc get applications -n openshift-gitops | grep spoke-components
 ```
+
+If hub apps show **Sync=Unknown** / `ComparisonError` (ACM 2.16): sync `openshift-gitops` (includes `acm-argocd-openapi-fix` CronJob) or see `troubleshooting.md#argocd-unknown-sync-status-acm-216`.
 
 ### ArgoCD Applications
 

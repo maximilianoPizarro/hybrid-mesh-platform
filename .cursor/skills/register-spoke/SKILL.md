@@ -123,7 +123,7 @@ managedClusters:
     token: "sha256~..."
 ```
 
-**Chart order (Git):** `ManagedCluster` → `auto-import-secret` → `KlusterletAddonConfig` — no pre-labeled Namespace. See `charts/all/acm-hub-spoke/templates/managed-clusters.yaml`.
+**Chart order (Git):** `ManagedCluster` + `auto-import-secret` (only when `apiUrl`/`token` set) → **`KlusterletAddonConfig` always** for each `managedClusters` key (east/west), including manual ACM UI import. See `charts/all/acm-hub-spoke/templates/managed-clusters.yaml`.
 
 **During failed import:** Disable auto-sync or `Prune=false` on `acm-hub-spoke` so empty `managedClusters` in Git does not prune live resources.
 
@@ -141,7 +141,7 @@ oc get applicationset fleet-spoke-push -n openshift-gitops
 oc get applications -n openshift-gitops | grep spoke-components
 ```
 
-Expected: `east`, `west`, `local-cluster` Available; ApplicationSet generates `east-spoke-components` and `west-spoke-components`.
+Expected: `east`, `west`, `local-cluster` Available; ApplicationSet generates `east-spoke-components` and `west-spoke-components`; cluster secrets `east-application-manager-cluster-secret` and `west-application-manager-cluster-secret` in `openshift-gitops`.
 
 ## Post-registration
 

@@ -455,7 +455,9 @@ oc get consoleplugin | grep -i camel
 
 **Helm template error (Hawtio disabled):** If Argo reports `index of nil pointer` on `hawtio-online-console-plugin`, ensure spoke `valuesObject` includes stub `plugin.service.port` and `gateway.service.port` (see `east/templates/component-applications.yaml`).
 
-**East spoke `Unknown` apps:** If `east-spoke-components` was removed from the hub, re-sync `field-content-acm-hub-spoke` so ApplicationSet `fleet-spoke-push` recreates it (see [GitOps deployment chain](gitops-deployment-chain.md)).
+**East spoke `Unknown` apps:** If `east-spoke-components` was removed from the hub, re-sync `acm-hub-spoke` so ApplicationSet `fleet-spoke-push` recreates it (see [GitOps deployment chain](gitops-deployment-chain.md)).
+
+**`east-spoke-components` missing but west exists:** Placement includes east but Argo has no `east-application-manager-cluster-secret` — spoke was imported via ACM UI without `KlusterletAddonConfig`. Sync `acm-hub-spoke` (chart creates KAC per `managedClusters` key) or apply KAC manually; wait for `application-manager` addon, then refresh ApplicationSet `fleet-spoke-push`.
 
 **`east-spoke-components` stuck Progressing:** Usually waiting on `devspaces-east` (CheCluster `InstallOrUpdateFailed` while `chePhase: Active`). Fixes: delete orphan **`east-devspaces`** on the spoke (duplicate of `devspaces-east`, often with `deletionTimestamp`); ensure only `devspaces` from `charts/region/east/values.yaml` exists. Git: `ignoreDifferences` on `CheCluster` status + `argocd.argoproj.io/skip-health-check` on the CheCluster CR. Then `oc patch application east-spoke-components -n openshift-gitops --type json -p='[{"op":"remove","path":"/operation"}]'` and re-sync.
 

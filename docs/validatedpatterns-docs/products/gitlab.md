@@ -57,9 +57,10 @@ curl -sk -H "PRIVATE-TOKEN: <token>" "https://gitlab.apps.<hub-domain>/api/v4/ve
 | Symptom | Fix |
 | ------- | --- |
 | GitLab pods Pending | Hub undersized — use **4×16/64** workers; check PVC storage class |
+| Argo `gitlab-operator` SyncFailed on `GitLab` CR | Expected until GitLab Operator CSV installs (`SkipDryRunOnMissingResource` on CR); subscriptions sync at wave 2 |
 | Scaffolder publish 404 | Confirm `ws-<owner>` group exists; re-run `gitlab-workshop-bootstrap` |
 | Runner not picking jobs | Check `gitlab-runner-token` Secret and Runner CR tags include `openshift` |
-| `GITLAB_TOKEN` invalid | Re-run PostSync `gitlab-token-setup` in `developer-hub` |
+| `GITLAB_TOKEN` invalid | Re-run PostSync `gitlab-token-setup` in `developer-hub` (skips with exit 0 if GitLab not deployed yet) |
 
 ## Documentation
 
