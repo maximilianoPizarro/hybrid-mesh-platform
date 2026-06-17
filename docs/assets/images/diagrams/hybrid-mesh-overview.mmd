@@ -1,0 +1,60 @@
+%% Hybrid Mesh Platform — hub-spoke, regions, dual GitOps (Validated Patterns)
+%% Export: npx @mermaid-js/mermaid-cli -i hybrid-mesh-overview.mmd -o ../arch-hybrid-mesh-overview.png
+%% Or regenerate stylized PNG with Gemini (maintainer): see diagrams/README.md
+
+flowchart TB
+  subgraph git["Git repo — branch main"]
+    HUB_PATH["charts/region/hub"]
+    EAST_PATH["charts/region/east"]
+    WEST_PATH["charts/region/west"]
+    ALL["charts/all/* shared charts"]
+  end
+
+  subgraph hub["Hub cluster"]
+    FC["Argo CD field-content\nclustergroup"]
+    AS["ApplicationSet\nfleet-spoke-push"]
+    ACM["ACM MultiClusterHub"]
+    RH["Developer Hub · ACS Central\nGrafana · Kafka Console"]
+    SKH["Skupper listeners"]
+    FC --> RH
+    FC --> SKH
+    ACM --> AS
+  end
+
+  subgraph east["East spoke"]
+    PULL_E["PULL clustergroup\nIE · mesh · observability"]
+    PUSH_E["PUSH operators-ci\noperators-platform"]
+    IE_E["Industrial Edge"]
+    SKE["Skupper connector"]
+    PULL_E --> IE_E
+    PUSH_E --> PULL_E
+    SKE --> IE_E
+  end
+
+  subgraph west["West spoke"]
+    PULL_W["PULL clustergroup"]
+    PUSH_W["PUSH operators"]
+    IE_W["Industrial Edge"]
+    SKW["Skupper connector"]
+    PULL_W --> IE_W
+    PUSH_W --> PULL_W
+    SKW --> IE_W
+  end
+
+  HUB_PATH --> FC
+  EAST_PATH --> PULL_E
+  WEST_PATH --> PULL_W
+  ALL --> FC
+  ALL --> PULL_E
+  ALL --> PULL_W
+
+  AS -->|"PUSH GitOps"| PUSH_E
+  AS -->|"PUSH GitOps"| PUSH_W
+  ACM -->|"ManagedCluster import"| east
+  ACM -->|"ManagedCluster import"| west
+  SKH <-->|"Skupper VAN"| SKE
+  SKH <-->|"Skupper VAN"| SKW
+
+  FVS["CronJob fleet-values-sync"] -->|"patch domains only"| FC
+  FVS -->|"ManifestWork ConfigMap"| PULL_E
+  FVS -->|"ManifestWork ConfigMap"| PULL_W

@@ -23,6 +23,8 @@ description: "Hybrid Mesh Platform — secure multi-cluster GitOps on OpenShift 
 | Region paths (hub/east/west) | [Region strategy](validatedpatterns-docs/region-strategy.md) |
 | ACM + GitOps | [Deploy with ACM and GitOps](validatedpatterns-docs/deploy-acm-gitops.md) |
 | GitOps chain | [Deployment chain](validatedpatterns-docs/gitops-deployment-chain.md) |
+| Fleet domain sync | [fleet-values-sync](validatedpatterns-docs/fleet-values-sync.md) |
+| Secrets (`values-secret.yaml`) | [Secrets configuration](validatedpatterns-docs/secrets-configuration.md) |
 | Red Hat products | [Products index](validatedpatterns-docs/products/index.md) |
 | Scaffolding | [Scaffolding](validatedpatterns-docs/scaffolding.md) |
 | Troubleshooting | [Troubleshooting](validatedpatterns-docs/troubleshooting.md) |

@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-nav_order: 11
+nav_order: 12
 parent: Hybrid Mesh Platform
 ---
 
@@ -9,6 +9,37 @@ parent: Hybrid Mesh Platform
 Production lessons from fleet GitOps, ambient mesh, and centralized observability. See also ebook Ch.15 matrix (adapted below).
 
 **RHDP fleets:** Start with the [RHDP install playbook](install-improvements.md) for install order, spoke token anti-patterns, console-link 503s during the first hour, and operator bootstrap blockers.
+
+## Verification scripts — what to run when something fails
+
+Use this order on the **hub** after install or when the fleet looks unhealthy:
+
+| Step | Command | If it fails |
+|------|---------|-------------|
+| 1 | `oc get managedclusters` | Spokes not **Available** → [ACM import](getting-started.md); do not put tokens in auto-syncing `field-content` |
+| 2 | `bash scripts/verify-fleet.sh` | Missing `fleet-values-sync` CronJob → sync clustergroup; missing Skupper links → import spokes first |
+| 3 | `bash scripts/argocd-preflight.sh` | Helm lint / path errors → fix chart before `oc apply`; run locally in CI |
+| 4 | `python scripts/verify-gitops-strategies.py` | PUSH/PULL partition broken → check `fleet-spoke-push` ApplicationSet and spoke `field-content` |
+| 5 | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` | 503 → backends still syncing ([playbook](install-improvements.md)); 403 on ODS → `oc login` first |
+
+### `verify-fleet.sh` output
+
+| Line | Healthy | Unhealthy |
+|------|---------|-----------|
+| `ManagedClusters` | `east`, `west` **Available=True** | Missing or `False` — finish ACM import |
+| `Hub Argo CD applications` | Long list of apps | Empty — not on hub or GitOps not installed |
+| `fleet-values-sync` | CronJob present | `not deployed yet` — hub clustergroup not synced |
+| `Skupper` | `skupperlinks` rows | Empty until spokes join mesh |
+
+### `argocd-preflight.sh`
+
+Offline checks before push: Helm lint on all `charts/all/*`, region bootstrap charts, and `verify-gitops-strategies.py`. **FAIL** on lint means invalid YAML or Chart.yaml — fix in Git, not on cluster.
+
+### `verify-gitops-strategies.py`
+
+Confirms east/west values declare explicit chart `path` and that PUSH component IDs match `acm-hub-spoke` gitops strategy config.
+
+Full product matrix: [Validation Guide](../validation-guide.md).
 
 ## Symptom matrix
 

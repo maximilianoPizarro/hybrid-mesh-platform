@@ -20,7 +20,44 @@ Hybrid Mesh Platform combines:
 - **Centralized security and observability** (ACS Central, Grafana, Kafka Console on the hub)
 - **Developer experience** (Developer Hub templates, OpenShift AI / MaaS, Gateway API ingress via RHCL/Kuadrant)
 
-See the [architecture overview](docs/validatedpatterns-docs/architecture.md) for hub→spoke diagrams and a end-to-end sensor trace.
+See the [architecture overview](docs/validatedpatterns-docs/architecture.md) for hub→spoke diagrams and an end-to-end sensor trace.
+
+## Architecture at a glance
+
+One **Validated Patterns** repo (`main`), three **region paths**, **dual GitOps** on spokes (PUSH + PULL), **ACM** fleet, **Skupper** mesh.
+
+![Hybrid Mesh Platform — hub, east, west, PUSH/PULL, fleet-values-sync](docs/assets/images/arch-hybrid-mesh-overview.png)
+
+```mermaid
+flowchart TB
+  subgraph git["Git — branch main"]
+    H["charts/region/hub"]
+    E["charts/region/east"]
+    W["charts/region/west"]
+  end
+  subgraph hub["Hub"]
+    FC[field-content clustergroup]
+    AS[fleet-spoke-push]
+    ACM[ACM]
+  end
+  subgraph spokes["Spokes"]
+    PULL[PULL: IE · mesh · observability]
+    PUSH[PUSH: operators-ci · operators-platform]
+  end
+  H --> FC
+  E --> PULL
+  W --> PULL
+  AS --> PUSH
+  ACM --> spokes
+  FVS[fleet-values-sync] --> FC
+```
+
+| Topic | Doc |
+|-------|-----|
+| Full architecture | [architecture.md](docs/validatedpatterns-docs/architecture.md) |
+| PUSH vs PULL | [gitops-push-vs-pull.md](docs/validatedpatterns-docs/gitops-push-vs-pull.md) |
+| Domain sync | [fleet-values-sync.md](docs/validatedpatterns-docs/fleet-values-sync.md) |
+| Regions / `main` | [REGIONS.md](REGIONS.md) |
 
 ## What's included
 
@@ -52,7 +89,7 @@ Technical detail: 50+ Helm charts, decoupled Argo AppProjects (`operators-platfo
 git clone https://github.com/maximilianoPizarro/hybrid-mesh-platform.git
 cd hybrid-mesh-platform
 cp values-secret.yaml.template values-secret.yaml
-# Edit values-secret.yaml if using external secrets / MaaS keys
+# Edit values-secret.yaml — see docs/validatedpatterns-docs/secrets-configuration.md
 
 # Install on hub cluster (bootstraps clustergroup + ACM ApplicationSet)
 ./pattern.sh make install
@@ -147,6 +184,8 @@ Hero images are **live cluster captures** in `docs/assets/images/workshop/` (ACS
 | **Bill of Materials** | [docs/bill-of-materials.md](docs/bill-of-materials.md) |
 | **Validation Guide** | [docs/validation-guide.md](docs/validation-guide.md) |
 | **GitOps Strategy** | [docs/validatedpatterns-docs/gitops-push-vs-pull.md](docs/validatedpatterns-docs/gitops-push-vs-pull.md) |
+| **Fleet domain sync** | [docs/validatedpatterns-docs/fleet-values-sync.md](docs/validatedpatterns-docs/fleet-values-sync.md) |
+| **Secrets config** | [docs/validatedpatterns-docs/secrets-configuration.md](docs/validatedpatterns-docs/secrets-configuration.md) |
 | **Deployment chain** | [docs/validatedpatterns-docs/gitops-deployment-chain.md](docs/validatedpatterns-docs/gitops-deployment-chain.md) |
 | **Products Index** | [docs/validatedpatterns-docs/products/index.md](docs/validatedpatterns-docs/products/index.md) |
 | **Troubleshooting** | [docs/validatedpatterns-docs/troubleshooting.md](docs/validatedpatterns-docs/troubleshooting.md) |

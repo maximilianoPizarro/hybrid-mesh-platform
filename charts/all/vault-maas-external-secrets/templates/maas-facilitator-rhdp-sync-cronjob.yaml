@@ -1,0 +1,172 @@
+{{- if include "vault-maas-external-secrets.rhdpSeedSyncEnabled" . }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maas-facilitator-rhdp-sync-script
+  namespace: {{ .Values.vault.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  sync.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    FIELD_APP="${FIELD_CONTENT_APP:-field-content}"
+    ARGO_NS="${ARGOCD_NAMESPACE:-openshift-gitops}"
+    VAULT_NS="${VAULT_NAMESPACE:-vault}"
+    VAULT_POD="${VAULT_POD:-vault-0}"
+    SEED_SECRET="${SEED_SECRET:-maas-facilitator-seed}"
+    MAAS_PATH="${MAAS_PATH:-workshop/maas}"
+    DEFAULT_MAAS_BASE="${DEFAULT_MAAS_BASE:-https://maas-rhdp.apps.maas.redhatworkshops.io/v1}"
+
+    load_litemaas() {
+      python3 - <<'PY'
+    import json, os, subprocess, sys
+    try:
+        import yaml
+    except ImportError:
+        print("PyYAML required", file=sys.stderr)
+        sys.exit(1)
+
+    app = os.environ["FIELD_APP"]
+    ns = os.environ["ARGO_NS"]
+    raw = subprocess.check_output(
+        ["oc", "get", "application", app, "-n", ns, "-o", "json"],
+        text=True,
+    )
+    doc = json.loads(raw)
+    helm = doc.get("spec", {}).get("source", {}).get("helm", {})
+    values = dict(helm.get("valuesObject") or {})
+    if not values:
+        text = helm.get("values") or ""
+        if text.strip():
+            loaded = yaml.safe_load(text) or {}
+            if isinstance(loaded, dict):
+                values = loaded
+    lm = values.get("litemaas") or {}
+    api_key = (lm.get("apiKey") or "").strip()
+    api_url = (lm.get("apiUrl") or "").strip()
+    model = (lm.get("model") or "").strip()
+    print(f"API_KEY={api_key}")
+    print(f"API_URL={api_url}")
+    print(f"MODEL={model}")
+    PY
+    }
+
+    map_keys() {
+      local key="$1" model="$2"
+      API_KEY="$key"
+      GRANITE="$key"
+      DEEPSEEK=""
+      case "$model" in
+        *deepseek*) DEEPSEEK="$key" ;;
+      esac
+    }
+
+    secret_changed() {
+      local want_api="$1"
+      local cur
+      cur="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NS}" -o jsonpath='{.data.api-key}' 2>/dev/null | base64 -d || true)"
+      [[ "${cur}" != "${want_api}" ]]
+    }
+
+    apply_seed_secret() {
+      local args=(--from-literal=api-key="${API_KEY}" --from-literal=granite-api-key="${GRANITE}")
+      [[ -n "${DEEPSEEK}" ]] && args+=(--from-literal=deepseek-api-key="${DEEPSEEK}")
+      args+=(--from-literal=openai-api-base="${MAAS_BASE}")
+      oc create secret generic "${SEED_SECRET}" -n "${VAULT_NS}" "${args[@]}" \
+        --dry-run=client -o yaml | oc apply -f -
+      oc annotate secret "${SEED_SECRET}" -n "${VAULT_NS}" \
+        hybrid-mesh.redhat.com/maas-seed-source=field-content-litemaas --overwrite
+      echo "Applied Secret ${VAULT_NS}/${SEED_SECRET}"
+    }
+
+    seed_vault() {
+      oc wait pod/"${VAULT_POD}" -n "${VAULT_NS}" --for=condition=Ready --timeout=120s
+      ROOT="$(oc get secret vaultkeys -n imperative -o jsonpath='{.data.vault_data_json}' \
+        | python3 -c "import sys,json,base64; print(json.loads(base64.b64decode(sys.stdin.read()))['root_token'])")"
+      [[ -n "${ROOT}" ]] || { echo "ERROR: missing Vault root token"; exit 1; }
+      ARGS=(api-key="${API_KEY}" openai-api-base="${MAAS_BASE}")
+      [[ -n "${GRANITE}" ]] && ARGS+=(granite-api-key="${GRANITE}")
+      [[ -n "${DEEPSEEK}" ]] && ARGS+=(deepseek-api-key="${DEEPSEEK}")
+      oc exec -n "${VAULT_NS}" "${VAULT_POD}" -- env \
+        VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="${ROOT}" \
+        vault kv put "secret/${MAAS_PATH}" "${ARGS[@]}"
+      echo "Seeded Vault secret/${MAAS_PATH}"
+      for NS in ai-gateway-system kairos-system maas-workshop neuroface developer-hub; do
+        for ES in $(oc get externalsecret -n "${NS}" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true); do
+          oc annotate externalsecret "${ES}" -n "${NS}" \
+            "reconcile.external-secrets.io/request-id=$(date +%s)" --overwrite 2>/dev/null || true
+        done
+      done
+      oc delete job maas-authpolicy-sync-once -n ai-gateway-system --ignore-not-found 2>/dev/null || true
+      if oc get cronjob maas-authpolicy-sync -n ai-gateway-system &>/dev/null; then
+        oc create job maas-authpolicy-sync-once --from=cronjob/maas-authpolicy-sync -n ai-gateway-system 2>/dev/null || true
+      fi
+    }
+
+    if ! oc get application "${FIELD_APP}" -n "${ARGO_NS}" &>/dev/null; then
+      echo "SKIP: Application ${ARGO_NS}/${FIELD_APP} not found"
+      exit 0
+    fi
+
+    eval "$(FIELD_APP="${FIELD_APP}" ARGO_NS="${ARGO_NS}" load_litemaas)"
+    if [[ -z "${API_KEY:-}" ]]; then
+      echo "SKIP: field-content has no litemaas.apiKey"
+      exit 0
+    fi
+
+    MAAS_BASE="${API_URL:-${DEFAULT_MAAS_BASE}}"
+    map_keys "${API_KEY}" "${MODEL:-}"
+    if secret_changed "${API_KEY}"; then
+      apply_seed_secret
+      seed_vault
+    else
+      echo "OK: ${SEED_SECRET} already matches field-content litemaas.apiKey"
+    fi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: maas-facilitator-rhdp-sync
+  namespace: {{ .Values.vault.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  schedule: {{ .Values.rhdpSeedSync.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: vault-maas-k8s-auth
+          containers:
+            - name: sync
+              image: {{ .Values.authPolicySync.image | quote }}
+              env:
+                - name: FIELD_CONTENT_APP
+                  value: {{ .Values.rhdpSeedSync.fieldContentApp | quote }}
+                - name: ARGOCD_NAMESPACE
+                  value: {{ .Values.rhdpSeedSync.argocdNamespace | quote }}
+                - name: VAULT_NAMESPACE
+                  value: {{ .Values.vault.namespace | quote }}
+                - name: VAULT_POD
+                  value: {{ .Values.vault.pod | quote }}
+                - name: MAAS_PATH
+                  value: {{ .Values.vault.maasPath | quote }}
+                - name: DEFAULT_MAAS_BASE
+                  value: {{ .Values.maas.openAiApiBase | quote }}
+              command: ["/bin/bash", "/scripts/sync.sh"]
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+          volumes:
+            - name: script
+              configMap:
+                name: maas-facilitator-rhdp-sync-script
+                defaultMode: 0555
+{{- end }}

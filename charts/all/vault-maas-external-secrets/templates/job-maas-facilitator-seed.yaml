@@ -40,6 +40,8 @@ spec:
               fi
               LLAMA="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.api-key}' | base64 -d)"
               [[ -n "${LLAMA}" ]] || { echo "ERROR: ${SEED_SECRET} missing api-key"; exit 1; }
+              MAAS_BASE_FROM_SECRET="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.openai-api-base}' 2>/dev/null | base64 -d || true)"
+              [[ -n "${MAAS_BASE_FROM_SECRET}" ]] && MAAS_BASE="${MAAS_BASE_FROM_SECRET}"
               ROOT="$(oc get secret vaultkeys -n imperative -o jsonpath='{.data.vault_data_json}' \
                 | python3 -c "import sys,json,base64; print(json.loads(base64.b64decode(sys.stdin.read()))['root_token'])")"
               GRANITE="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.granite-api-key}' 2>/dev/null | base64 -d || true)"

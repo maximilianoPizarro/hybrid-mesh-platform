@@ -169,11 +169,26 @@ oc get application field-content -n openshift-gitops -o jsonpath='{.status.condi
 
 ## MaaS API keys (hub — after sync)
 
-RHDP `litemaas.apiKey` in field-content (`enable_litemaas_keys: true`) propagates to charts. For Vault+ESO (v1.7.1+), create facilitator Secret — PostSync Job seeds Vault and ESO syncs consumers:
+With **`enable_litemaas_keys: true`**, RHDP injects `litemaas.*` into the `field-content` Application (see mapping table above). Chart **`vault-maas-external-secrets`** creates the facilitator seed automatically — no manual `oc create secret`:
+
+1. **CronJob `maas-facilitator-rhdp-sync`** (every 5 min) reads `field-content` → Secret `maas-facilitator-seed` in `vault` → Vault `secret/workshop/maas` → ExternalSecrets.
+2. When clustergroup passes `litemaas.apiKey`, Helm also renders the same Secret (sync-wave 3).
+3. PostSync **`hub-post-install-vault-maas-eso`** triggers the CronJob once on day-2 bootstrap.
+
+Verify:
+
+```bash
+oc get cronjob maas-facilitator-rhdp-sync -n vault
+oc get secret maas-facilitator-seed -n vault
+oc get application field-content -n openshift-gitops \
+  -o jsonpath='{.spec.source.helm.valuesObject.litemaas.apiKey}{"\n"}'
+```
+
+Manual fallback (only if RHDP did not inject `litemaas.apiKey`):
 
 ```bash
 oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
-oc annotate application vault-maas-external-secrets -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
+oc create job maas-facilitator-rhdp-sync-manual --from=cronjob/maas-facilitator-rhdp-sync -n vault
 ```
 
 Day-2 mesh/workshop/ACS: Argo app **`hub-post-install-bootstrap`** (PostSync Jobs). ACS:

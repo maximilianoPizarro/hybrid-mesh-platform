@@ -75,11 +75,37 @@ data:
       --set clusterDomain="$HUB_DOMAIN" | oc apply -f -
 
     if ! oc get secret maas-facilitator-seed -n vault &>/dev/null; then
-      echo "WARN: Secret maas-facilitator-seed missing in vault — create before MaaS ESO sync"
-      echo "  oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key=... --from-literal=granite-api-key=..."
-    else
+      MAAS_KEY="$(oc get application field-content -n openshift-gitops \
+        -o jsonpath='{.spec.source.helm.valuesObject.litemaas.apiKey}' 2>/dev/null || true)"
+      MAAS_URL="$(oc get application field-content -n openshift-gitops \
+        -o jsonpath='{.spec.source.helm.valuesObject.litemaas.apiUrl}' 2>/dev/null || true)"
+      if [[ -z "$MAAS_KEY" ]]; then
+        MAAS_JSON="$(oc get application field-content -n openshift-gitops -o json 2>/dev/null || true)"
+        if [[ -n "$MAAS_JSON" ]]; then
+          MAAS_KEY="$(printf '%s' "$MAAS_JSON" | python3 -c "import json,sys; lm=(json.load(sys.stdin).get('spec',{}).get('source',{}).get('helm',{}).get('valuesObject') or {}).get('litemaas') or {}; print((lm.get('apiKey') or '').strip())" 2>/dev/null || true)"
+          MAAS_URL="$(printf '%s' "$MAAS_JSON" | python3 -c "import json,sys; lm=(json.load(sys.stdin).get('spec',{}).get('source',{}).get('helm',{}).get('valuesObject') or {}).get('litemaas') or {}; print((lm.get('apiUrl') or '').strip())" 2>/dev/null || true)"
+        fi
+      fi
+      if [[ -n "$MAAS_KEY" ]]; then
+        echo "Creating maas-facilitator-seed from field-content litemaas.apiKey..."
+        SECRET_ARGS=(--from-literal=api-key="$MAAS_KEY" --from-literal=granite-api-key="$MAAS_KEY")
+        [[ -n "$MAAS_URL" ]] && SECRET_ARGS+=(--from-literal=openai-api-base="$MAAS_URL")
+        oc create secret generic maas-facilitator-seed -n vault "${SECRET_ARGS[@]}" \
+          --dry-run=client -o yaml | oc apply -f -
+      else
+        echo "WARN: Secret maas-facilitator-seed missing — waiting for CronJob maas-facilitator-rhdp-sync or field-content litemaas.apiKey"
+      fi
+    fi
+    if oc get secret maas-facilitator-seed -n vault &>/dev/null; then
       oc delete job maas-facilitator-vault-seed -n vault --ignore-not-found 2>/dev/null || true
       argo_refresh vault-maas-external-secrets
+    fi
+
+    echo "Triggering maas-facilitator-rhdp-sync (field-content → Vault seed)..."
+    oc delete job maas-facilitator-rhdp-sync-manual -n vault --ignore-not-found 2>/dev/null || true
+    if oc get cronjob maas-facilitator-rhdp-sync -n vault &>/dev/null; then
+      oc create job maas-facilitator-rhdp-sync-manual --from=cronjob/maas-facilitator-rhdp-sync -n vault 2>/dev/null || true
+      oc wait --for=condition=complete job/maas-facilitator-rhdp-sync-manual -n vault --timeout=300s || true
     fi
 
     echo "Refreshing Vault kubernetes auth for ESO..."

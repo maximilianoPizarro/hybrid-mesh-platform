@@ -1,6 +1,20 @@
 clusterDomain: ""
 enabled: true
 
+# Injected at runtime via field-content Application litemaas.* (never commit apiKey to Git).
+litemaas:
+  apiKey: ""
+  apiUrl: ""
+  model: ""
+  duration: ""
+
+# Reads field-content Argo CD Application and creates maas-facilitator-seed + Vault seed.
+rhdpSeedSync:
+  enabled: true
+  schedule: "*/5 * * * *"
+  fieldContentApp: field-content
+  argocdNamespace: openshift-gitops
+
 vault:
   namespace: vault
   pod: vault-0

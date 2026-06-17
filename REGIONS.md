@@ -2,7 +2,21 @@
 
 > **Note:** Git branches `east` and `west` were removed. All clusters use revision **`main`** and a region path below.
 
-All clusters use git revision **`main`**. Per-cluster GitOps profile is selected by **RHDP path**, not by git branch.
+## Why one branch (not `east` / `west` branches)
+
+Earlier layouts used **separate git branches** per spoke so RHDP could point each cluster at `revision: east` or `revision: west`. That duplicated merges, drifted chart versions between regions, and fought the [Validated Patterns](https://validatedpatterns.io) model: **one pattern revision**, region selected by **Helm path** (`charts/region/hub|east|west`), not by branch name.
+
+**Current model (VP-aligned):**
+
+| Before | After |
+|--------|-------|
+| Branch `main` + `east` + `west` | Single branch **`main`** only |
+| Region = git branch | Region = **`gitops_repo_path`** + `values.yaml` per region |
+| Manual branch sync scripts | Edit `charts/region/{hub,east,west}/values.yaml` on `main` |
+
+If you cloned an old fork with `east`/`west` branches, delete local tracking branches and use `main` + paths in [region-strategy.md](docs/validatedpatterns-docs/region-strategy.md).
+
+All clusters use git revision **`main`**. Per-cluster GitOps profile is selected by **region path**, not by git branch.
 
 | Cluster | RHDP `gitops_repo_path` | Values file |
 |---------|-------------------------|-------------|

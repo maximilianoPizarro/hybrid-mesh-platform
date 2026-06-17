@@ -46,8 +46,10 @@ charts/
 
 ### GitOps strategy
 - [PUSH vs PULL](gitops-push-vs-pull.md)
+- [Fleet values sync](fleet-values-sync.md)
 - [Argo AppProjects](argo-projects.md)
 - [Deployment chain](gitops-deployment-chain.md)
+- [Secrets configuration](secrets-configuration.md)
 
 ### Components
 - [Products index](products/index.md)

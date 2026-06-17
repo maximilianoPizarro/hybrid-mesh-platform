@@ -23,6 +23,11 @@ Spokes remain the execution venues for application namespaces, data-plane compon
 
 ## Platform architecture overview
 
+![Hybrid Mesh Platform — regions, PUSH/PULL, fleet-values-sync]({{ site.baseurl }}/assets/images/arch-hybrid-mesh-overview.png)
+{: .mb-4 }
+*Single `main` branch: hub at `charts/region/hub`, spokes at `charts/region/east` and `charts/region/west`, shared charts under `charts/all/`. CronJob **fleet-values-sync** patches cross-cluster domains — see [fleet-values-sync](fleet-values-sync.md).*
+{: .fs-2 .text-grey-dk-000 }
+
 ![Hub-spoke platform — Git paths, ApplicationSet, Skupper VAN, and per-cluster components]({{ site.baseurl }}/assets/images/arch-hub-spoke-flow.png)
 {: .mb-4 }
 *Single `main` branch: hub at `charts/region/hub`, spokes at `charts/region/east` and `charts/region/west`, shared charts under `charts/all/`.*

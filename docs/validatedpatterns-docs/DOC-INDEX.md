@@ -1,6 +1,9 @@
-# Hybrid Mesh Platform — documentation index
+# Hybrid Mesh Platform — documentation index (maintainers)
 
 Hub-spoke multi-cluster GitOps on OpenShift. **Sandbox tier** Validated Pattern.
+
+> **Published site:** [_index.md](_index.md) and [GitHub Pages](https://maximilianopizarro.github.io/hybrid-mesh-platform/).  
+> **Upstream PR:** [UPSTREAM-PR-TEMPLATE.md](UPSTREAM-PR-TEMPLATE.md)
 
 | Resource | URL |
 |----------|-----|
@@ -17,6 +20,7 @@ Hub-spoke multi-cluster GitOps on OpenShift. **Sandbox tier** Validated Pattern.
 | **RHDP install playbook** | [install-improvements.md](install-improvements.md) |
 | RHDP catalog (3 cluster orders) | [rhdp-field-content.md](rhdp-field-content.md) |
 | Region paths (hub / east / west) | [region-strategy.md](region-strategy.md) |
+| Secrets (`values-secret.yaml`) | [secrets-configuration.md](secrets-configuration.md) |
 | Deploy with ACM + GitOps | [deploy-acm-gitops.md](deploy-acm-gitops.md) |
 
 ## GitOps strategy
@@ -25,6 +29,7 @@ Hub-spoke multi-cluster GitOps on OpenShift. **Sandbox tier** Validated Pattern.
 |-------|------|
 | PUSH vs PULL (dual strategy) | [gitops-push-vs-pull.md](gitops-push-vs-pull.md) |
 | End-to-end deployment chain | [gitops-deployment-chain.md](gitops-deployment-chain.md) |
+| **Fleet domain sync** | [fleet-values-sync.md](fleet-values-sync.md) |
 | Argo CD AppProjects | [argo-projects.md](argo-projects.md) |
 
 ## Components & products
@@ -56,4 +61,4 @@ Hub-spoke multi-cluster GitOps on OpenShift. **Sandbox tier** Validated Pattern.
 
 ## Maintainer note
 
-To publish on [validatedpatterns.io](https://validatedpatterns.io), copy this folder into `validatedpatterns/docs/content/patterns/hybrid-mesh-platform/` and update front matter `repo_url` links. The public site index is [_index.md](_index.md).
+To publish on [validatedpatterns.io](https://validatedpatterns.io), use [UPSTREAM-PR-TEMPLATE.md](UPSTREAM-PR-TEMPLATE.md). Copy this folder into `validatedpatterns/docs/content/patterns/hybrid-mesh-platform/` and update front matter `repo_url` links.

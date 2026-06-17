@@ -1,6 +1,6 @@
 ---
 title: RHDP install playbook
-nav_order: 7
+nav_order: 8
 parent: Hybrid Mesh Platform
 ---
 
@@ -433,23 +433,19 @@ oc annotate application hub-post-install-bootstrap -n openshift-gitops \
 | Secret | Namespace | Keys | Triggers |
 | ------ | --------- | ---- | -------- |
 | `acs-init-credentials` | `stackrox` | `ROX_ADMIN_PASSWORD` | ACS PostSync jobs (wave 15 + `acs-init-bundle-sync`) |
-| `maas-facilitator-seed` | `vault` | `api-key` (llama-scout-17b), `granite-api-key`, `deepseek-api-key` | `maas-facilitator-vault-seed` PostSync → Vault + ESO |
+| `maas-facilitator-seed` | `vault` | `api-key`, `granite-api-key`, `deepseek-api-key` (optional) | **Auto:** CronJob `maas-facilitator-rhdp-sync` reads RHDP `litemaas.apiKey` from `field-content`; PostSync `maas-facilitator-vault-seed` seeds Vault + ESO |
 
 ```bash
 # ACS (before or after sync — Job skips until secret exists)
 oc create secret generic acs-init-credentials -n stackrox \
   --from-literal=ROX_ADMIN_PASSWORD='...'
 
-# MaaS via Vault+ESO (v1.7.1+)
-oc create secret generic maas-facilitator-seed -n vault \
-  --from-literal=api-key='sk-...' \
-  --from-literal=granite-api-key='sk-...' \
-  --from-literal=deepseek-api-key='sk-...'
-oc annotate application vault-maas-external-secrets -n openshift-gitops \
-  argocd.argoproj.io/refresh=hard --overwrite
+# MaaS — automatic when RHDP order has enable_litemaas_keys: true
+oc get cronjob maas-facilitator-rhdp-sync -n vault
+oc create job maas-facilitator-rhdp-sync-manual --from=cronjob/maas-facilitator-rhdp-sync -n vault
 ```
 
-RHDP `litemaas.apiKey` in field-content still propagates to Kuadrant/NeuroFace charts when `enable_litemaas_keys: true`.
+RHDP `litemaas.apiKey` in field-content propagates to Kuadrant/NeuroFace charts and **auto-creates** `maas-facilitator-seed` when `enable_litemaas_keys: true`.
 
 ### Manual steps (not automatable in Git)
 

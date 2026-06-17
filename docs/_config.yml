@@ -54,7 +54,8 @@ exclude:
   - Gemfile.lock
   - superpowers/
   - DEMO_VALIDATION.md
-  - validatedpatterns-docs/README.md
+  - validatedpatterns-docs/DOC-INDEX.md
+  - validatedpatterns-docs/UPSTREAM-PR-TEMPLATE.md
   # Backstage skeletons use ${{ }} / {{ }} — exclude from Liquid; template.yaml + catalog stay published
   - assets/backstage/onboarding/
   - assets/backstage/software-templates/camel-kaoto-cdc/skeleton/

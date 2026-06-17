@@ -46,4 +46,4 @@ oc get applications -n openshift-gitops | grep -E 'operators-ci|industrial-edge'
 python scripts/verify-gitops-strategies.py
 ```
 
-See also [GitOps deployment chain](gitops-deployment-chain.md) and [Argo projects](argo-projects.md).
+See also [GitOps deployment chain](gitops-deployment-chain.md), [fleet-values-sync](fleet-values-sync.md), and [Argo projects](argo-projects.md).

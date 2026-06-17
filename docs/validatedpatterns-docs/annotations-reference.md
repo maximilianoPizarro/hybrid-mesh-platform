@@ -1,6 +1,6 @@
 ---
 title: Annotations & Labels Reference
-nav_order: 10
+nav_order: 11
 parent: Hybrid Mesh Platform
 ---
 

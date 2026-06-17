@@ -153,7 +153,7 @@ bash scripts/verify-industrial-edge.sh   # IE dashboard chain
 | Troubleshooting | `docs/validatedpatterns-docs/troubleshooting.md` |
 | **Workshop Showroom** | `docs/validatedpatterns-docs/workshop/index.md` |
 | Showroom content skill | `showroom-hybrid-mesh-ai/.cursor/skills/hybrid-mesh-ai-workshop/SKILL.md` |
-| Docs index | `docs/validatedpatterns-docs/README.md` |
+| Docs index | `docs/validatedpatterns-docs/DOC-INDEX.md` |
 
 ## Common Operations
 

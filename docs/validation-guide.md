@@ -10,6 +10,8 @@ This guide describes how to validate the Hybrid Mesh Platform pattern is working
 
 For RHDP-specific install order, token handling, and first-hour 503s, see the [RHDP install playbook](validatedpatterns-docs/install-improvements.md).
 
+When validation fails, start with [Verification scripts](validatedpatterns-docs/troubleshooting.md#verification-scripts--what-to-run-when-something-fails) in the troubleshooting guide.
+
 ## Product outcomes (what to prove)
 
 | Outcome | Validation |
