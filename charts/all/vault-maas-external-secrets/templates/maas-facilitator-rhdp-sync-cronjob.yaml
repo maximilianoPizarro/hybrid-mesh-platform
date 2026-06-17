@@ -56,10 +56,7 @@ data:
       local key="$1" model="$2"
       API_KEY="$key"
       GRANITE="$key"
-      DEEPSEEK=""
-      case "$model" in
-        *deepseek*) DEEPSEEK="$key" ;;
-      esac
+      DEEPSEEK="$key"
     }
 
     secret_changed() {
@@ -71,7 +68,7 @@ data:
 
     apply_seed_secret() {
       local args=(--from-literal=api-key="${API_KEY}" --from-literal=granite-api-key="${GRANITE}")
-      [[ -n "${DEEPSEEK}" ]] && args+=(--from-literal=deepseek-api-key="${DEEPSEEK}")
+      args+=(--from-literal=deepseek-api-key="${DEEPSEEK}")
       args+=(--from-literal=openai-api-base="${MAAS_BASE}")
       oc create secret generic "${SEED_SECRET}" -n "${VAULT_NS}" "${args[@]}" \
         --dry-run=client -o yaml | oc apply -f -
@@ -87,7 +84,7 @@ data:
       [[ -n "${ROOT}" ]] || { echo "ERROR: missing Vault root token"; exit 1; }
       ARGS=(api-key="${API_KEY}" openai-api-base="${MAAS_BASE}")
       [[ -n "${GRANITE}" ]] && ARGS+=(granite-api-key="${GRANITE}")
-      [[ -n "${DEEPSEEK}" ]] && ARGS+=(deepseek-api-key="${DEEPSEEK}")
+      ARGS+=(deepseek-api-key="${DEEPSEEK}")
       oc exec -n "${VAULT_NS}" "${VAULT_POD}" -- env \
         VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="${ROOT}" \
         vault kv put "secret/${MAAS_PATH}" "${ARGS[@]}"

@@ -48,7 +48,7 @@ spec:
               DEEPSEEK="$(oc get secret "${SEED_SECRET}" -n "${VAULT_NAMESPACE}" -o jsonpath='{.data.deepseek-api-key}' 2>/dev/null | base64 -d || true)"
               ARGS=(api-key="${LLAMA}" openai-api-base="${MAAS_BASE}")
               [[ -n "${GRANITE}" ]] && ARGS+=(granite-api-key="${GRANITE}")
-              [[ -n "${DEEPSEEK}" ]] && ARGS+=(deepseek-api-key="${DEEPSEEK}")
+              ARGS+=(deepseek-api-key="${DEEPSEEK}")
               oc exec -n "${VAULT_NAMESPACE}" "${VAULT_POD}" -- env \
                 VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="${ROOT}" \
                 vault kv put "secret/${MAAS_PATH}" "${ARGS[@]}"
