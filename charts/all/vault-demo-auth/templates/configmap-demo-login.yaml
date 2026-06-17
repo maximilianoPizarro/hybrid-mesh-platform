@@ -18,9 +18,13 @@ data:
     | `{{ .username }}` | `{{ $.Values.defaultPassword }}` | {{ join ", " .policies }} |
     {{- end }}
 
-    Example paths (KV v2):
-    - `secret/workshop/maas` — upstream MaaS token
-    - `secret/workshop/kuadrant/<user>/<product>` — optional API keys
+    Example paths (KV v2) — in the UI path box type `workshop/` (not `secret/`):
+
+    | Path in UI | Content |
+    |------------|---------|
+    | `workshop/` | list workshop secrets |
+    | `workshop/maas` | MaaS API keys (api-key, granite-api-key, …) |
+    | `workshop/kuadrant/<user>/<product>` | optional Kuadrant API keys |
 
     CLI from a pod with network access to Vault:
 

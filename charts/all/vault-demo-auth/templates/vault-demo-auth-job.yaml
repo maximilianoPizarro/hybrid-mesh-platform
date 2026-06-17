@@ -122,6 +122,9 @@ spec:
                 'path "secret/data/workshop/*" {' \
                 '  capabilities = ["read", "list"]' \
                 '}' \
+                'path "secret/metadata/workshop" {' \
+                '  capabilities = ["list", "read"]' \
+                '}' \
                 'path "secret/metadata/workshop/*" {' \
                 '  capabilities = ["read", "list"]' \
                 '}' \
@@ -130,6 +133,9 @@ spec:
               printf '%s\n' \
                 'path "secret/data/workshop/*" {' \
                 '  capabilities = ["create", "read", "update", "delete", "list"]' \
+                '}' \
+                'path "secret/metadata/workshop" {' \
+                '  capabilities = ["list", "read"]' \
                 '}' \
                 'path "secret/metadata/workshop/*" {' \
                 '  capabilities = ["read", "list", "delete"]' \

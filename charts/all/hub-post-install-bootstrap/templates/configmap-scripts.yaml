@@ -55,6 +55,51 @@ data:
       oc annotate application "$1" -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite 2>/dev/null || true
     }
 
+  vault-maas-eso.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    source /scripts/common.sh
+    install_helm
+    clone_pattern
+    HUB_DOMAIN="$(hub_domain)"
+    echo "== Vault MaaS + External Secrets bootstrap =="
+
+    if ! oc get pod vault-0 -n vault &>/dev/null; then
+      echo "SKIP: vault-0 not found"
+      exit 0
+    fi
+    oc wait pod/vault-0 -n vault --for=condition=Ready --timeout=300s
+
+    echo "Applying vault-maas-external-secrets chart (CronJob + auth script)..."
+    /tmp/helm template vmaas /tmp/pattern/charts/all/vault-maas-external-secrets \
+      --set clusterDomain="$HUB_DOMAIN" | oc apply -f -
+
+    if ! oc get secret maas-facilitator-seed -n vault &>/dev/null; then
+      echo "WARN: Secret maas-facilitator-seed missing in vault — create before MaaS ESO sync"
+      echo "  oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key=... --from-literal=granite-api-key=..."
+    else
+      oc delete job maas-facilitator-vault-seed -n vault --ignore-not-found 2>/dev/null || true
+      argo_refresh vault-maas-external-secrets
+    fi
+
+    echo "Refreshing Vault kubernetes auth for ESO..."
+    oc delete job vault-k8s-auth-eso-manual -n vault --ignore-not-found 2>/dev/null || true
+    if oc get cronjob vault-k8s-auth-eso-refresh -n vault &>/dev/null; then
+      oc create job vault-k8s-auth-eso-manual --from=cronjob/vault-k8s-auth-eso-refresh -n vault
+      oc wait --for=condition=complete job/vault-k8s-auth-eso-manual -n vault --timeout=300s || true
+    fi
+
+    echo "Reconciling ExternalSecrets..."
+    oc rollout restart deployment/external-secrets -n external-secrets 2>/dev/null || true
+    for ns in ai-gateway-system developer-hub kairos-system maas-workshop neuroface; do
+      for es in $(oc get externalsecret -n "$ns" -o name 2>/dev/null || true); do
+        oc annotate "$es" -n "$ns" "reconcile.external-secrets.io/request-id=$(date +%s)" --overwrite 2>/dev/null || true
+      done
+    done
+
+    READY="$(oc get clustersecretstore vault-workshop-maas -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo False)"
+    echo "ClusterSecretStore vault-workshop-maas Ready=${READY}"
+    argo_refresh vault-demo-auth
   hub-resource-relief.sh: |
     #!/bin/bash
     set -euo pipefail

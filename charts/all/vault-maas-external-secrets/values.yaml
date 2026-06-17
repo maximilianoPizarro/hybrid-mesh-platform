@@ -14,7 +14,7 @@ vault:
     reviewerTokenDuration: 24h
     refreshCron:
       enabled: true
-      schedule: "*/30 * * * *"
+      schedule: "*/15 * * * *"
   caSecret:
     enabled: true
     name: vault-secret

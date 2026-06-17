@@ -511,7 +511,26 @@ oc annotate application vault-maas-external-secrets -n openshift-gitops \
 
 **Symptom:** Developer Hub `/lightspeed` or NeuroFace chat **401** — create `maas-facilitator-seed` in `vault` and refresh `vault-maas-external-secrets`.
 
-**Symptom:** `ClusterSecretStore vault-workshop-maas` not ready / ExternalSecret `SecretSyncedError` with *unable to create client* — OpenShift ESO NetworkPolicy blocks Vault `:8200`; chart `vault-maas-external-secrets` applies `allow-vault-maas-egress-8200`. Re-sync that Argo app after `vault-k8s-auth-eso` PostSync completes.
+**Symptom:** `ClusterSecretStore vault-workshop-maas` not ready / ExternalSecret `SecretSyncedError` with *permission denied* on `auth/kubernetes/login` — the Vault kubernetes auth **reviewer JWT expires**. Chart `vault-maas-external-secrets` runs CronJob `vault-k8s-auth-eso-refresh` every **15 min** (regular Argo resource, not PostSync-only). Day-2 job `hub-post-install-vault-maas-eso` applies the chart and triggers a manual refresh.
+
+```bash
+oc create job vault-k8s-auth-manual --from=cronjob/vault-k8s-auth-eso-refresh -n vault
+oc rollout restart deployment/external-secrets -n external-secrets
+```
+
+**Symptom:** NetworkPolicy — OpenShift ESO blocks Vault `:8200`; chart applies `allow-vault-maas-egress-8200`.
+
+### RHDP `unsealvault-cronjob` pods in `Init:Error` (namespace `imperative`)
+
+These pods belong to the **RHDP imperative** operator, not chart `vault-maas-external-secrets`. On first hub install they often fail when ACM spokes are not imported yet (`vault_spokes_init.yaml`) or when the playbook races Vault permissions (`403` on `sys/mounts/secret`). **Vault stays unsealed** if already initialized; the CronJob retries every 5 min and recent runs should show **Completed**.
+
+```bash
+# Safe cleanup of stale failed pods (does not delete Vault)
+oc delete pod -n imperative -l job-name --field-selector=status.phase=Failed
+oc delete job -n imperative -l job-name --field-selector=status.successful=0
+```
+
+Ignore `Init:Error` rows older than the latest **Completed** `unsealvault-cronjob-*` job unless `vault-0` is Sealed (`oc exec -n vault vault-0 -- vault status`).
 
 RHDP can inject `litemaas.apiKey` into clustergroup values (wired to `workshop-kuadrant-apis`, `openshift-ai-hub`, `neuroface` charts).
 

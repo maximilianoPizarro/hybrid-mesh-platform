@@ -50,51 +50,6 @@ data:
     echo "Vault kubernetes auth configured for External Secrets (reviewer JWT refreshed)"
 ---
 apiVersion: batch/v1
-kind: Job
-metadata:
-  name: vault-k8s-auth-eso
-  namespace: {{ .Values.vault.namespace }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
-spec:
-  backoffLimit: 6
-  ttlSecondsAfterFinished: 600
-  template:
-    spec:
-      restartPolicy: OnFailure
-      serviceAccountName: vault-maas-k8s-auth
-      containers:
-        - name: configure
-          image: {{ .Values.authPolicySync.image | quote }}
-          env:
-            - name: VAULT_NAMESPACE
-              value: {{ .Values.vault.namespace | quote }}
-            - name: VAULT_POD
-              value: {{ .Values.vault.pod | quote }}
-            - name: ESO_NS
-              value: {{ .Values.externalSecrets.namespace | quote }}
-            - name: ESO_SA
-              value: {{ .Values.externalSecrets.serviceAccountName | quote }}
-            - name: VAULT_ROLE
-              value: {{ .Values.vault.role | quote }}
-            - name: K8S_AUTH_MOUNT
-              value: {{ .Values.vault.kubernetesAuthMount | quote }}
-            - name: REVIEWER_TOKEN_DURATION
-              value: {{ $reviewerDuration | quote }}
-          command: ["/bin/bash", "/scripts/configure.sh"]
-          volumeMounts:
-            - name: script
-              mountPath: /scripts
-      volumes:
-        - name: script
-          configMap:
-            name: vault-k8s-auth-eso-script
-            defaultMode: 0755
-{{- if .Values.vault.k8sAuth.refreshCron.enabled }}
----
-apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: vault-k8s-auth-eso-refresh
@@ -106,6 +61,7 @@ spec:
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 600
   jobTemplate:
     spec:
       backoffLimit: 3
@@ -140,5 +96,4 @@ spec:
               configMap:
                 name: vault-k8s-auth-eso-script
                 defaultMode: 0755
-{{- end }}
 {{- end }}

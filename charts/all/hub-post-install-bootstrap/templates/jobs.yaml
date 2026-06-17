@@ -3,6 +3,32 @@
 {{- $sa := .Values.serviceAccount.name -}}
 {{- $hook := include "hub-post-install-bootstrap.hookAnnotations" . -}}
 
+{{- if .Values.phases.vaultMaasEso.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-post-install-vault-maas-eso
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.phases.vaultMaasEso.syncWave | quote }}
+    {{ $hook | nindent 4 }}
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 7200
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ $sa }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: hub-post-install-scripts
+            defaultMode: 0755
+      containers:
+        {{- include "hub-post-install-bootstrap.jobContainer" (dict "root" . "command" (list "/scripts/vault-maas-eso.sh") "extraEnv" (list)) | nindent 8 }}
+{{- end }}
+
 {{- if .Values.phases.hubResourceRelief.enabled }}
 ---
 apiVersion: batch/v1

@@ -19,6 +19,9 @@ phases:
   hubResourceRelief:
     enabled: true
     syncWave: "10"
+  vaultMaasEso:
+    enabled: true
+    syncWave: "10"
   fleetMesh:
     enabled: true
     syncWave: "11"
