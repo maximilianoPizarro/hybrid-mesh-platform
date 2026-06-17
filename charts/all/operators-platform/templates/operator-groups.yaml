@@ -1,12 +1,7 @@
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: redhat-ods-operator
-  namespace: redhat-ods-operator
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-spec: {}
----
+{{- /*
+  OperatorGroups for redhat-ods-operator and openshift-cluster-observability-operator
+  are created by clustergroup (targetNamespaces: [] in hub values.yaml).
+*/ -}}
 {{- if eq .Values.clusterRole "hub" }}
 apiVersion: v1
 kind: Namespace
@@ -27,15 +22,9 @@ metadata:
 spec: {}
 ---
 {{- end }}
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: openshift-cluster-observability-operator
-  namespace: openshift-cluster-observability-operator
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-spec: {}
----
+{{- /*
+  openshift-cluster-observability-operator OG: clustergroup (hub values targetNamespaces: []).
+*/ -}}
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -27,13 +27,19 @@ clusterGroup:
     neuroface: {}
     cnv-workshop: {}
     openshift-cnv: {}
-    redhat-connectivity-link-operator: {}
-    openshift-cluster-observability-operator: {}
+    redhat-connectivity-link-operator:
+      operatorGroup: true
+      targetNamespaces: []
+    openshift-cluster-observability-operator:
+      operatorGroup: true
+      targetNamespaces: []
     openshift-opentelemetry: {}
     distributed-tracing: {}
     istio-system: {}
     kairos-system: {}
-    redhat-ods-operator: {}
+    redhat-ods-operator:
+      operatorGroup: true
+      targetNamespaces: []
     redhat-ods-applications: {}
     external-secrets-operator:
       operatorGroup: true

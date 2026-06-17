@@ -123,7 +123,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "gitlab.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://gitlab.apps.{{ $domain }}"
+  href: "https://gitlab.{{ $domain }}"
   location: ApplicationMenu
   text: "GitLab (SCM)"
 ---
@@ -207,7 +207,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://rh-ai.apps.{{ $domain }}"
+  href: "https://rh-ai.{{ $domain }}"
   location: ApplicationMenu
   text: "OpenShift AI"
 ---

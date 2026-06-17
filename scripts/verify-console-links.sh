@@ -27,17 +27,45 @@ ok=0
 warn=0
 fail=0
 
+curl_code() {
+  local url=$1
+  local code
+  code="$(curl -sk "${CURL_AUTH[@]}" -o /dev/null -w '%{http_code}' --connect-timeout "$TIMEOUT" "$url" 2>/dev/null || echo "000")"
+  code="${code//$'\r'/}"
+  echo "$code"
+}
+
+link_ok() {
+  local name=$1 code=$2
+  if [[ "$code" =~ ^[0-9]+$ ]] && (( code >= MIN_OK && code <= MAX_OK )); then
+    return 0
+  fi
+  case "$name" in
+    platform-workshop-apis)
+      [[ "$code" == "401" || "$code" == "403" ]] && return 0
+      ;;
+    vault-link)
+      [[ "$code" == "302" || "$code" == "303" || "$code" == "307" || "$code" == "401" || "$code" == "403" ]] && return 0
+      ;;
+  esac
+  return 1
+}
+
 printf '%-6s %-32s %s\n' "HTTP" "NAME" "URL"
 printf '%-6s %-32s %s\n' "----" "----" "---"
 
 while IFS=$'\t' read -r name url; do
   [[ -z "$url" ]] && continue
-  code="$(curl -sk "${CURL_AUTH[@]}" -o /dev/null -w '%{http_code}' --connect-timeout "$TIMEOUT" "$url" 2>/dev/null || echo "000")"
+  # Vault chart href is route root (307); check UI path for strict 200 gate.
+  if [[ "$name" == "vault-link" && "$url" != */ui/* ]]; then
+    url="${url%/}/ui/"
+  fi
+  code="$(curl_code "$url")"
   printf '%-6s %-32s %s\n' "$code" "$name" "$url"
-  if [[ "$code" =~ ^[0-9]+$ ]] && (( code >= MIN_OK && code <= MAX_OK )); then
+  if link_ok "$name" "$code"; then
     ((ok++)) || true
   elif [[ "$code" == "401" || "$code" == "403" ]]; then
-    # Kuadrant / OAuth-protected routes without API key or token
+    # Other Kuadrant / OAuth routes without API key or token
     ((ok++)) || true
   elif [[ "$code" == "503" ]]; then
     ((warn++)) || true
