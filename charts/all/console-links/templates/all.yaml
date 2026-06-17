@@ -277,7 +277,7 @@ spec:
   applicationMenu:
     imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
     section: "Platform Hub-Spoke"
-  href: "https://ai-gateway.{{ $hubDomain }}/v1/models"
+  href: "https://ai-gateway.{{ $hubDomain }}/v1/chat/completions"
   location: ApplicationMenu
   text: "AI Gateway (MaaS + Kuadrant)"
 {{- end }}

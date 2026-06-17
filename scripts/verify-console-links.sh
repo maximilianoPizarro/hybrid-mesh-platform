@@ -44,6 +44,10 @@ link_ok() {
     platform-workshop-apis)
       [[ "$code" == "401" || "$code" == "403" ]] && return 0
       ;;
+    platform-ai-gateway)
+      # Kuadrant gateway: route up; 401/404 without APIKEY is expected in smoke tests
+      [[ "$code" == "401" || "$code" == "403" || "$code" == "404" ]] && return 0
+      ;;
     vault-link)
       [[ "$code" == "302" || "$code" == "303" || "$code" == "307" || "$code" == "401" || "$code" == "403" ]] && return 0
       ;;

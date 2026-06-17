@@ -62,12 +62,6 @@ fi
 
 TOKEN="$(oc whoami -t 2>/dev/null || true)"
 
-echo "== Console links (MIN_OK_CODE=200) =="
-if ! MIN_OK_CODE=200 bash "$ROOT/scripts/verify-console-links.sh"; then
-  FAIL=$((FAIL + 1))
-fi
-
-echo ""
 echo "== Workshop + AI (hub: $HUB) =="
 check showroom "https://showroom-showroom.$HUB/"
 check registration "https://workshop-registration.$HUB/"
@@ -81,8 +75,7 @@ check mcp-gateway "https://mcp-gateway.$HUB/mcp"
 check_expect_one_of workshop-apis-no-key "https://workshop-apis.$HUB/httpbin/get" "401" "200"
 check vault-ui "https://vault-vault.$HUB/ui/"
 check grafana "https://grafana.$HUB/"
-check ods-dashboard "https://rh-ai.apps.$HUB/" token
-
+# rh-ai is validated in verify-console-links (platform-openshift-ai) with the same Bearer token
 EAST="${EAST_DOMAIN:-$(cluster_apps_domain east)}"
 WEST="${WEST_DOMAIN:-$(cluster_apps_domain west)}"
 
@@ -97,6 +90,12 @@ if [[ -n "${WEST:-}" ]]; then
   echo ""
   echo "== Spokes (west: $WEST) =="
   check devspaces-west "https://devspaces.$WEST/"
+fi
+
+echo ""
+echo "== Console links (MIN_OK_CODE=200) =="
+if ! MIN_OK_CODE=200 bash "$ROOT/scripts/verify-console-links.sh"; then
+  FAIL=$((FAIL + 1))
 fi
 
 echo ""
