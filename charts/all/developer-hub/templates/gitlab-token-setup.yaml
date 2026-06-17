@@ -91,7 +91,7 @@ spec:
           image: registry.redhat.io/openshift4/ose-cli:latest
           env:
             - name: GITLAB_API
-              value: "https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4"
+              value: "https://{{ include "developer-hub.gitlabHost" . }}/api/v4"
             - name: RHDH_NAMESPACE
               value: developer-hub
             - name: RHDH_DEPLOYMENT

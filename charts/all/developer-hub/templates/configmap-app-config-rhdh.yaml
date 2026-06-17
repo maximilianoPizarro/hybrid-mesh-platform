@@ -159,10 +159,6 @@ data:
           target: /opt/app-root/src/catalog-data/cnv-workshop/cnv-workshop.yaml
           rules:
             - allow: [System, Component]
-        - type: url
-          target: {{ printf "%s/-/raw/main/software-templates/templates-catalog.yaml" (include "developer-hub.platformContentBaseUrl" .) | quote }}
-          rules:
-            - allow: [Template, Location]
       providers:
         ocm:
           default:
@@ -252,7 +248,7 @@ data:
           headers:
             Authorization: Bearer ${RHACS_API_TOKEN}
         '/gitlab':
-          target: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
+          target: https://{{ include "developer-hub.gitlabHost" . }}/api/v4
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
             PRIVATE-TOKEN: ${GITLAB_TOKEN}
@@ -268,19 +264,19 @@ data:
           changeOrigin: true
     integrations:
       gitlab:
-        - host: gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
-          apiBaseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
+        - host: {{ include "developer-hub.gitlabHost" . }}
+          apiBaseUrl: https://{{ include "developer-hub.gitlabHost" . }}/api/v4
           token: ${GITLAB_TOKEN}
       github:
         - host: github.com
           apiBaseUrl: https://api.github.com
           rawBaseUrl: https://raw.githubusercontent.com
-        - host: gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
-          apiBaseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
+        - host: {{ include "developer-hub.gitlabHost" . }}
+          apiBaseUrl: https://{{ include "developer-hub.gitlabHost" . }}/api/v4
           token: ${GITLAB_TOKEN}
     gitlab:
       default:
-        baseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
+        baseUrl: https://{{ include "developer-hub.gitlabHost" . }}
         token: ${GITLAB_TOKEN}
     # -- Azure DevOps integration (uncomment when AZURE_TOKEN and AZURE_ORG are set) --
     # integrations:

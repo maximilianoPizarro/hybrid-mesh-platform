@@ -209,7 +209,26 @@ spec:
   owner: platform-engineering
   system: workshop-kuadrant-apis
   definition:
-    $text: https://httpbin.org/spec.json
+    $text: |
+      openapi: 3.0.3
+      info:
+        title: httpbin (via workshop-apis)
+        version: v1
+      servers:
+        - url: https://workshop-apis.__HUB_APPS_DOMAIN__/httpbin
+      paths:
+        /get:
+          get:
+            summary: GET echo
+            responses:
+              "200":
+                description: OK
+        /post:
+          post:
+            summary: POST echo
+            responses:
+              "200":
+                description: OK
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -235,25 +254,26 @@ spec:
   owner: platform-engineering
   system: workshop-kuadrant-apis
   definition:
-    openapi: 3.0.3
-    info:
-      title: REST Countries (via workshop-apis)
-      version: v1
-    servers:
-      - url: https://workshop-apis.__HUB_APPS_DOMAIN__/countries
-    paths:
-      /name/{country}:
-        get:
-          summary: Country by name
-          parameters:
-            - name: country
-              in: path
-              required: true
-              schema:
-                type: string
-          responses:
-            "200":
-              description: OK
+    $text: |
+      openapi: 3.0.3
+      info:
+        title: REST Countries (via workshop-apis)
+        version: v1
+      servers:
+        - url: https://workshop-apis.__HUB_APPS_DOMAIN__/countries
+      paths:
+        /name/{country}:
+          get:
+            summary: Country by name
+            parameters:
+              - name: country
+                in: path
+                required: true
+                schema:
+                  type: string
+            responses:
+              "200":
+                description: OK
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -281,37 +301,38 @@ spec:
   owner: platform-engineering
   system: workshop-kuadrant-apis
   definition:
-    openapi: 3.0.3
-    info:
-      title: MaaS LLM (ai-gateway)
-      version: v1
-    servers:
-      - url: https://ai-gateway.__HUB_APPS_DOMAIN__
-    paths:
-      /v1/chat/completions:
-        post:
-          summary: Chat completions (Kuadrant APIKEY required)
-          requestBody:
-            required: true
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    model:
-                      type: string
-                      example: granite-3-2-8b-instruct
-                    messages:
-                      type: array
-                      items:
-                        type: object
-                    max_tokens:
-                      type: integer
-          responses:
-            "200":
-              description: LLM response
-            "401":
-              description: Missing or invalid APIKEY
+    $text: |
+      openapi: 3.0.3
+      info:
+        title: MaaS LLM (ai-gateway)
+        version: v1
+      servers:
+        - url: https://ai-gateway.__HUB_APPS_DOMAIN__
+      paths:
+        /v1/chat/completions:
+          post:
+            summary: Chat completions (Kuadrant APIKEY required)
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      model:
+                        type: string
+                        example: granite-3-2-8b-instruct
+                      messages:
+                        type: array
+                        items:
+                          type: object
+                      max_tokens:
+                        type: integer
+            responses:
+              "200":
+                description: LLM response
+              "401":
+                description: Missing or invalid APIKEY
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -332,19 +353,20 @@ spec:
   owner: platform-engineering
   system: workshop-kuadrant-apis
   definition:
-    openapi: 3.0.3
-    info:
-      title: MCP Gateway proxy
-      version: v1
-    servers:
-      - url: https://workshop-apis.__HUB_APPS_DOMAIN__/mcp
-    paths:
-      /:
-        post:
-          summary: MCP JSON-RPC (Streamable HTTP)
-          responses:
-            "200":
-              description: MCP response
+    $text: |
+      openapi: 3.0.3
+      info:
+        title: MCP Gateway proxy
+        version: v1
+      servers:
+        - url: https://workshop-apis.__HUB_APPS_DOMAIN__/mcp
+      paths:
+        /:
+          post:
+            summary: MCP JSON-RPC (Streamable HTTP)
+            responses:
+              "200":
+                description: MCP response
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
