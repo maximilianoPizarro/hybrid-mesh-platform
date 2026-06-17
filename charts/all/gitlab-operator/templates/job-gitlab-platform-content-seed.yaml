@@ -109,24 +109,29 @@ spec:
               WORK=/shared/repo
               ROOT_DIR=/shared/pattern
               rm -rf "${WORK}"
+              mkdir -p "${WORK}"
+              cd "${WORK}"
+              git init -b main
+              git config user.email platform-content@developer-hub.local
+              git config user.name platform-content-seed
+              REMOTE="https://oauth2:${GITLAB_PAT}@${GITLAB_WEB#https://}/${PROJECT_PATH}.git"
+              git remote add origin "${REMOTE}"
+              if git ls-remote origin refs/heads/main >/dev/null 2>&1; then
+                git fetch origin main
+                git checkout -B main origin/main
+              fi
               mkdir -p "${WORK}/docs"
               cp -a "${ROOT_DIR}/docs/assets/backstage/software-templates" "${WORK}/"
               cp -a "${ROOT_DIR}/charts/all/developer-hub/files/onboarding" "${WORK}/docs/"
               cp -a "${ROOT_DIR}/charts/all/developer-hub/files/techdocs/industrial-edge" "${WORK}/docs/industrial-edge"
               printf '%s\n' "# Platform content" "" "Seeded from pattern repo." > "${WORK}/README.md"
-              cd "${WORK}"
-              git init -b main
-              git config user.email platform-content@developer-hub.local
-              git config user.name platform-content-seed
               git add .
-              git commit -m "Seed platform content from pattern"
-              REMOTE="https://oauth2:${GITLAB_PAT}@${GITLAB_WEB#https://}/${PROJECT_PATH}.git"
-              git remote add origin "${REMOTE}"
-              if git ls-remote origin main >/dev/null 2>&1; then
-                git fetch origin main
-                git pull origin main --rebase --allow-unrelated-histories || git pull origin main --allow-unrelated-histories
+              if git diff --cached --quiet; then
+                echo "platform-content already up to date"
+              else
+                git commit -m "Seed platform content from pattern"
+                git push -u origin main
               fi
-              git push -u origin main
               echo "gitlab-platform-content-seed complete: ${GITLAB_WEB}/${PROJECT_PATH}"
           volumeMounts:
             - name: shared
