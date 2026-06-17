@@ -350,11 +350,19 @@ spec:
           volumeMounts:
             - name: shared
               mountPath: /shared
+        - name: copy-oc
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command: ["sh", "-c", "cp /usr/bin/oc /shared/oc && chmod +x /shared/oc"]
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
       containers:
         - name: sync
-          image: registry.redhat.io/openshift4/ose-cli:latest
+          image: {{ .Values.initBundleSync.cliImage | default "registry.redhat.io/rhel9/support-tools:latest" | quote }}
           command: ["python3", "/scripts/sync.py"]
           env:
+            - name: PATH
+              value: /shared:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
             - name: ACS_CENTRAL_ENDPOINT
               value: {{ .Values.initBundleSync.centralEndpoint | default "central.stackrox.svc:443" | quote }}
             - name: ACS_NAMESPACE
@@ -415,11 +423,19 @@ spec:
               volumeMounts:
                 - name: shared
                   mountPath: /shared
+            - name: copy-oc
+              image: registry.redhat.io/openshift4/ose-cli:latest
+              command: ["sh", "-c", "cp /usr/bin/oc /shared/oc && chmod +x /shared/oc"]
+              volumeMounts:
+                - name: shared
+                  mountPath: /shared
           containers:
             - name: sync
-              image: registry.redhat.io/openshift4/ose-cli:latest
+              image: {{ .Values.initBundleSync.cliImage | default "registry.redhat.io/rhel9/support-tools:latest" | quote }}
               command: ["python3", "/scripts/sync.py"]
               env:
+                - name: PATH
+                  value: /shared:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 - name: ACS_CENTRAL_ENDPOINT
                   value: {{ .Values.initBundleSync.centralEndpoint | default "central.stackrox.svc:443" | quote }}
                 - name: ACS_NAMESPACE
