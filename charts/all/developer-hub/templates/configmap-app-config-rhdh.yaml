@@ -278,6 +278,10 @@ data:
         - host: gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
           apiBaseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}/api/v4
           token: ${GITLAB_TOKEN}
+    gitlab:
+      default:
+        baseUrl: https://gitlab.apps.{{ include "developer-hub.clusterDomain" . }}
+        token: ${GITLAB_TOKEN}
     # -- Azure DevOps integration (uncomment when AZURE_TOKEN and AZURE_ORG are set) --
     # integrations:
     #   azure:

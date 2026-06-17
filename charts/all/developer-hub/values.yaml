@@ -64,6 +64,7 @@ plugins:
     enabled: true
   gitlab:
     enabled: true
+    pluginTag: "bs_1.45.3__6.13.0"
   tekton:
     enabled: true
   kuadrant:
