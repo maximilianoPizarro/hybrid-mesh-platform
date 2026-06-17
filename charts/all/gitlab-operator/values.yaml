@@ -51,3 +51,8 @@ bootstrap:
   developerHubGroup: developer-hub
   appOfAppsGroup: app-of-apps
   workshopDemosGroup: workshop-demos
+  platformContent:
+    enabled: true
+    project: platform-content
+    repoUrl: ""
+    revision: ""

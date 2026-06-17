@@ -454,7 +454,7 @@ spec:
         }
       ],
       "schemaVersion": 39,
-      "tags": ["istio", "kafka", "spoke", "local"],
+      "tags": ["istio", "kafka", "spoke", "local", "industrial-edge"],
       "templating": {"list": []},
       "time": {"from": "now-30m", "to": "now"},
       "timepicker": {},

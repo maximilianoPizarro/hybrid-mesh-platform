@@ -173,8 +173,18 @@ data:
       sourceNamespace: openshift-marketplace'
 
     echo "== Refresh fleet ApplicationSet + spoke apps =="
+    argo_refresh fleet-values-sync
+    oc delete job fleet-values-sync-manual -n openshift-gitops --ignore-not-found 2>/dev/null || true
+    oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops 2>/dev/null || true
+    for _ in $(seq 1 18); do
+      if oc get job fleet-values-sync-manual -n openshift-gitops -o jsonpath='{.status.succeeded}' 2>/dev/null | grep -q 1; then
+        break
+      fi
+      sleep 10
+    done
     argo_refresh fleet-spoke-push
-    for app in east-spoke-components west-spoke-components servicemeshoperator3 hub-gateway service-interconnect; do
+    for app in east-spoke-components west-spoke-components servicemeshoperator3 hub-gateway service-interconnect \
+      industrial-edge-tst spoke-gateway spoke-interconnect istio-monitoring grafana-dashboards spoke-dashboards; do
       argo_refresh "$app"
     done
 
@@ -280,6 +290,11 @@ data:
       oc delete job gitlab-workshop-bootstrap -n "$NS" --ignore-not-found
       argo_refresh gitlab-operator
     fi
+    if ! oc get job gitlab-platform-content-seed -n "$NS" -o jsonpath='{.status.succeeded}' 2>/dev/null | grep -q 1; then
+      oc delete job gitlab-platform-content-seed -n "$NS" --ignore-not-found
+      argo_refresh gitlab-operator
+    fi
+    argo_refresh developer-hub
     echo "OK: gitlab bootstrap check"
 
   acs-init-bundle.sh: |

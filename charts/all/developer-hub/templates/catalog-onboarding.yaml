@@ -1,6 +1,8 @@
 {{- /*
-  Workshop onboarding + TechDocs (mkdocs) — mounted in-pod so builder uses dir:. not GitHub Pages.
+  Workshop onboarding catalog — TechDocs served from GitLab platform-content repo.
 */ -}}
+{{- $onboardingDocs := printf "url:%s/-/tree/main/docs/onboarding" (include "developer-hub.platformContentBaseUrl" .) -}}
+{{- $platformDocs := printf "https://%s/developer-hub/platform-content/-/tree/main/docs/onboarding" (include "developer-hub.gitlabHost" .) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,5 +15,9 @@ metadata:
 data:
 {{- range $path, $_ := .Files.Glob "files/onboarding/**" }}
   {{ base $path }}: |
+{{- if eq (base $path) "catalog-info.yaml" }}
+{{ $.Files.Get $path | replace "backstage.io/techdocs-ref: dir:." (printf "backstage.io/techdocs-ref: %s" $onboardingDocs) | replace "https://github.com/maximilianoPizarro/platform-hub-spoke-config/tree/main/docs/assets/backstage/onboarding" $platformDocs | replace "https://maximilianopizarro.github.io/platform-hub-spoke-config/" (printf "https://%s/developer-hub/platform-content" (include "developer-hub.gitlabHost" $)) | indent 4 }}
+{{- else }}
 {{ $.Files.Get $path | indent 4 }}
+{{- end }}
 {{- end }}

@@ -36,6 +36,16 @@ API_BASE = f"https://{API_HOST}:{API_PORT}"
 MODE = os.environ.get("SYNC_MODE", "hub")
 FIELD_CONTENT_APP = os.environ.get("FIELD_CONTENT_APP", "field-content")
 ARGOCD_NS = os.environ.get("ARGOCD_NAMESPACE", "openshift-gitops")
+REFRESH_APPS = [
+    a.strip()
+    for a in os.environ.get(
+        "REFRESH_APPS",
+        "field-content,hybrid-mesh-platform-hub,hub-gateway,service-interconnect,"
+        "developer-hub,console-links,kafka-console,istio-monitoring,grafana-dashboards,"
+        "industrial-edge-tst,spoke-gateway,spoke-interconnect",
+    ).split(",")
+    if a.strip()
+]
 SPOKE_CLUSTERS = [
     c.strip()
     for c in os.environ.get("SPOKE_CLUSTERS", "east,west").split(",")
@@ -211,7 +221,7 @@ def patch_field_content_values(patch: dict) -> bool:
     merged = deep_merge(current, patch)
     if merged == current:
         print("field-content helm values already up to date")
-        return True
+        return False
     updated = save_helm_values(app, merged)
     api_patch_merge(
         f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{FIELD_CONTENT_APP}",
@@ -219,6 +229,27 @@ def patch_field_content_values(patch: dict) -> bool:
     )
     print(f"Patched {FIELD_CONTENT_APP} helm values")
     return True
+
+
+def refresh_argo_apps(names: list[str]) -> None:
+    for name in names:
+        path = f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{name}"
+        try:
+            api_patch_merge(
+                path,
+                {
+                    "metadata": {
+                        "annotations": {
+                            "argocd.argoproj.io/refresh": "hard",
+                        }
+                    }
+                },
+            )
+            print(f"Refreshed Argo CD application {name}")
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                continue
+            print(f"WARN: refresh {name} failed ({e.code}): {e.reason}")
 
 
 def hub_domain_from_app(app: dict) -> str:
@@ -340,7 +371,9 @@ def run_hub() -> int:
     if not patch:
         print("Nothing to sync on hub yet")
         return 0
-    patch_field_content_values(patch)
+    changed = patch_field_content_values(patch)
+    if changed:
+        refresh_argo_apps(REFRESH_APPS)
     hub_domain = patch["global"]["hubClusterDomain"]
     hub_api = patch.get("clusters", {}).get("hub", {}).get("apiUrl", "")
     for name in SPOKE_CLUSTERS:
@@ -374,7 +407,23 @@ def run_spoke() -> int:
     hub_api = (cm.get("data") or {}).get("hub-api-url", "").strip()
     if hub_api:
         patch["clusters"]["hub"]["apiUrl"] = hub_api
-    patch_field_content_values(patch)
+    changed = patch_field_content_values(patch)
+    if changed and patch.get("clusters", {}).get("hub", {}).get("domain"):
+        refresh_argo_apps(
+            [
+                a
+                for a in REFRESH_APPS
+                if a
+                in {
+                    "field-content",
+                    "industrial-edge-tst",
+                    "spoke-gateway",
+                    "spoke-interconnect",
+                    "istio-monitoring",
+                    "spoke-dashboards",
+                }
+            ]
+        )
     return 0
 
 

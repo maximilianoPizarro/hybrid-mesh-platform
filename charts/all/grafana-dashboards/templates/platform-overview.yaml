@@ -197,7 +197,7 @@ spec:
       ],
       "refresh": "30s",
       "schemaVersion": 39,
-      "tags": ["istio", "multi-cluster", "kafka", "hub-gateway", "platform"],
+      "tags": ["istio", "multi-cluster", "kafka", "hub-gateway", "platform", "industrial-edge"],
       "templating": {
         "list": [
           {"current": {"selected": false, "text": "Prometheus", "value": "Prometheus"}, "hide": 0, "includeAll": false, "label": "Hub", "multi": false, "name": "ds_hub", "options": [], "query": "prometheus", "refresh": 1, "regex": "/^Prometheus$/", "skipUrlSync": false, "type": "datasource"},

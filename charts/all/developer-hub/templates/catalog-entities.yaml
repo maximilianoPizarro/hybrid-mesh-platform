@@ -6,7 +6,8 @@
 {{- $hub := include "developer-hub.clusterDomain" . -}}
 {{- $east := .Values.spokeDomains.east | default "apps.cluster-east.example.com" -}}
 {{- $west := .Values.spokeDomains.west | default "apps.cluster-west.example.com" -}}
-{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" | replace "__HUB_APPS_DOMAIN__" $hub | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west -}}
+{{- $gitlabDocs := printf "url:%s/-/tree/main/docs/industrial-edge" (include "developer-hub.platformContentBaseUrl" .) -}}
+{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" | replace "__HUB_APPS_DOMAIN__" $hub | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west | replace "backstage.io/techdocs-ref: dir:./techdocs" (printf "backstage.io/techdocs-ref: %s" $gitlabDocs) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

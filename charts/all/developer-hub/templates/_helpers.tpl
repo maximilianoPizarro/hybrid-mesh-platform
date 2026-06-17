@@ -35,3 +35,20 @@
 {{- $g := .Values.global | default dict -}}
 {{- .Values.hubClusterDomain | default $g.hubClusterDomain | default (include "developer-hub.clusterDomain" .) -}}
 {{- end -}}
+
+{{- define "developer-hub.clusterDomainBase" -}}
+{{- $d := include "developer-hub.clusterDomain" . -}}
+{{- if hasPrefix "apps." $d -}}
+{{- trimPrefix "apps." $d -}}
+{{- else -}}
+{{- $d -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "developer-hub.gitlabHost" -}}
+{{- printf "gitlab.apps.%s" (include "developer-hub.clusterDomainBase" .) -}}
+{{- end -}}
+
+{{- define "developer-hub.platformContentBaseUrl" -}}
+{{- printf "https://%s/developer-hub/platform-content" (include "developer-hub.gitlabHost" .) -}}
+{{- end -}}

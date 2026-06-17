@@ -24,6 +24,7 @@ data:
           - host: "*.github.io"
           - host: raw.githubusercontent.com
           - host: github.com
+          - host: {{ include "developer-hub.gitlabHost" . | quote }}
           - host: petstore3.swagger.io
           - host: httpbin.org
           - host: catfact.ninja
@@ -127,7 +128,7 @@ data:
           rules:
             - allow: [System, Domain, Component, API, Resource]
         - type: url
-          target: https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/docs/assets/backstage/software-templates/templates-catalog.yaml
+          target: {{ printf "%s/-/raw/main/software-templates/templates-catalog.yaml" (include "developer-hub.platformContentBaseUrl" .) | quote }}
           rules:
             - allow: [Template, Location]
         - type: file
@@ -159,7 +160,7 @@ data:
           rules:
             - allow: [System, Component]
         - type: url
-          target: https://raw.githubusercontent.com/maximilianoPizarro/hybrid-mesh-platform/main/docs/assets/backstage/software-templates/templates-catalog.yaml
+          target: {{ printf "%s/-/raw/main/software-templates/templates-catalog.yaml" (include "developer-hub.platformContentBaseUrl" .) | quote }}
           rules:
             - allow: [Template, Location]
       providers:
