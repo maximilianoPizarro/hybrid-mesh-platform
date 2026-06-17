@@ -28,6 +28,9 @@ kubernetesSpokes:
     apiUrl: ""
   west:
     apiUrl: ""
+# TechDocs: GitHub Pages URL used for catalog entities until validatedpatterns.io is live.
+techdocs:
+  githubPagesUrl: "https://maximilianopizarro.github.io/hybrid-mesh-platform/"
 # RHDP injects spoke ingress domains for IE catalog links (component-applications.yaml).
 spokeDomains:
   east: ""

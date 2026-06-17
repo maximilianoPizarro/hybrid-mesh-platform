@@ -323,7 +323,7 @@ metadata:
     backstage.io/kubernetes-label-selector: app=line-dashboard
     argocd/app-name: field-content-industrial-edge-tst
     janus-idp.io/tekton: industrial-edge-ci
-    backstage.io/techdocs-ref: url:https://validatedpatterns.io/patterns/hybrid-mesh-platform/
+    backstage.io/techdocs-ref: url:https://maximilianopizarro.github.io/hybrid-mesh-platform/
   links:
     - url: https://line-dashboard-industrial-edge-tst-all.__EAST_APPS_DOMAIN__
       title: Dashboard (east)
