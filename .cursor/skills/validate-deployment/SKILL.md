@@ -169,7 +169,10 @@ Argo app **`hub-post-install-bootstrap`** (sync wave 9) runs phased Jobs in `ope
 
 ```bash
 oc create secret generic acs-init-credentials -n stackrox --from-literal=ROX_ADMIN_PASSWORD='...'
-oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc create secret generic maas-facilitator-seed -n vault \
+  --from-literal=api-key='sk-...' \
+  --from-literal=granite-api-key='sk-...' \
+  --from-literal=deepseek-api-key='sk-...'
 oc annotate application hub-post-install-bootstrap -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
@@ -193,8 +196,19 @@ Spot-check module heroes in Showroom UI (live captures, not placeholders): **13*
 After hub sync, inject keys (never commit `sk-*` to Git):
 
 ```bash
-oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
+oc create secret generic maas-facilitator-seed -n vault \
+  --from-literal=api-key='sk-...' \
+  --from-literal=granite-api-key='sk-...' \
+  --from-literal=deepseek-api-key='sk-...'
 oc annotate application vault-maas-external-secrets -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
+```
+
+Verify ESO + Vault path:
+
+```bash
+oc get clustersecretstore vault-workshop-maas -o jsonpath='{.status.conditions[0].status}{"\n"}'   # True
+oc get netpol allow-vault-maas-egress-8200 -n external-secrets
+oc get externalsecret -A
 ```
 
 Verify:

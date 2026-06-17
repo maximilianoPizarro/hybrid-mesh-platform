@@ -485,6 +485,8 @@ oc annotate application vault-maas-external-secrets -n openshift-gitops \
 
 **Symptom:** Developer Hub `/lightspeed` or NeuroFace chat **401** — create `maas-facilitator-seed` in `vault` and refresh `vault-maas-external-secrets`.
 
+**Symptom:** `ClusterSecretStore vault-workshop-maas` not ready / ExternalSecret `SecretSyncedError` with *unable to create client* — OpenShift ESO NetworkPolicy blocks Vault `:8200`; chart `vault-maas-external-secrets` applies `allow-vault-maas-egress-8200`. Re-sync that Argo app after `vault-k8s-auth-eso` PostSync completes.
+
 RHDP can inject `litemaas.apiKey` into clustergroup values (wired to `workshop-kuadrant-apis`, `openshift-ai-hub`, `neuroface` charts).
 
 ---

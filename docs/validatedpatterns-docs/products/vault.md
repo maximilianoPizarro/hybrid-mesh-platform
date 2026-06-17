@@ -87,6 +87,7 @@ Chart `charts/all/vault-maas-external-secrets/` (hub Argo app, sync wave 4) ship
 | Resource | Purpose |
 | -------- | ------- |
 | PostSync Job `vault-k8s-auth-eso` | Enables Vault `kubernetes` auth + policy `external-secrets-maas-read` for SA `external-secrets-vault` |
+| NetworkPolicy `allow-vault-maas-egress-8200` | ESO pod egress to Vault `:8200` (operator `allow-vault-access` only opens `:443`) |
 | `ClusterSecretStore` `vault-workshop-maas` | ESO → Vault KV `secret/workshop/maas` |
 | `ExternalSecret` (×5) | Syncs to `ai-gateway-system`, `kairos-system`, `maas-workshop`, `neuroface`, `developer-hub` |
 | CronJob `maas-authpolicy-sync` | Patches Kuadrant `AuthPolicy` `ai-maas-auth` Bearer header from ESO secret |
@@ -98,7 +99,9 @@ Facilitator flow (keys never in Git):
 
 ```bash
 oc create secret generic maas-facilitator-seed -n vault \
-  --from-literal=api-key='sk-...'
+  --from-literal=api-key='sk-...' \
+  --from-literal=granite-api-key='sk-...' \
+  --from-literal=deepseek-api-key='sk-...'
 oc annotate application vault-maas-external-secrets -n openshift-gitops \
   argocd.argoproj.io/refresh=hard --overwrite
 ```
@@ -195,7 +198,8 @@ oc get cm workshop-api-vault-paths -n workshop-kuadrant-apis
 | Vault link HTTP 307 | Use `/ui/` in ConsoleLink href |
 | `userpass` login fails | Re-sync Argo app `vault-demo-auth` |
 | NeuroFace chat 401 | Confirm ESO synced `neuroface-maas-api-key` or create `maas-facilitator-seed` |
-| ExternalSecret `SecretSyncedError` | Check Vault policy, `ClusterSecretStore` auth, path spelling |
+| `ClusterSecretStore` not ready / `unable to create client` | Run PostSync `vault-k8s-auth-eso`; confirm `oc get netpol allow-vault-maas-egress-8200 -n external-secrets`; ESO must reach Vault on **:8200** |
+| ExternalSecret `SecretSyncedError` | Check Vault policy, `ClusterSecretStore` auth, path spelling (`workshop/maas`) |
 | Keys in Git | Remove from history; rotate keys; use Vault + ESO only |
 
 ## Documentation

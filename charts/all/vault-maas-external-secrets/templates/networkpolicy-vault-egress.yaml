@@ -1,0 +1,24 @@
+{{- if include "vault-maas-external-secrets.enabled" . }}
+# OpenShift ESO operator's allow-vault-access only permits egress :443; in-cluster Vault listens on :8200.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vault-maas-egress-8200
+  namespace: {{ .Values.externalSecrets.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: external-secrets
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.vault.namespace }}
+      ports:
+        - protocol: TCP
+          port: 8200
+{{- end }}
