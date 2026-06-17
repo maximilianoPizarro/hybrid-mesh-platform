@@ -24,8 +24,7 @@ data:
     try:
         import yaml
     except ImportError:
-        print("PyYAML required", file=sys.stderr)
-        sys.exit(1)
+        yaml = None
 
     app = os.environ["FIELD_APP"]
     ns = os.environ["ARGO_NS"]
@@ -36,7 +35,7 @@ data:
     doc = json.loads(raw)
     helm = doc.get("spec", {}).get("source", {}).get("helm", {})
     values = dict(helm.get("valuesObject") or {})
-    if not values:
+    if not values and yaml:
         text = helm.get("values") or ""
         if text.strip():
             loaded = yaml.safe_load(text) or {}
