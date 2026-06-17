@@ -35,6 +35,7 @@ stringData:
   token: {{ $cluster.token }}
 type: Opaque
 {{- end }}
+{{- end }}
 ---
 apiVersion: agent.open-cluster-management.io/v1
 kind: KlusterletAddonConfig
@@ -59,5 +60,4 @@ spec:
     enabled: true
   searchCollector:
     enabled: true
-{{- end }}
 {{- end }}
