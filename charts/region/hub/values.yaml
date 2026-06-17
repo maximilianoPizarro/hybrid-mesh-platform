@@ -400,7 +400,7 @@ clusterGroup:
       namespace: developer-hub
       argoProject: workshop
       path: charts/all/workshop-demos
-      syncWave: '6'
+      syncWave: '2'
     # --- Wave 7: Post-config (ACS bundles, NeuroFace) ---
     acs-init-bundle-sync:
       name: acs-init-bundle-sync

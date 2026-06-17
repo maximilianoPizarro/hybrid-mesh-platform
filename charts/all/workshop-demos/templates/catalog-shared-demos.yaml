@@ -10,7 +10,7 @@ metadata:
   labels:
     backstage.io/catalog: "true"
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "2"
 data:
   hybrid-mesh-shared-demos.yaml: |
 {{ (.Files.Get "files/catalog/hybrid-mesh-shared-demos.yaml") | replace "YOUR_HUB_DOMAIN" $hub | replace "YOUR_EAST_DOMAIN" $east | nindent 4 }}
