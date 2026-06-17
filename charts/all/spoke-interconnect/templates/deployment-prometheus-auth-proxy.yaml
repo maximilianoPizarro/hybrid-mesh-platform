@@ -32,7 +32,7 @@ spec:
               mountPath: /config
       containers:
         - name: nginx
-          image: {{ .Values.prometheusProxy.image | default "quay.io/rhpds/nginx:1.25" | quote }}
+          image: {{ dig "prometheusProxy" "image" "quay.io/rhpds/nginx:1.25" .Values | quote }}
           command:
             - /bin/sh
             - -ec
