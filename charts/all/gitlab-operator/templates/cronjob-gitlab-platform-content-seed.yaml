@@ -66,6 +66,8 @@ spec:
                       -H "PRIVATE-TOKEN: $(cat /shared/gitlab-pat)" -H "Content-Type: application/json" \
                       -d "{\"name\":\"${PROJECT_NAME}\",\"path\":\"${PROJECT_NAME}\",\"namespace_id\":${GROUP_ID},\"visibility\":\"public\",\"initialize_with_readme\":false}" >/dev/null
                   fi
+                  curl -skS -X DELETE "${GITLAB_API}/projects/${DEVHUB_GROUP}%2F${PROJECT_NAME}/protected_branches/main" \
+                    -H "PRIVATE-TOKEN: $(cat /shared/gitlab-pat)" >/dev/null 2>&1 || true
               volumeMounts:
                 - name: shared
                   mountPath: /shared
@@ -114,7 +116,11 @@ spec:
                   git commit -m "Seed platform content from pattern"
                   REMOTE="https://oauth2:${GITLAB_PAT}@${GITLAB_WEB#https://}/${PROJECT_PATH}.git"
                   git remote add origin "${REMOTE}"
-                  git push -u origin main --force
+                  if git ls-remote origin main >/dev/null 2>&1; then
+                    git fetch origin main
+                    git pull origin main --rebase --allow-unrelated-histories || git pull origin main --allow-unrelated-histories
+                  fi
+                  git push -u origin main
                   echo "Seeded ${GITLAB_WEB}/${PROJECT_PATH}"
               volumeMounts:
                 - name: shared

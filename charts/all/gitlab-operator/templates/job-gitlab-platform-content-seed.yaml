@@ -73,6 +73,8 @@ spec:
                   -d "{\"name\":\"${PROJECT_NAME}\",\"path\":\"${PROJECT_NAME}\",\"namespace_id\":${GROUP_ID},\"visibility\":\"public\",\"initialize_with_readme\":false}")
                 echo "${CREATE}" | grep -q '"id"' || { echo "Project create failed: ${CREATE}" >&2; exit 1; }
               fi
+              curl -skS -X DELETE "${GITLAB_API}/projects/${PROJECT_PATH//\//%2F}/protected_branches/main" \
+                -H "PRIVATE-TOKEN: ${GITLAB_PAT}" >/dev/null 2>&1 || true
           volumeMounts:
             - name: shared
               mountPath: /shared
@@ -120,7 +122,11 @@ spec:
               git commit -m "Seed platform content from pattern"
               REMOTE="https://oauth2:${GITLAB_PAT}@${GITLAB_WEB#https://}/${PROJECT_PATH}.git"
               git remote add origin "${REMOTE}"
-              git push -u origin main --force
+              if git ls-remote origin main >/dev/null 2>&1; then
+                git fetch origin main
+                git pull origin main --rebase --allow-unrelated-histories || git pull origin main --allow-unrelated-histories
+              fi
+              git push -u origin main
               echo "gitlab-platform-content-seed complete: ${GITLAB_WEB}/${PROJECT_PATH}"
           volumeMounts:
             - name: shared

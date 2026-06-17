@@ -15,6 +15,7 @@
   "kairos-system"
   "openshift-cnv"
   "maas-workshop"
+  "camel-dashboard"
 }}
 {{- /* RHCL dns-operator: no ambient — CrashLoopBackOff on spokes when meshed */ -}}
 {{- $noMeshNamespaces := list
