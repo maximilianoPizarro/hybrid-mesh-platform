@@ -1,7 +1,8 @@
 {{- $maas := .Values.maas | default dict -}}
 {{- $endpoint := $maas.endpoint | default "https://maas-rhdp.apps.maas.redhatworkshops.io" -}}
 {{- $secretName := $maas.credentialsSecretName | default "openshift-ai-maas-credentials" -}}
-{{- $secretKey := $maas.credentialsSecretKey | default "api-key" -}}
+{{- $defaultSecretKey := $maas.credentialsSecretKey | default "api-key" -}}
+{{- $maasKey := include "openshift-ai-hub.maasApiKey" . -}}
 {{- $ms := .Values.modelServing | default dict -}}
 {{- $modelMesh := $ms.modelMeshEnabled | default false -}}
 {{- $serverless := $ms.serverlessEnabled | default false -}}
@@ -68,6 +69,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "0"
     openshift.io/description: "OpenShift AI workshop — MaaS external models and playground"
 ---
+{{- if $maasKey }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -83,13 +85,9 @@ metadata:
     openshift.io/display-name: MaaS RHDP API Key
 type: Opaque
 stringData:
-  {{- $maasKey := include "openshift-ai-hub.maasApiKey" . -}}
-  {{- if $maasKey }}
-  {{ $secretKey }}: {{ $maasKey | quote }}
-  {{- else }}
-  {{ $secretKey }}: "CHANGEME-inject-via-RHDP-or-oc-create-secret"
-  {{- end }}
+  {{ $defaultSecretKey }}: {{ $maasKey | quote }}
   OPENAI_API_BASE: {{ printf "%s/v1" (trimSuffix "/" $endpoint) | quote }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -124,7 +122,7 @@ data:
         "displayName": {{ $m.displayName | default $m.id | quote }},
         "endpoint": {{ printf "%s/v1" (trimSuffix "/" $endpoint) | quote }},
         "apiKeySecret": {{ $secretName | quote }},
-        "apiKeySecretKey": {{ $secretKey | quote }}
+        "apiKeySecretKey": {{ ($m.secretKey | default $defaultSecretKey) | quote }}
       }{{- if ne $i (sub (len ($maas.models | default list)) 1) }},{{ end }}
 {{- end }}
     ]
@@ -247,7 +245,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: {{ $secretName }}
-                key: {{ $secretKey }}
+                key: {{ $m.secretKey | default $defaultSecretKey }}
                 optional: true
         resources:
           requests:

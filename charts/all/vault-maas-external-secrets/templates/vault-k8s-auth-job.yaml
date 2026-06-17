@@ -49,10 +49,12 @@ spec:
 
               vault_exec auth enable -path="${K8S_AUTH_MOUNT}" kubernetes 2>/dev/null || echo "kubernetes auth already enabled"
 
-              SA_JWT="$(oc create token "${ESO_SA}" -n "${ESO_NS}" --duration=600s)"
+              KUBE_CA="$(oc get configmap kube-root-ca.crt -n "${ESO_NS}" -o jsonpath='{.data.ca\.crt}')"
+              REVIEWER_JWT="$(oc create token vault-auth-delegator -n "${ESO_NS}" --duration=600s)"
               vault_exec write "auth/${K8S_AUTH_MOUNT}/config" \
-                kubernetes_host="https://kubernetes.default.svc:443" \
-                token_reviewer_jwt="${SA_JWT}" \
+                kubernetes_host="https://kubernetes.default.svc" \
+                kubernetes_ca_cert="${KUBE_CA}" \
+                token_reviewer_jwt="${REVIEWER_JWT}" \
                 disable_iss_validation=true
 
               vault_exec policy write external-secrets-maas-read - <<'EOF'

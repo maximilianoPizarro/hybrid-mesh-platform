@@ -407,7 +407,7 @@ oc annotate application hub-post-install-bootstrap -n openshift-gitops \
 | Secret | Namespace | Keys | Triggers |
 | ------ | --------- | ---- | -------- |
 | `acs-init-credentials` | `stackrox` | `ROX_ADMIN_PASSWORD` | ACS PostSync jobs (wave 15 + `acs-init-bundle-sync`) |
-| `maas-facilitator-seed` | `vault` | `api-key`, optional `granite-api-key`, `deepseek-api-key` | `maas-facilitator-vault-seed` PostSync → Vault + ESO |
+| `maas-facilitator-seed` | `vault` | `api-key` (llama-scout-17b), `granite-api-key`, `deepseek-api-key` | `maas-facilitator-vault-seed` PostSync → Vault + ESO |
 
 ```bash
 # ACS (before or after sync — Job skips until secret exists)
@@ -416,7 +416,9 @@ oc create secret generic acs-init-credentials -n stackrox \
 
 # MaaS via Vault+ESO (v1.7.1+)
 oc create secret generic maas-facilitator-seed -n vault \
-  --from-literal=api-key='sk-...'
+  --from-literal=api-key='sk-...' \
+  --from-literal=granite-api-key='sk-...' \
+  --from-literal=deepseek-api-key='sk-...'
 oc annotate application vault-maas-external-secrets -n openshift-gitops \
   argocd.argoproj.io/refresh=hard --overwrite
 ```
@@ -465,16 +467,21 @@ oc get cm vault-demo-login -n vault -o yaml
 Never commit `sk-*` keys. RHDP `litemaas.apiKey` or facilitator Secret:
 
 ```bash
-oc create secret generic maas-facilitator-seed -n vault --from-literal=api-key='sk-...'
-oc annotate application vault-maas-external-secrets -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
+oc create secret generic maas-facilitator-seed -n vault \
+  --from-literal=api-key='sk-...' \
+  --from-literal=granite-api-key='sk-...' \
+  --from-literal=deepseek-api-key='sk-...'
+oc annotate application vault-maas-external-secrets -n openshift-gitops \
+  argocd.argoproj.io/refresh=hard --overwrite
 ```
 
-| Secret | Namespace | Consumers |
-|--------|-----------|-----------|
-| `kairos-ai-credentials` | `kairos-system` | Kairos, Lightspeed sync |
-| `openshift-ai-maas-credentials` | `maas-workshop` | ODS playground, MaaS proxies |
-| `neuroface-maas-api-key` | `neuroface` | NeuroFace `/api/chat` |
-| `maas-granite-credentials` | `maas-workshop` | ODS connection (optional) |
+| Secret (K8s, from ESO) | Namespace | Vault key | Consumers |
+|--------|-----------|-----------|-----------|
+| `kairos-ai-credentials` | `kairos-system` | `api-key` | Kairos (llama-scout-17b) |
+| `openshift-ai-maas-credentials` | `maas-workshop` | all three + `OPENAI_API_BASE` | ODS playground / ISV proxies |
+| `neuroface-maas-api-key` | `neuroface` | `api-key` | NeuroFace chat |
+| `llama-stack-secrets` | `developer-hub` | `granite-api-key` → `VLLM_API_KEY` | Lightspeed |
+| `ai-maas-upstream-credentials` | `ai-gateway-system` | `granite-api-key` | Kuadrant AI gateway AuthPolicy |
 
 **Symptom:** Developer Hub `/lightspeed` or NeuroFace chat **401** — create `maas-facilitator-seed` in `vault` and refresh `vault-maas-external-secrets`.
 

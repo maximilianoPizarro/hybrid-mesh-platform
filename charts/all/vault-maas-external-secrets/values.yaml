@@ -12,8 +12,8 @@ vault:
   role: external-secrets-maas
   caSecret:
     enabled: true
-    name: vault-server-tls
-    key: ca.crt
+    name: vault-secret
+    key: tls.crt
 
 externalSecrets:
   namespace: external-secrets
@@ -23,16 +23,23 @@ externalSecrets:
 
 maas:
   openAiApiBase: https://maas-rhdp.apps.maas.redhatworkshops.io/v1
+  # Vault secret/workshop/maas keys (seeded from maas-facilitator-seed):
+  #   api-key            → llama-scout-17b
+  #   granite-api-key    → granite-3-2-8b-instruct
+  #   deepseek-api-key   → deepseek-r1-distill-qwen-14b
+  #   openai-api-base    → MaaS endpoint (set by seed job)
 
 consumers:
   aiGateway:
     enabled: true
     namespace: ai-gateway-system
     secretName: ai-maas-upstream-credentials
+    vaultProperty: granite-api-key
   kairos:
     enabled: true
     namespace: kairos-system
     secretName: kairos-ai-credentials
+    vaultProperty: api-key
   maasWorkshop:
     enabled: true
     namespace: maas-workshop
@@ -41,11 +48,13 @@ consumers:
     enabled: true
     namespace: neuroface
     secretName: neuroface-maas-api-key
+    vaultProperty: api-key
   developerHubLightspeed:
     enabled: true
     namespace: developer-hub
     secretName: llama-stack-secrets
     mergeKey: VLLM_API_KEY
+    vaultProperty: granite-api-key
 
 authPolicySync:
   enabled: true

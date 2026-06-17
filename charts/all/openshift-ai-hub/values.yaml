@@ -39,12 +39,16 @@ maas:
   models:
     - id: llama-scout-17b
       displayName: Llama Scout 17B (workshop default)
+      secretKey: api-key
     - id: granite-3-2-8b-instruct
       displayName: Granite 3.2 8B Instruct (Lightspeed default)
+      secretKey: granite-api-key
     - id: deepseek-r1-distill-qwen-14b
       displayName: DeepSeek R1 Distill Qwen 14B
+      secretKey: deepseek-api-key
     - id: codellama-7b-instruct
       displayName: CodeLlama 7B Instruct
+      secretKey: api-key
 playground:
   enabled: true
 mcp:
