@@ -36,7 +36,10 @@ clusterGroup:
     openshift-opentelemetry: {}
     distributed-tracing: {}
     istio-system: {}
-    kairos-system: {}
+    kairos-system:
+      operatorGroup: true
+      targetNamespaces:
+        - kairos-system
     redhat-ods-operator:
       operatorGroup: true
       targetNamespaces: []

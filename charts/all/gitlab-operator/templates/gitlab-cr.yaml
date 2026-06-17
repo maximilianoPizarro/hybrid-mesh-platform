@@ -1,4 +1,4 @@
-{{- $domain := include "gitlab-operator.clusterDomain" . -}}
+{{- $appsDomain := include "gitlab-operator.appsDomain" . -}}
 apiVersion: apps.gitlab.com/v1beta1
 kind: GitLab
 metadata:
@@ -13,7 +13,7 @@ spec:
     values:
       global:
         hosts:
-          domain: {{ $domain | quote }}
+          domain: {{ $appsDomain | quote }}
           hostSuffix: gitlab
           https: true
         ingress:
@@ -28,7 +28,7 @@ spec:
             tls:
               termination: edge
         minio:
-          enabled: false
+          enabled: true
       certmanager:
         install: false
       installCertmanager: false

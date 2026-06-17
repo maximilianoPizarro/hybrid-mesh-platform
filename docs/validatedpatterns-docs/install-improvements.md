@@ -126,7 +126,7 @@ Full detail: [Troubleshooting → ArgoCD Unknown sync status](troubleshooting.md
 
 **v1.7.0** replaces GitLab with **GitLab Operator** (standard profile: webservice, gitaly, PostgreSQL, Container Registry) plus **GitLab Runner Operator** on the hub.
 
-Chart: `charts/all/gitlab-operator/` — Subscriptions in `gitlab` and `gitlab-runner` namespaces, `GitLab` CR with OpenShift routes at `https://gitlab.apps.<hub-domain>/`.
+Chart: `charts/all/gitlab-operator/` — Subscriptions in `gitlab` and `gitlab-runner` namespaces (`installPlanApproval: Automatic`), `GitLab` CR (chart **9.11.6**) with bundled MinIO for object storage, plus Route `gitlab-apps` at `https://gitlab.apps.<hub-domain>/` (operator-created routes use `gitlab-gitlab.apps.*`; the extra Route matches console links and scaffolder URLs).
 
 PostSync jobs:
 
@@ -140,6 +140,23 @@ bash scripts/verify-node-capacity.sh
 ```
 
 **OpenShift AI 3.4:** subscription channel `stable-3.4`; dashboard URL `https://rh-ai.apps.<hub-domain>/`. Notebooks are **opt-in** (`notebook.deployCr: false`); PostSync scales `neuroface-ml-lab` StatefulSets to 0 until the AI module.
+
+**RHODS subscription orphan (CSV missing, `UpgradePending`):** if `status.installedCSV` is set but `oc get csv` returns NotFound, delete the InstallPlan and Subscription in `redhat-ods-operator` and let Argo recreate (or re-sync `hybrid-mesh-platform-hub`):
+
+```bash
+oc delete installplan -n redhat-ods-operator --all
+oc delete subscription rhods-operator -n redhat-ods-operator
+```
+
+---
+
+## Kairos operator
+
+Chart: `charts/all/kairos/` — community `kairos-operator` subscription only (no OperatorGroup in the chart; clustergroup creates **`kairos-system-operator-group`** via `kairos-system.operatorGroup: true` in `charts/region/*/values.yaml`).
+
+`KairosAgent`, `KairosConsole`, and `SmartScalingPolicy` CRs use `SkipDryRunOnMissingResource` until the operator CSV installs.
+
+**Symptom:** `Multiple OperatorGroup found in the same namespace` — duplicate OG from chart + clustergroup. **Fix in Git:** single OG from clustergroup only (chart ships subscription + CRs, not OperatorGroup).
 
 ---
 

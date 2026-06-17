@@ -18,7 +18,10 @@ clusterGroup:
     camel-dashboard: {}
     spoke-gateway-system: {}
     service-interconnect: {}
-    kairos-system: {}
+    kairos-system:
+      operatorGroup: true
+      targetNamespaces:
+        - kairos-system
     openshift-cluster-observability-operator: {}
     openshift-opentelemetry: {}
     istio-system: {}

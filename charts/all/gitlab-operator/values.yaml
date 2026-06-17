@@ -7,16 +7,16 @@ operator:
   packageName: gitlab-operator-kubernetes
   channel: stable
   source: community-operators
-  installPlanApproval: Manual
+  installPlanApproval: Automatic
 
 runnerOperator:
   packageName: gitlab-runner-operator
   channel: stable
   source: community-operators
-  installPlanApproval: Manual
+  installPlanApproval: Automatic
 
 gitlab:
-  chartVersion: "8.9.0"
+  chartVersion: "9.11.6"
   rootPasswordSecret: gitlab-gitlab-initial-root-password
   postgresStorage: 50Gi
   gitalyStorage: 50Gi

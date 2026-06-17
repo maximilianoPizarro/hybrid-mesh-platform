@@ -14,10 +14,10 @@ weight: 23
 
 | Resource | Purpose |
 | -------- | ------- |
-| GitLab Operator | Subscription `gitlab-operator-kubernetes` (community-operators, channel `stable`) |
-| GitLab CR | Namespace `gitlab` — webservice, gitaly, PostgreSQL, Container Registry |
+| GitLab Operator | Subscription `gitlab-operator-kubernetes` (community-operators, channel `stable`, **Automatic** InstallPlan) |
+| GitLab CR | Namespace `gitlab` — chart **9.11.6**, webservice, gitaly, PostgreSQL, bundled MinIO, Container Registry |
 | GitLab Runner Operator | Subscription in `gitlab-runner`; Runner CR with tag `openshift` |
-| Route | `https://gitlab.apps.<hub-domain>` |
+| Route | `https://gitlab.apps.<hub-domain>` via `route-gitlab-apps.yaml` (canonical workshop URL) |
 | PostSync `gitlab-workshop-bootstrap` | Groups `ws-user1` … `ws-userN`, `developer-hub`, `app-of-apps`, `workshop-demos` |
 | PostSync `gitlab-token-setup` | PAT → `GITLAB_TOKEN` in `developer-hub-oidc-auth` for scaffolder API |
 
@@ -57,7 +57,10 @@ curl -sk -H "PRIVATE-TOKEN: <token>" "https://gitlab.apps.<hub-domain>/api/v4/ve
 | Symptom | Fix |
 | ------- | --- |
 | GitLab pods Pending | Hub undersized — use **4×16/64** workers; check PVC storage class |
+| `ConfigError` object storage / `connection` empty | Chart enables bundled MinIO (`global.minio.enabled: true`); do not disable MinIO without external S3 |
+| Route 503 but pods Running | Operator route is `gitlab-gitlab.apps.*`; workshop URL is `gitlab.apps.*` — confirm `route/gitlab-apps` exists |
 | Argo `gitlab-operator` SyncFailed on `GitLab` CR | Expected until GitLab Operator CSV installs (`SkipDryRunOnMissingResource` on CR); subscriptions sync at wave 2 |
+| InstallPlan **Manual** / operator never installs | `values.yaml` sets `installPlanApproval: Automatic` for both GitLab subscriptions |
 | Scaffolder publish 404 | Confirm `ws-<owner>` group exists; re-run `gitlab-workshop-bootstrap` |
 | Runner not picking jobs | Check `gitlab-runner-token` Secret and Runner CR tags include `openshift` |
 | `GITLAB_TOKEN` invalid | Re-run PostSync `gitlab-token-setup` in `developer-hub` (skips with exit 0 if GitLab not deployed yet) |

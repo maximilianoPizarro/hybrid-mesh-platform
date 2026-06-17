@@ -9,6 +9,7 @@ metadata:
   namespace: kairos-system
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   mode: {{ .Values.clusterAgent.mode | quote }}
   aiModel:
@@ -48,6 +49,7 @@ metadata:
   namespace: kairos-system
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   mode: {{ $cfg.mode | quote }}
   aiModel:

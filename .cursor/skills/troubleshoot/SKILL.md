@@ -20,10 +20,10 @@ MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 | Link | Blocker |
 |------|---------|
 | Developer Hub | Missing `developer-hub-catalog-demos`; TechDocs CM keys with `/`; Backstage still Init |
-| GitLab | Pending InstallPlans or GitLab CR not Ready; undersized hub (need 4×16/64) |
-| OpenShift AI | RHODS OG must be **AllNamespaces** (`spec: {}`); needs DSCInitialization v2; **403** without `oc login` |
+| GitLab | Pending InstallPlans (`installPlanApproval: Automatic` in chart) or `ConfigError` object storage — enable bundled MinIO; confirm `route/gitlab-apps`; undersized hub (need 4×16/64) |
+| OpenShift AI | RHODS OG must be **AllNamespaces** (`spec: {}`); orphaned subscription (CSV missing) — delete InstallPlan + Subscription; **403** without `oc login` |
 | Kubecost | Duplicate OG or wrong domain (`example.com`) — OG name **`kubecost-operator-group`** |
-| Kairos | Duplicate OperatorGroup in namespace |
+| Kairos | Duplicate OperatorGroup — OG only from clustergroup (`kairos-system.operatorGroup`), not `charts/all/kairos/templates/operator.yaml` |
 | Skupper observer | OCI chart in `default`; missing wrapper Route **passthrough** — use `charts/all/skupper-network-observer` in **`service-interconnect`** |
 | Industrial Edge | Spokes not imported or Skupper VAN incomplete; or missing hub-gateway Service until Istio/mesh ready |
 
