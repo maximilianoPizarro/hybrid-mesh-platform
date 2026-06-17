@@ -24,13 +24,19 @@ spec:
     route:
       enabled: true
   controller:
+    processors:
+      operation: 25
+      status: 50
+    env:
+      - name: ARGOCD_APPLICATION_CONTROLLER_KUBECTL_PARALLELISM_LIMIT
+        value: "20"
     resources:
       limits:
-        cpu: "2"
-        memory: 8Gi
+        cpu: "4"
+        memory: 12Gi
       requests:
-        cpu: 250m
-        memory: 4Gi
+        cpu: "1"
+        memory: 6Gi
   resourceExclusions: |
     - apiGroups:
       - tekton.dev
@@ -70,14 +76,22 @@ spec:
       g, system:masters, role:admin
       g, admin, role:admin
     scopes: '[groups]'
-  repo:
+  redis:
     resources:
       limits:
         cpu: "1"
-        memory: 1Gi
+        memory: 512Mi
       requests:
         cpu: 250m
         memory: 256Mi
+  repo:
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
   resourceHealthChecks:
     - group: operators.coreos.com
       kind: Subscription
