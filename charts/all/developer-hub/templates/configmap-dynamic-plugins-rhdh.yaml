@@ -161,7 +161,7 @@ data:
                         allOf:
                           - isKind: api
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
-        disabled: false
+        disabled: {{ not (.Values.plugins.tekton.enabled | default true) }}
         pluginConfig:
           dynamicPlugins:
             frontend:
@@ -245,6 +245,10 @@ data:
                   schedule:
                     frequency: { minutes: 30 }
                     timeout: { minutes: 3 }
+      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-gitlab-dynamic
+        disabled: {{ not (.Values.plugins.gitlab.enabled | default true) }}
+      - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-gitlab-dynamic
+        disabled: {{ not (.Values.plugins.gitlab.enabled | default true) }}
       - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-notifications

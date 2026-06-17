@@ -70,7 +70,10 @@ spec:
               python3 <<'PY'
               import json, subprocess
               def oc(*args):
-                  return subprocess.check_output(["oc", *args], text=True)
+                  return subprocess.check_output(
+                      ["oc", *args],
+                      universal_newlines=True,
+                  )
               products = json.loads(oc("get", "apiproducts.devportal.kuadrant.io", "-A", "-o", "json"))["items"]
               policies = json.loads(oc("get", "planpolicies.extensions.kuadrant.io", "-A", "-o", "json"))["items"]
               by_route = {}

@@ -62,6 +62,10 @@ plugins:
     enabled: false
   argocd:
     enabled: true
+  gitlab:
+    enabled: true
+  tekton:
+    enabled: true
   kuadrant:
     enabled: true
   kafka:
