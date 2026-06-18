@@ -22,29 +22,33 @@ gitlab:
   postgresStorage: 50Gi
   gitalyStorage: 50Gi
   registryEnabled: true
-  # Sizing for ~30 concurrent scaffolder users (HTTP + Sidekiq background jobs).
+  # Sizing for ~50 concurrent workshop users (HTTP + Git push + Sidekiq).
+  # Webservice: 2 Puma workers/replica × maxReplicas => handles ~50 concurrent HTTP.
+  # Sidekiq: background jobs (pipelines, notifications, webhooks).
   webservice:
     minReplicas: 3
-    maxReplicas: 4
+    maxReplicas: 8
     workerProcesses: 4
     resources:
       requests:
-        cpu: 500m
+        cpu: "1"
         memory: 2Gi
       limits:
-        memory: 4Gi
+        cpu: "3"
+        memory: 5Gi
   sidekiq:
     minReplicas: 2
-    maxReplicas: 3
+    maxReplicas: 6
     resources:
       requests:
         cpu: 500m
         memory: 2Gi
       limits:
+        cpu: "2"
         memory: 4Gi
   gitlabShell:
     minReplicas: 2
-    maxReplicas: 2
+    maxReplicas: 5
 
 bootstrap:
   groupPrefix: ws-

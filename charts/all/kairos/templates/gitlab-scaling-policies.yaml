@@ -1,0 +1,201 @@
+{{- /*
+  SmartScalingPolicies for GitLab components — visible in Kairos Console UI.
+  Policies run on hub; Kairos hub-agent watches the gitlab namespace.
+  Rules use Prometheus UWM metrics available via kube-state-metrics on hub.
+*/ -}}
+{{- if and .Values.sensorScanPolicies.enabled (eq .Values.clusterRole "hub") }}
+{{- $otel := .Values.sensorScanPolicies.otelEndpoint }}
+{{- $prom := .Values.sensorScanPolicies.prometheusEndpoint }}
+---
+# GitLab Webservice — scales up under high CPU (workshop Git HTTP + scaffolder).
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: SmartScalingPolicy
+metadata:
+  name: gitlab-webservice-workshop
+  namespace: kairos-system
+  labels:
+    kairos.io/policy-type: workshop-platform
+    app.kubernetes.io/component: gitlab
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  scope: cluster
+  target:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gitlab-webservice-default
+    namespace: gitlab
+  otelEndpoint: {{ $otel | quote }}
+  prometheusEndpoint: {{ $prom | quote }}
+  rules:
+    - name: webservice-cpu-high
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: GreaterThan
+        threshold: "75"
+        for: 3m
+      action:
+        type: IncreaseResources
+        increaseCPUPercent: 30
+        maxCPU: "3"
+        cooldown: 5m
+    - name: webservice-memory-pressure
+      when:
+        metric: container_memory_working_set_bytes
+        operator: GreaterThan
+        threshold: "80"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseMemoryPercent: 25
+        maxMemory: 5Gi
+        cooldown: 5m
+    - name: webservice-cpu-idle
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: LessThan
+        threshold: "20"
+        for: 15m
+      action:
+        type: DecreaseResources
+        decreaseCPUPercent: 20
+        minCPU: "1"
+        cooldown: 10m
+  ai:
+    enabled: true
+  paused: false
+---
+# GitLab Sidekiq — background jobs (pipeline triggers, webhooks, notifications).
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: SmartScalingPolicy
+metadata:
+  name: gitlab-sidekiq-workshop
+  namespace: kairos-system
+  labels:
+    kairos.io/policy-type: workshop-platform
+    app.kubernetes.io/component: gitlab
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  scope: cluster
+  target:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gitlab-sidekiq-all-in-1-v2
+    namespace: gitlab
+  otelEndpoint: {{ $otel | quote }}
+  prometheusEndpoint: {{ $prom | quote }}
+  rules:
+    - name: sidekiq-cpu-high
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: GreaterThan
+        threshold: "70"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseCPUPercent: 50
+        maxCPU: "2"
+        cooldown: 5m
+    - name: sidekiq-memory-high
+      when:
+        metric: container_memory_working_set_bytes
+        operator: GreaterThan
+        threshold: "85"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseMemoryPercent: 20
+        maxMemory: 4Gi
+        cooldown: 5m
+  ai:
+    enabled: true
+  paused: false
+---
+# GitLab KAS — Kubernetes Agent Server (DevSpaces + kubeconfig access).
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: SmartScalingPolicy
+metadata:
+  name: gitlab-kas-workshop
+  namespace: kairos-system
+  labels:
+    kairos.io/policy-type: workshop-platform
+    app.kubernetes.io/component: gitlab
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  scope: cluster
+  target:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gitlab-kas
+    namespace: gitlab
+  otelEndpoint: {{ $otel | quote }}
+  prometheusEndpoint: {{ $prom | quote }}
+  rules:
+    - name: kas-cpu-high
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: GreaterThan
+        threshold: "60"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseCPUPercent: 25
+        maxCPU: "500m"
+        cooldown: 5m
+  ai:
+    enabled: true
+  paused: false
+---
+# GitLab Registry — container image push/pull from workshop pipelines.
+apiVersion: kairos.maximilianopizarro.github.io/v1alpha1
+kind: SmartScalingPolicy
+metadata:
+  name: gitlab-registry-workshop
+  namespace: kairos-system
+  labels:
+    kairos.io/policy-type: workshop-platform
+    app.kubernetes.io/component: gitlab
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  scope: cluster
+  target:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gitlab-registry
+    namespace: gitlab
+  otelEndpoint: {{ $otel | quote }}
+  prometheusEndpoint: {{ $prom | quote }}
+  rules:
+    - name: registry-cpu-high
+      when:
+        metric: container_cpu_usage_seconds_total
+        operator: GreaterThan
+        threshold: "70"
+        for: 3m
+      action:
+        type: IncreaseResources
+        increaseCPUPercent: 30
+        maxCPU: "1"
+        cooldown: 5m
+    - name: registry-memory-high
+      when:
+        metric: container_memory_working_set_bytes
+        operator: GreaterThan
+        threshold: "80"
+        for: 2m
+      action:
+        type: IncreaseResources
+        increaseMemoryPercent: 20
+        maxMemory: 2Gi
+        cooldown: 5m
+  ai:
+    enabled: true
+  paused: false
+{{- end }}
