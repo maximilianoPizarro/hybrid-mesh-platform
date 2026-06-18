@@ -204,6 +204,8 @@ clusterGroup:
       overrides:
         - name: clusterName
           value: east
+        - name: global.hubClusterDomain
+          value: '{{ $.Values.global.hubClusterDomain }}'
     industrial-edge-stormshift:
       name: industrial-edge-stormshift
       namespace: industrial-edge-stormshift-messaging
