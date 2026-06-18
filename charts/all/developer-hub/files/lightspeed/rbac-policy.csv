@@ -25,7 +25,15 @@ p, role:default/authenticated, ocm.entity.read, read, allow
 p, role:default/authenticated, ocm.cluster.read, read, allow
 # ArgoCD
 p, role:default/authenticated, argocd.view.read, read, allow
-# Kafka
+# Notifications
+p, role:default/authenticated, notification.entity.read, read, allow
+p, role:default/authenticated, notification.entity.create, create, allow
+p, role:default/authenticated, notification.send, create, allow
+# Quay (catalog entity tab)
+p, role:default/authenticated, quay.repository.read, read, allow
+# Tekton
+p, role:default/authenticated, tekton.pipelinerun.read, read, allow
+p, role:default/authenticated, tekton.pipeline.read, read, allow
 p, role:default/authenticated, kafka.topic.read, read, allow
 p, role:default/authenticated, kafka.consumer-group.read, read, allow
 # Adoption Insights
@@ -73,6 +81,14 @@ p, role:default/admin, adoption-insights.entity.read, read, allow
 p, role:default/admin, techdocs.entity.read, read, allow
 p, role:default/admin, lightspeed.chat.read, read, allow
 p, role:default/admin, lightspeed.chat.create, create, allow
+p, role:default/admin, kubernetes.proxy, use, allow
+p, role:default/admin, argocd.view.read, read, allow
+p, role:default/admin, notification.entity.read, read, allow
+p, role:default/admin, notification.entity.create, create, allow
+p, role:default/admin, notification.send, create, allow
+p, role:default/admin, quay.repository.read, read, allow
+p, role:default/admin, tekton.pipelinerun.read, read, allow
+p, role:default/admin, tekton.pipeline.read, read, allow
 p, role:default/admin, policy-entity, read, allow
 p, role:default/admin, policy-entity, create, allow
 p, role:default/admin, policy-entity, update, allow

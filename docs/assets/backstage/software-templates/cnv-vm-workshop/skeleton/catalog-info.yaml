@@ -8,6 +8,9 @@ metadata:
     backstage.io/kubernetes-id: ${{ values.name }}
     backstage.io/kubernetes-namespace: ${{ values.name }}
     backstage.io/kubernetes-cluster: hub
+    backstage.io/techdocs-ref: dir:.
+    gitlab.com/project-slug: ws-${{ values.owner }}/${{ values.name }}-cnv
+    quay.io/repository-slug: workshop/${{ values.owner }}-${{ values.name }}-cnv
   links:
     - url: https://console-openshift-console.${{ values.clusterDomain }}/k8s/ns/${{ values.name }}/kubevirt.io~v1~VirtualMachine
       title: Virtual Machines (console)
@@ -20,3 +23,5 @@ spec:
   lifecycle: experimental
   owner: ${{ values.owner }}
   system: cnv-workshop
+  dependsOn:
+    - resource:minio-storage

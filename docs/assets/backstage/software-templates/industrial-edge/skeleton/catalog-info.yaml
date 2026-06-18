@@ -10,6 +10,7 @@ metadata:
     backstage.io/kubernetes-cluster: ${{ values.targetCluster }}
     backstage.io/techdocs-ref: dir:.
     janus-idp.io/tekton: ${{ values.namespace }}
+    gitlab.com/project-slug: ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
     backstage.io/source-location: url:https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
     kairos.io/environment: ${{ values.environment }}
     quay.io/repository-slug: workshop/${{ values.uniqueName }}
@@ -33,3 +34,10 @@ spec:
   lifecycle: experimental
   owner: ${{ values.owner }}
   system: industrial-edge
+  dependsOn:
+    - component:machine-sensors-${{ values.targetCluster }}
+    - component:kafka-dev-cluster-${{ values.targetCluster }}
+    - resource:minio-storage
+  consumesApis:
+    - mqtt-sensor-api
+    - kafka-iot-topics-api

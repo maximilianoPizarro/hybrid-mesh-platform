@@ -187,6 +187,7 @@ spec:
     - mqtt-sensor-api
   dependsOn:
     - component:amq-broker-east
+    - resource:minio-storage
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -251,6 +252,10 @@ spec:
   owner: platform-engineering
   system: industrial-edge
   domain: spoke-east
+  consumesApis:
+    - mqtt-sensor-api
+  providesApis:
+    - kafka-iot-topics-api
   dependsOn:
     - component:amq-broker-east
     - component:kafka-dev-cluster-east
@@ -269,6 +274,8 @@ metadata:
     argocd/app-name: field-content-industrial-edge-tst
     janus-idp.io/tekton: industrial-edge-ci
     backstage.io/techdocs-ref: dir:./techdocs-line-dashboard
+    quay.io/repository-slug: workshop/line-dashboard-east
+    gitlab.com/project-slug: developer-hub/platform-content
   links:
     - url: https://line-dashboard-industrial-edge-tst-all.__EAST_APPS_DOMAIN__
       title: Dashboard (east)
@@ -291,6 +298,7 @@ spec:
   consumesApis:
     - mqtt-sensor-api
     - kafka-iot-topics-api
+    - s3-data-lake-api
   dependsOn:
     - component:machine-sensors-east
     - component:kafka-dev-cluster-east
@@ -328,12 +336,16 @@ metadata:
     backstage.io/kubernetes-label-selector: tekton.dev/pipeline=build-and-test-iot-component
     janus-idp.io/tekton: industrial-edge-ci
     argocd/app-name: field-content-industrial-edge-pipelines
+    gitlab.com/project-slug: developer-hub/platform-content
 spec:
   type: service
   lifecycle: production
   owner: platform-engineering
   system: industrial-edge
   domain: spoke-east
+  dependsOn:
+    - component:line-dashboard-east
+    - component:machine-sensors-east
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -354,8 +366,10 @@ spec:
   domain: spoke-east
   providesApis:
     - kafka-iot-topics-api
+    - s3-data-lake-api
   dependsOn:
     - resource:minio-storage
+    - component:kafka-dev-cluster-east
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -465,6 +479,10 @@ spec:
   owner: platform-engineering
   system: industrial-edge
   domain: spoke-west
+  consumesApis:
+    - mqtt-sensor-api
+  providesApis:
+    - kafka-iot-topics-api
   dependsOn:
     - component:amq-broker-west
     - component:kafka-dev-cluster-west
@@ -481,6 +499,9 @@ metadata:
     backstage.io/kubernetes-id: line-dashboard
     backstage.io/kubernetes-label-selector: app=line-dashboard
     argocd/app-name: field-content-industrial-edge-tst
+    janus-idp.io/tekton: industrial-edge-ci
+    backstage.io/techdocs-ref: dir:./techdocs-line-dashboard
+    quay.io/repository-slug: workshop/line-dashboard-west
   links:
     - url: https://line-dashboard-industrial-edge-tst-all.__WEST_APPS_DOMAIN__
       title: Dashboard (west)
@@ -494,6 +515,7 @@ spec:
   consumesApis:
     - mqtt-sensor-api
     - kafka-iot-topics-api
+    - s3-data-lake-api
   dependsOn:
     - component:machine-sensors-west
     - component:kafka-dev-cluster-west
@@ -531,12 +553,16 @@ metadata:
     backstage.io/kubernetes-label-selector: tekton.dev/pipeline=build-and-test-iot-component
     janus-idp.io/tekton: industrial-edge-ci
     argocd/app-name: field-content-industrial-edge-pipelines
+    gitlab.com/project-slug: developer-hub/platform-content
 spec:
   type: service
   lifecycle: production
   owner: platform-engineering
   system: industrial-edge
   domain: spoke-west
+  dependsOn:
+    - component:line-dashboard-west
+    - component:machine-sensors-west
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -557,8 +583,10 @@ spec:
   domain: spoke-west
   providesApis:
     - kafka-iot-topics-api
+    - s3-data-lake-api
   dependsOn:
     - resource:minio-storage
+    - component:kafka-dev-cluster-west
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component

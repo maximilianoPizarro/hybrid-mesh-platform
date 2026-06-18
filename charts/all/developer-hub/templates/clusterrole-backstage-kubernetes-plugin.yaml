@@ -14,6 +14,10 @@ rules:
       - limitranges
       - resourcequotas
       - serviceaccounts
+      - namespaces
+      - persistentvolumeclaims
+      - replicationcontrollers
+      - endpoints
     verbs: [get, list, watch]
   - apiGroups: ["apps"]
     resources:
@@ -124,6 +128,16 @@ rules:
     resources:
       - apikeys/status
     verbs: [get, patch, update]
+  - apiGroups: ["camel.apache.org"]
+    resources:
+      - integrations
+      - kamelets
+      - pipes
+    verbs: [get, list, watch]
+  - apiGroups: ["machineconfiguration.openshift.io"]
+    resources:
+      - machineconfigpools
+    verbs: [get, list, watch]
   - apiGroups: [""]
     resources:
       - secrets

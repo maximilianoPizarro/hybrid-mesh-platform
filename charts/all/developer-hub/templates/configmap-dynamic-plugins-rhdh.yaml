@@ -14,6 +14,19 @@ data:
     plugins:
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs
         disabled: {{ not (.Values.plugins.techdocs.enabled | default true) }}
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage.plugin-techdocs:
+                entityTabs:
+                  - path: /docs
+                    title: Docs
+                    mountPoint: entity.page.docs
+                    importName: EntityTechdocsContent
+                    config:
+                      if:
+                        allOf:
+                          - isTechDocsAvailable
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-backend-dynamic
         disabled: {{ not (.Values.plugins.techdocs.enabled | default true) }}
       - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
@@ -87,14 +100,58 @@ data:
           dynamicPlugins:
             frontend:
               backstage.plugin-kubernetes:
+                entityTabs:
+                  - path: /kubernetes
+                    title: Kubernetes
+                    mountPoint: entity.page.kubernetes
+                    importName: EntityKubernetesContent
+                    config:
+                      if:
+                        anyOf:
+                          - hasAnnotation: backstage.io/kubernetes-id
+                          - hasAnnotation: backstage.io/kubernetes-namespace
                 mountPoints:
                   - mountPoint: entity.page.kubernetes/content
                     importName: EntityKubernetesContent
+                    config:
+                      if:
+                        anyOf:
+                          - hasAnnotation: backstage.io/kubernetes-id
+                          - hasAnnotation: backstage.io/kubernetes-namespace
       # Disabled: package missing in RHDH 1.9 image (npm pack ENOENT). Use redhat-argocd plugin instead.
       - package: ./dynamic-plugins/dist/backstage-community-plugin-argocd
         disabled: true
       - package: ./dynamic-plugins/dist/backstage-community-plugin-topology
         disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage-community.plugin-topology:
+                translationResources:
+                  - importName: topologyTranslations
+                    ref: topologyTranslationRef
+                    module: Alpha
+                entityTabs:
+                  - path: /topology
+                    title: Topology
+                    mountPoint: entity.page.topology
+                    importName: TopologyPage
+                    config:
+                      if:
+                        anyOf:
+                          - hasAnnotation: backstage.io/kubernetes-id
+                          - hasAnnotation: backstage.io/kubernetes-namespace
+                mountPoints:
+                  - mountPoint: entity.page.topology/cards
+                    importName: TopologyPage
+                    config:
+                      layout:
+                        gridColumn: 1 / -1
+                        height: 75vh
+                      if:
+                        anyOf:
+                          - hasAnnotation: backstage.io/kubernetes-id
+                          - hasAnnotation: backstage.io/kubernetes-namespace
       - package: ./dynamic-plugins/dist/backstage-community-plugin-scaffolder-backend-module-kubernetes-dynamic
         disabled: false
       # Kafka — NOT in RHDH 1.9 image and no ghcr.io OCI package available; hardcode disabled
@@ -117,15 +174,15 @@ data:
                 mountPoints:
                   - mountPoint: entity.page.kafka/content
                     importName: EntityKafkaContent
-      - package: "@kuadrant/kuadrant-backstage-plugin-backend-dynamic@v0.3.0"
+      - package: "@kuadrant/kuadrant-backstage-plugin-backend-dynamic@v0.2.1"
         disabled: {{ not (.Values.plugins.kuadrant.enabled | default false) }}
-        integrity: sha512-TWqq/0qW+ks3rNUSBF93/1Gw1ADu1MMVlQwl1xXbQpzPWyabZm/2F9MFsznl+3DQ16/w/9e7QPNS7DiTis2urw==
+        integrity: sha512-pttQ6Lp7wD6EqDXAC3AIm4FWuQYO0i1KwoR0k6opTTyRZOGaNyO3YmPQdF403n+WjfTZRE+dfccD/9R4/SO5iA==
         pluginConfig:
           kuadrant:
             dev: true
-      - package: "@kuadrant/kuadrant-backstage-plugin-frontend@v0.3.0"
+      - package: "@kuadrant/kuadrant-backstage-plugin-frontend@v0.2.1"
         disabled: {{ not (.Values.plugins.kuadrant.enabled | default false) }}
-        integrity: sha512-v1AgCXqouFlpINPWUnNDfuayO1krkRY5XJLPsne4mzBiKp5dDY993Zu+YdRVHsrrIbuNoRUcotWOZqjLwuLWuw==
+        integrity: sha512-E4zgwY3QQmA2mn0CwO2Zwc0k9/oCtHcsVHRcrKal2PfnXv6chKb9fCKi5SznH9FbNtx8fHVYnac9SQjFh5XGCA==
         pluginConfig:
           dynamicPlugins:
             frontend:
@@ -160,15 +217,41 @@ data:
                       if:
                         allOf:
                           - isKind: api
+                  - mountPoint: entity.page.overview/cards
+                    importName: EntityKuadrantApiProductInfoContent
+                    config:
+                      layout:
+                        gridColumn: "1 / -1"
+                      if:
+                        allOf:
+                          - hasAnnotation: kuadrant.io/api-product
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tekton
         disabled: {{ not (.Values.plugins.tekton.enabled | default true) }}
         pluginConfig:
           dynamicPlugins:
             frontend:
               backstage-community.plugin-tekton:
+                translationResources:
+                  - importName: tektonTranslations
+                    ref: tektonTranslationRef
+                entityTabs:
+                  - path: /tekton
+                    title: Tekton
+                    mountPoint: entity.page.ci
+                    importName: TektonCI
+                    config:
+                      if:
+                        allOf:
+                          - isTektonCIAvailable
                 mountPoints:
-                  - mountPoint: entity.page.ci/content
-                    importName: EntityTektonPipelinesContent
+                  - mountPoint: entity.page.ci/cards
+                    importName: TektonCI
+                    config:
+                      layout:
+                        gridColumn: 1 / -1
+                      if:
+                        allOf:
+                          - isTektonCIAvailable
 {{- if .Values.plugins.techRadar.enabled | default true }}
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar-backend-dynamic
         disabled: false
@@ -216,6 +299,28 @@ data:
         disabled: true
       - package: ./dynamic-plugins/dist/backstage-community-plugin-quay
         disabled: {{ not (.Values.plugins.quay.enabled | default true) }}
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage-community.plugin-quay:
+                entityTabs:
+                  - path: /quay
+                    title: Quay
+                    mountPoint: entity.page.image-registry
+                    importName: QuayPage
+                    config:
+                      if:
+                        anyOf:
+                          - isQuayAvailable
+                mountPoints:
+                  - mountPoint: entity.page.image-registry/cards
+                    importName: QuayPage
+                    config:
+                      layout:
+                        gridColumn: 1 / -1
+                      if:
+                        anyOf:
+                          - isQuayAvailable
       # quay-backend-dynamic not in RHDH 1.9 image; frontend quay plugin is sufficient
       - package: ./dynamic-plugins/dist/backstage-community-plugin-quay-backend-dynamic
         disabled: true
@@ -293,6 +398,19 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-notifications
         disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              backstage.plugin-notifications:
+                dynamicRoutes:
+                  - importName: NotificationsPage
+                    menuItem:
+                      config:
+                        props:
+                          titleCounterEnabled: true
+                          webNotificationsEnabled: true
+                      importName: NotificationsSidebarItem
+                    path: /notifications
       - package: ./dynamic-plugins/dist/backstage-plugin-notifications-backend-dynamic
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-notifications-backend-module-email-dynamic

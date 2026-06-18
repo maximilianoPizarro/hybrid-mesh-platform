@@ -113,6 +113,15 @@ data:
         - group: devportal.kuadrant.io
           apiVersion: v1alpha1
           plural: apikeys
+        - group: camel.apache.org
+          apiVersion: v1
+          plural: integrations
+        - group: camel.apache.org
+          apiVersion: v1
+          plural: kamelets
+        - group: camel.apache.org
+          apiVersion: v1
+          plural: pipes
     catalog:
       import:
         entityFilename: catalog-info.yaml

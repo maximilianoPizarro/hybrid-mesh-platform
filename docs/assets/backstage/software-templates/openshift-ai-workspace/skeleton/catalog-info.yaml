@@ -7,6 +7,13 @@ metadata:
   annotations:
     openshift.ai/project: ${{ values.name }}
     maas.redhat.com/default-model: ${{ values.model }}
+    backstage.io/kubernetes-namespace: ${{ values.namespace }}
+    backstage.io/kubernetes-cluster: hub
+    backstage.io/kubernetes-id: ${{ values.name }}-osai
+    backstage.io/techdocs-ref: dir:.
+    janus-idp.io/tekton: ${{ values.namespace }}
+    gitlab.com/project-slug: ws-${{ values.owner }}/${{ values.name }}-osai
+    quay.io/repository-slug: workshop/${{ values.owner }}-${{ values.name }}-osai
   links:
     - url: https://rh-ai.apps.${{ values.clusterDomain }}
       title: OpenShift AI Dashboard
@@ -15,4 +22,8 @@ spec:
   type: ml-workspace
   lifecycle: experimental
   owner: ${{ values.owner }}
-  system: public-api-demos
+  system: openshift-ai-workshop
+  dependsOn:
+    - component:ai-gateway-maas
+  consumesApis:
+    - workshop-maas-openapi
