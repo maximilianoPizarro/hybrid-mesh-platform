@@ -55,34 +55,7 @@ spec:
   owner: platform-engineering
   system: public-api-demos
   definition: |
-    openapi: 3.0.3
-    info:
-      title: httpbin.org
-      version: 1.0.0
-      description: HTTP request/response testing service
-    servers:
-      - url: https://httpbin.org
-    paths:
-      /get:
-        get:
-          summary: Returns GET request data
-          operationId: getRequest
-          responses:
-            "200":
-              description: Echo of GET request
-      /status/{code}:
-        get:
-          summary: Returns given HTTP status code
-          operationId: getStatus
-          parameters:
-            - name: code
-              in: path
-              required: true
-              schema:
-                type: integer
-          responses:
-            "200":
-              description: Status response
+__PUBLIC_HTTPBIN_OPENAPI_SPEC__
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -104,47 +77,7 @@ spec:
   owner: platform-engineering
   system: public-api-demos
   definition: |
-    openapi: 3.0.3
-    info:
-      title: REST Countries API
-      version: 3.1.0
-      description: Get country data by name, code, or region
-    servers:
-      - url: https://restcountries.com/v3.1
-    paths:
-      /all:
-        get:
-          summary: Get all countries
-          operationId: getAllCountries
-          responses:
-            "200":
-              description: List of countries
-      /name/{name}:
-        get:
-          summary: Search countries by name
-          operationId: getCountryByName
-          parameters:
-            - name: name
-              in: path
-              required: true
-              schema:
-                type: string
-          responses:
-            "200":
-              description: Matching countries
-      /alpha/{code}:
-        get:
-          summary: Get country by ISO alpha code
-          operationId: getCountryByCode
-          parameters:
-            - name: code
-              in: path
-              required: true
-              schema:
-                type: string
-          responses:
-            "200":
-              description: Country details
+__PUBLIC_RESTCOUNTRIES_OPENAPI_SPEC__
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -166,60 +99,7 @@ spec:
   owner: platform-engineering
   system: public-api-demos
   definition: |
-    openapi: 3.0.3
-    info:
-      title: JSONPlaceholder
-      version: 1.0.0
-      description: Fake online REST API for testing and prototyping
-    servers:
-      - url: https://jsonplaceholder.typicode.com
-    paths:
-      /posts:
-        get:
-          summary: List posts
-          operationId: listPosts
-          responses:
-            "200":
-              description: Array of posts
-        post:
-          summary: Create a post
-          operationId: createPost
-          requestBody:
-            required: true
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    title:
-                      type: string
-                    body:
-                      type: string
-                    userId:
-                      type: integer
-          responses:
-            "201":
-              description: Created post
-      /posts/{id}:
-        get:
-          summary: Get post by ID
-          operationId: getPost
-          parameters:
-            - name: id
-              in: path
-              required: true
-              schema:
-                type: integer
-          responses:
-            "200":
-              description: Post details
-      /users:
-        get:
-          summary: List users
-          operationId: listUsers
-          responses:
-            "200":
-              description: Array of users
+__PUBLIC_JSONPLACEHOLDER_OPENAPI_SPEC__
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -241,44 +121,4 @@ spec:
   owner: platform-engineering
   system: public-api-demos
   definition: |
-    openapi: 3.0.3
-    info:
-      title: Cat Facts API
-      version: 1.0.0
-      description: Returns random cat facts
-    servers:
-      - url: https://catfact.ninja
-    paths:
-      /fact:
-        get:
-          summary: Get a random cat fact
-          operationId: getRandomFact
-          parameters:
-            - name: max_length
-              in: query
-              schema:
-                type: integer
-          responses:
-            "200":
-              description: A cat fact
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      fact:
-                        type: string
-                      length:
-                        type: integer
-      /facts:
-        get:
-          summary: Get multiple cat facts
-          operationId: getFacts
-          parameters:
-            - name: limit
-              in: query
-              schema:
-                type: integer
-          responses:
-            "200":
-              description: List of cat facts
+__PUBLIC_CATFACTS_OPENAPI_SPEC__

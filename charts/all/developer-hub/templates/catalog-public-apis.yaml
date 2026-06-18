@@ -2,6 +2,11 @@
   Public OpenAPI demo APIs — bundled in-chart for catalog ingestion and Try It Out.
   Published copy also lives under docs/assets/backstage/catalog/ for GitHub Pages.
 */ -}}
+{{- $httpbinSpec := .Files.Get "files/catalog/openapi/httpbin-public.yaml" -}}
+{{- $restcountriesSpec := .Files.Get "files/catalog/openapi/restcountries-public.yaml" -}}
+{{- $jsonplaceholderSpec := .Files.Get "files/catalog/openapi/jsonplaceholder-public.yaml" -}}
+{{- $catfactsSpec := .Files.Get "files/catalog/openapi/cat-facts-public.yaml" -}}
+{{- $catalog := .Files.Get "files/catalog/public-apis.yaml" | replace "__PUBLIC_HTTPBIN_OPENAPI_SPEC__" $httpbinSpec | replace "__PUBLIC_RESTCOUNTRIES_OPENAPI_SPEC__" $restcountriesSpec | replace "__PUBLIC_JSONPLACEHOLDER_OPENAPI_SPEC__" $jsonplaceholderSpec | replace "__PUBLIC_CATFACTS_OPENAPI_SPEC__" $catfactsSpec -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,4 +18,4 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 data:
   public-apis.yaml: |
-{{ .Files.Get "files/catalog/public-apis.yaml" | indent 4 }}
+{{ $catalog | indent 4 }}

@@ -59,21 +59,7 @@ spec:
   owner: platform-engineering
   system: industrial-edge
   definition: |
-    asyncapi: 2.6.0
-    info:
-      title: MQTT Sensor API
-      version: 1.0.0
-    channels:
-      iot-sensor/sw/temperature:
-        publish:
-          message:
-            payload:
-              type: object
-      iot-sensor/sw/vibration:
-        publish:
-          message:
-            payload:
-              type: object
+__IE_MQTT_SENSOR_ASYNCAPI_SPEC__
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -93,17 +79,7 @@ spec:
   owner: platform-engineering
   system: industrial-edge
   definition: |
-    asyncapi: 2.6.0
-    info:
-      title: Kafka IoT Topics
-      version: 1.0.0
-    channels:
-      temperature:
-        description: Sensor temperature readings
-      vibration:
-        description: Sensor vibration readings
-      industrial-edge-archive:
-        description: Archived telemetry in data lake
+__IE_KAFKA_IOT_ASYNCAPI_SPEC__
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -117,38 +93,7 @@ spec:
   owner: platform-engineering
   system: industrial-edge
   definition: |
-    openapi: 3.0.0
-    info:
-      title: MinIO S3 API
-      version: 1.0.0
-    servers:
-      - url: http://minio-hub.service-interconnect.svc:9000
-    paths:
-      /health:
-        get:
-          summary: MinIO health check (stub)
-          operationId: minioHealth
-          responses:
-            "200":
-              description: Service reachable
-      /models/{bucket}/{object}:
-        get:
-          summary: Fetch object from models bucket (stub)
-          operationId: getModelObject
-          parameters:
-            - name: bucket
-              in: path
-              required: true
-              schema:
-                type: string
-            - name: object
-              in: path
-              required: true
-              schema:
-                type: string
-          responses:
-            "200":
-              description: Object metadata
+__IE_S3_DATA_LAKE_OPENAPI_SPEC__
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -323,7 +268,7 @@ metadata:
     backstage.io/kubernetes-label-selector: app=line-dashboard
     argocd/app-name: field-content-industrial-edge-tst
     janus-idp.io/tekton: industrial-edge-ci
-    backstage.io/techdocs-ref: url:https://maximilianopizarro.github.io/hybrid-mesh-platform/
+    backstage.io/techdocs-ref: dir:./techdocs-line-dashboard
   links:
     - url: https://line-dashboard-industrial-edge-tst-all.__EAST_APPS_DOMAIN__
       title: Dashboard (east)

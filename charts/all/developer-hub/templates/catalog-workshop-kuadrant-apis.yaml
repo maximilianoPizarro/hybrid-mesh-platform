@@ -3,7 +3,11 @@
   Domain placeholder __HUB_APPS_DOMAIN__ replaced from RHDP-injected clusterDomain.
 */ -}}
 {{- $hub := include "developer-hub.clusterDomain" . -}}
-{{- $catalog := .Files.Get "files/catalog/workshop-kuadrant-apis.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $httpbinSpec := .Files.Get "files/catalog/openapi/workshop-httpbin-openapi.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $restcountriesSpec := .Files.Get "files/catalog/openapi/workshop-restcountries-openapi.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $maasSpec := .Files.Get "files/catalog/openapi/workshop-maas-openapi.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $mcpSpec := .Files.Get "files/catalog/openapi/workshop-mcp-openapi.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $catalog := .Files.Get "files/catalog/workshop-kuadrant-apis.yaml" | replace "__HUB_APPS_DOMAIN__" $hub | replace "__WORKSHOP_HTTPBIN_OPENAPI_SPEC__" $httpbinSpec | replace "__WORKSHOP_RESTCOUNTRIES_OPENAPI_SPEC__" $restcountriesSpec | replace "__WORKSHOP_MAAS_OPENAPI_SPEC__" $maasSpec | replace "__WORKSHOP_MCP_OPENAPI_SPEC__" $mcpSpec -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

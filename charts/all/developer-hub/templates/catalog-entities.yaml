@@ -7,8 +7,12 @@
 {{- $east := .Values.spokeDomains.east | default "apps.cluster-east.example.com" -}}
 {{- $west := .Values.spokeDomains.west | default "apps.cluster-west.example.com" -}}
 {{- $gitlabDocs := printf "url:%s/-/tree/main/docs/industrial-edge" (include "developer-hub.platformContentBaseUrl" .) -}}
+{{- $githubIeDocs := "url:https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/developer-hub/files/techdocs/industrial-edge" -}}
 {{- $ghPages := .Values.techdocs.githubPagesUrl | default "https://maximilianopizarro.github.io/hybrid-mesh-platform/" -}}
-{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" | replace "__HUB_APPS_DOMAIN__" $hub | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west | replace "backstage.io/techdocs-ref: dir:./techdocs" (printf "backstage.io/techdocs-ref: %s" $gitlabDocs) | replace "backstage.io/techdocs-ref: dir:." (printf "backstage.io/techdocs-ref: %s" $gitlabDocs) | replace "url:https://validatedpatterns.io/patterns/hybrid-mesh-platform/" (printf "url:%s" $ghPages) -}}
+{{- $mqttSpec := .Files.Get "files/catalog/asyncapi/mqtt-sensor.yaml" | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west -}}
+{{- $kafkaSpec := .Files.Get "files/catalog/asyncapi/kafka-iot-topics.yaml" -}}
+{{- $s3Spec := .Files.Get "files/catalog/openapi/s3-data-lake.yaml" | replace "__HUB_APPS_DOMAIN__" $hub -}}
+{{- $catalog := .Files.Get "files/catalog/industrial-edge-system.yaml" | replace "__HUB_APPS_DOMAIN__" $hub | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west | replace "__IE_MQTT_SENSOR_ASYNCAPI_SPEC__" $mqttSpec | replace "__IE_KAFKA_IOT_ASYNCAPI_SPEC__" $kafkaSpec | replace "__IE_S3_DATA_LAKE_OPENAPI_SPEC__" $s3Spec | replace "backstage.io/techdocs-ref: dir:./techdocs-line-dashboard" (printf "backstage.io/techdocs-ref: %s" $githubIeDocs) | replace "backstage.io/techdocs-ref: dir:./techdocs" (printf "backstage.io/techdocs-ref: %s" $gitlabDocs) | replace "url:https://validatedpatterns.io/patterns/hybrid-mesh-platform/" (printf "url:%s" $ghPages) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
