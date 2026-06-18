@@ -83,6 +83,7 @@ spec:
           metadata:
             annotations:
               developer-hub.redhat.com/catalog-users: {{ .Values.userCount | default 50 | quote }}
+              developer-hub.redhat.com/kuadrant-plugin-version: "0.2.1"
           spec:
             automountServiceAccountToken: true
             serviceAccountName: developer-hub

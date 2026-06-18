@@ -14,6 +14,14 @@ data:
       baseUrl: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
     backend:
       baseUrl: https://developer-hub.{{ include "developer-hub.clusterDomain" . }}
+      # Limit per-plugin DB pools — many dynamic plugins exhaust default PostgreSQL max_connections.
+      database:
+        knexConfig:
+          pool:
+            min: 0
+            max: 4
+            idleTimeoutMillis: 10000
+            acquireTimeoutMillis: 30000
       auth:
         dangerouslyDisableDefaultAuthPolicy: true
       cors:

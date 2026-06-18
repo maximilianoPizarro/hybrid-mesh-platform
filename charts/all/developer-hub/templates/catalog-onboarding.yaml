@@ -1,9 +1,9 @@
 {{- /*
-  Workshop onboarding catalog — TechDocs via GitHub repo URL (readTree supported by GithubUrlReader).
-  Do NOT use GitHub Pages URLs (FetchUrlReader) or ConfigMap dir:. (flattened keys, no docs/ subdir).
+  Workshop onboarding catalog — TechDocs from in-pod mount (mkdocs + docs/ tree preserved).
+  GitHub tree URLs work for readTree but local mount avoids external fetch and build flakes.
 */ -}}
+{{- $onboardingDocs := "dir:/opt/app-root/src/catalog-data/onboarding" -}}
 {{- $ghPages := .Values.techdocs.githubPagesUrl | default "https://maximilianopizarro.github.io/hybrid-mesh-platform/" -}}
-{{- $onboardingDocs := "url:https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/developer-hub/files/onboarding" -}}
 {{- $platformDocs := printf "%sdocs/onboarding/" $ghPages -}}
 apiVersion: v1
 kind: ConfigMap
@@ -16,8 +16,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 data:
 {{- range $path, $_ := .Files.Glob "files/onboarding/**" }}
-  {{ base $path }}: |
-{{- if eq (base $path) "catalog-info.yaml" }}
+{{- $rel := trimPrefix "files/onboarding/" $path }}
+  {{ $rel }}: |
+{{- if eq $rel "catalog-info.yaml" }}
 {{ $.Files.Get $path | replace "backstage.io/techdocs-ref: dir:." (printf "backstage.io/techdocs-ref: %s" $onboardingDocs) | replace "https://github.com/maximilianoPizarro/platform-hub-spoke-config/tree/main/docs/assets/backstage/onboarding" $platformDocs | replace "https://maximilianopizarro.github.io/platform-hub-spoke-config/" (printf "https://%s/developer-hub/platform-content" (include "developer-hub.gitlabHost" $)) | indent 4 }}
 {{- else }}
 {{ $.Files.Get $path | indent 4 }}
