@@ -7,5 +7,5 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   routingKey: ie-gateway-{{ include "spoke-interconnect.clusterName" . }}
-  host: spoke-gateway-istio.spoke-gateway-system.svc.cluster.local
+  host: line-dashboard.industrial-edge-tst-all.svc.cluster.local
   port: 8080
