@@ -1,6 +1,10 @@
 pytest
+pytest-html
 kubernetes
 openshift
 openshift-python-wrapper
 junitparser
+requests
+urllib3
+# VP QE test common library (fixtures, subscription/application/component helpers)
 git+https://github.com/validatedpatterns/vp-qe-test-common.git@development#egg=vp-qe-test-common
