@@ -181,18 +181,10 @@ spec:
         credentials:
           authorizationHeader:
             prefix: APIKEY
-    response:
-      success:
-        filters:
-          identity:
-            json:
-              properties:
-                groups:
-                  selector: auth.identity.metadata.annotations.kuadrant\.io/groups
-                userid:
-                  selector: auth.identity.metadata.annotations.secret\.kuadrant\.io/user-id
         {{- $maasKey := include "workshop-kuadrant-apis.maasApiKey" . -}}
         {{- if $maasKey }}
+    response:
+      success:
         headers:
           authorization:
             plain:
