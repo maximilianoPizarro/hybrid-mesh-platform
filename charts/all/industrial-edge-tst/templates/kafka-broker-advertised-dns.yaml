@@ -1,28 +1,27 @@
 {{- /*
-  Maps Skupper/hub advertised broker hostnames to the local broker pod IP on this spoke.
+  Maps Skupper/hub advertised broker hostnames to the local broker pod on this spoke.
   Without this, in-cluster clients (mqtt-to-kafka, Camel) cannot resolve
   dev-cluster-broker-0-<clusterName>.dev-cluster-kafka-brokers.* after metadata exchange.
+
+  ExternalName Service: resolves the advertised hostname CNAME to the real pod's headless
+  DNS entry. No pod IP lookup needed — works across restarts.
 */ -}}
-{{- $pod := lookup "v1" "Pod" "industrial-edge-tst-all" "dev-cluster-broker-0" }}
-{{- if and $pod $pod.status.podIP }}
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
+{{- $cn := include "industrial-edge-tst.clusterName" . -}}
+apiVersion: v1
+kind: Service
 metadata:
-  name: dev-cluster-kafka-brokers-advertised
+  name: dev-cluster-broker-0-{{ $cn }}
   namespace: industrial-edge-tst-all
   labels:
-    kubernetes.io/service-name: dev-cluster-kafka-brokers
+    strimzi.io/cluster: dev-cluster
+    strimzi.io/kind: Kafka
   annotations:
     argocd.argoproj.io/sync-wave: "5"
-addressType: IPv4
-ports:
-  - name: tcp
-    port: 9092
-    protocol: TCP
-endpoints:
-  - addresses:
-      - {{ $pod.status.podIP | quote }}
-    hostname: dev-cluster-broker-0-{{ include "industrial-edge-tst.clusterName" . }}
-    conditions:
-      ready: true
-{{- end }}
+spec:
+  type: ExternalName
+  externalName: dev-cluster-broker-0.dev-cluster-kafka-brokers.industrial-edge-tst-all.svc.cluster.local
+  ports:
+    - name: tcp-clients
+      port: 9092
+      protocol: TCP
+      targetPort: 9092
