@@ -31,7 +31,7 @@ heading_anchors: true
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "Sandbox tier — Community supported. No SLA; suitable for PoC and workshops. <a href='https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/SUPPORT.md'>Support policy</a>"
+footer_content: "Sandbox tier — Community supported. No SLA; suitable for PoC and workshops. <a href='https://github.com/maximilianoPizarro/hybrid-mesh-platform/blob/main/SUPPORT.md'>Support policy</a>. By <a href='https://maximilianopizarro.github.io'>Maximiliano Pizarro</a>."
 
 mermaid:
   version: "10.9.0"
