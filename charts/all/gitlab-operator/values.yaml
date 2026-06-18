@@ -3,6 +3,8 @@ clusterDomain: ""
 userCount: 30
 namespace: gitlab
 runnerNamespace: gitlab-runner
+# Set to false when gitlab-runner namespace is removed or runner not needed.
+runnerEnabled: false
 
 operator:
   packageName: gitlab-operator-kubernetes

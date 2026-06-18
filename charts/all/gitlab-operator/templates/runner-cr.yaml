@@ -1,3 +1,4 @@
+{{- if .Values.runnerEnabled }}
 {{- $webUrl := include "gitlab-operator.webUrl" . -}}
 apiVersion: apps.gitlab.com/v1beta2
 kind: Runner
@@ -11,3 +12,4 @@ spec:
   token: gitlab-runner-token
   tags: openshift,kubernetes,workshop
   buildImage: registry.access.redhat.com/ubi9/ubi-minimal:latest
+{{- end }}

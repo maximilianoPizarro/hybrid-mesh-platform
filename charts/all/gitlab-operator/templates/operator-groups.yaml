@@ -8,6 +8,7 @@ metadata:
 spec:
   targetNamespaces:
     - {{ .Values.namespace }}
+{{- if .Values.runnerEnabled }}
 ---
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
@@ -19,3 +20,4 @@ metadata:
 spec:
   targetNamespaces:
     - {{ .Values.runnerNamespace }}
+{{- end }}

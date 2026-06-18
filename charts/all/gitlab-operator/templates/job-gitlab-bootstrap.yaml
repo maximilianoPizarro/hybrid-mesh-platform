@@ -40,6 +40,7 @@ subjects:
   - kind: ServiceAccount
     name: gitlab-workshop-bootstrap
     namespace: {{ .Values.namespace }}
+{{- if .Values.runnerEnabled }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -67,6 +68,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: gitlab-workshop-bootstrap
+{{- end }}
     namespace: {{ .Values.namespace }}
 ---
 apiVersion: batch/v1

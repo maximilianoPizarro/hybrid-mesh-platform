@@ -11,6 +11,7 @@ spec:
   source: {{ .Values.operator.source }}
   sourceNamespace: openshift-marketplace
   installPlanApproval: {{ .Values.operator.installPlanApproval }}
+{{- if .Values.runnerEnabled }}
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -25,3 +26,4 @@ spec:
   source: {{ .Values.runnerOperator.source }}
   sourceNamespace: openshift-marketplace
   installPlanApproval: {{ .Values.runnerOperator.installPlanApproval }}
+{{- end }}
