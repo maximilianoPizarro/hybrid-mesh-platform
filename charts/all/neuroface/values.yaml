@@ -36,6 +36,7 @@ yoloPpeServing:
   image: registry.access.redhat.com/ubi9/python-311:latest
   modelRepo: Hexmon/vyra-yolo-ppe-detection
   modelFile: best.pt
+  storageClassName: ocs-external-storagecluster-ceph-rbd-immediate
   resources:
     requests:
       cpu: 200m
