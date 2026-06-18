@@ -211,7 +211,9 @@ spec:
               fi
 
               echo "Ensuring GitLab Runner token secret..."
-              if ! oc get secret "${RUNNER_SECRET}" -n "${RUNNER_NS}" &>/dev/null; then
+              if ! oc get ns "${RUNNER_NS}" &>/dev/null; then
+                echo "Runner namespace ${RUNNER_NS} does not exist — skipping runner token (runnerEnabled=false)."
+              elif ! oc get secret "${RUNNER_SECRET}" -n "${RUNNER_NS}" &>/dev/null; then
                 RESP=$(curl -skS -X POST "${GITLAB_API}/user/runners" \
                   -H "PRIVATE-TOKEN: ${GITLAB_PAT}" \
                   -H "Content-Type: application/json" \
