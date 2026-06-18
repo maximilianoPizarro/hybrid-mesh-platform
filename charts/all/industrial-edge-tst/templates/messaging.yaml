@@ -15,6 +15,54 @@ spec:
     - name: amqp
       protocols: amqp
       port: 5672
+  brokerProperties:
+    - "securityEnabled=false"
+---
+# Allow anonymous MQTT access for workshop sensors (securityEnabled=false via brokerProperties
+# does not always apply with AMQ Operator 7.12; this Security CR adds open permissions as fallback).
+apiVersion: broker.amq.io/v1alpha1
+kind: ActiveMQArtemisSecurity
+metadata:
+  name: messaging-security
+  namespace: industrial-edge-tst-all
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  loginModules:
+    guestLoginModules:
+      - name: guest-login
+        guestUser: guest
+        guestRole: all
+  securityDomains:
+    brokerDomain:
+      name: activemq
+      loginModules:
+        - name: guest-login
+          flag: sufficient
+  securitySettings:
+    broker:
+      - match: "#"
+        permissions:
+          - operationType: send
+            roles: [admin, all, guest]
+          - operationType: consume
+            roles: [admin, all, guest]
+          - operationType: createAddress
+            roles: [admin, all, guest]
+          - operationType: createDurableQueue
+            roles: [admin, all, guest]
+          - operationType: createNonDurableQueue
+            roles: [admin, all, guest]
+          - operationType: deleteAddress
+            roles: [admin, all, guest]
+          - operationType: deleteDurableQueue
+            roles: [admin, all, guest]
+          - operationType: deleteNonDurableQueue
+            roles: [admin, all, guest]
+          - operationType: browse
+            roles: [admin, all, guest]
+          - operationType: manage
+            roles: [admin]
 ---
 # Stable DNS alias for sensors and iot-consumer (broker operator pods use these labels).
 apiVersion: v1
