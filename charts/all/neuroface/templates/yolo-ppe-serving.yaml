@@ -90,7 +90,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  replicas: 1
+  replicas: {{ .Values.yoloPpeServing.replicas | default 1 }}
   selector:
     matchLabels:
       app: yolo-ppe-serving

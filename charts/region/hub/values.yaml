@@ -437,6 +437,8 @@ clusterGroup:
       overrides:
         - name: neuroface.route.host
           value: neuroface.{{ $.Values.global.localClusterDomain }}
+        - name: ppeWorkbench.route.host
+          value: ppe-workbench.{{ $.Values.global.localClusterDomain }}
     # --- Wave 8: CNV ---
     cnv-example:
       name: cnv-example

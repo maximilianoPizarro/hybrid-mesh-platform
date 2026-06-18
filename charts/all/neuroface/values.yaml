@@ -22,6 +22,7 @@ neuroface:
     enabled: false
   ppe:
     enabled: true
+    # Injected into neuroface-config ConfigMap as NEUROFACE_PPE_* (backend envFrom).
     endpoint: "http://yolo-ppe-serving:8080"
     classes: "hardhat,safety-vest,goggles"
     confidence: "0.5"
@@ -33,6 +34,7 @@ neuroface:
 
 yoloPpeServing:
   enabled: true
+  replicas: 1
   image: registry.access.redhat.com/ubi9/python-311:latest
   modelRepo: Hexmon/vyra-yolo-ppe-detection
   modelFile: best.pt
@@ -44,3 +46,13 @@ yoloPpeServing:
     limits:
       cpu: "2"
       memory: 3Gi
+
+ppeWorkbench:
+  enabled: true
+  name: ppe-workbench
+  image: image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/pytorch:2025.1
+  cpu: "1"
+  memory: 2Gi
+  route:
+    enabled: true
+    host: ""
