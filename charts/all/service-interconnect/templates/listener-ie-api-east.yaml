@@ -1,0 +1,11 @@
+apiVersion: skupper.io/v2alpha1
+kind: Listener
+metadata:
+  name: ie-api-east
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  routingKey: ie-api-east
+  host: ie-api-east
+  port: 3000

@@ -6,9 +6,14 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 data:
+  {{- $hubDomain := .Values.clusters.hub.domain | default (.Values.global).hubClusterDomain | default "" }}
   config.json: |
     {
+      {{- if $hubDomain }}
+      "websocketHost": "https://industrial-edge.{{ $hubDomain }}",
+      {{- else }}
       "websocketHost": "https://line-dashboard-industrial-edge-tst-all.{{ include "industrial-edge.domain" . }}",
+      {{- end }}
       "websocketPath": "/api/service-web/socket",
       "SERVER_TIMEOUT": 7500
     }

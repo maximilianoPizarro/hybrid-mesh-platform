@@ -18,14 +18,25 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /api
+            value: /api/service-web/socket
       backendRefs:
-        - name: industrial-edge-east-api
-          port: 8080
+        - name: industrial-edge-east-iot
+          port: 3000
           weight: {{- if hasKey $apiW "east" }} {{ $apiW.east }}{{- else }} 100{{- end }}
-        - name: industrial-edge-west-api
-          port: 8080
+        - name: industrial-edge-west-iot
+          port: 3000
           weight: {{- if hasKey $apiW "west" }} {{ $apiW.west }}{{- else }} 0{{- end }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /conf
+      backendRefs:
+        - name: industrial-edge-east-front
+          port: 8080
+          weight: {{ .Values.gateway.weights.east }}
+        - name: industrial-edge-west-front
+          port: 8080
+          weight: {{ .Values.gateway.weights.west }}
     - backendRefs:
         - name: industrial-edge-east-front
           port: 8080
@@ -37,10 +48,10 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /api
+            value: /api/service-web/socket
       backendRefs:
-        - name: industrial-edge-east-api
-          port: 8080
+        - name: industrial-edge-east-iot
+          port: 3000
           weight: 100
     - backendRefs:
         - name: industrial-edge-east-front
@@ -50,10 +61,10 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /api
+            value: /api/service-web/socket
       backendRefs:
-        - name: industrial-edge-west-api
-          port: 8080
+        - name: industrial-edge-west-iot
+          port: 3000
           weight: 100
     - backendRefs:
         - name: industrial-edge-west-front

@@ -30,6 +30,22 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: industrial-edge-east-iot
+  namespace: hub-gateway-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  type: ExternalName
+  externalName: ie-api-east.service-interconnect.svc.cluster.local
+  ports:
+    - name: http
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
 {{- end }}
 ---
 {{- if .Values.clusters.west.domain }}
@@ -64,4 +80,20 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: industrial-edge-west-iot
+  namespace: hub-gateway-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  type: ExternalName
+  externalName: ie-api-west.service-interconnect.svc.cluster.local
+  ports:
+    - name: http
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
 {{- end }}
