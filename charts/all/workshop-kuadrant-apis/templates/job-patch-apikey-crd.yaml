@@ -1,0 +1,78 @@
+{{- /*
+  Patch APIKey CRD to remove secretRef from required fields.
+  The Kuadrant Backstage plugin v0.1.0 creates APIKey CRs without secretRef;
+  the plugin creates the backing Secret separately. Without this patch,
+  the CRD validation rejects the APIKey CR with "spec.secretRef: Required value".
+*/ -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: apikey-crd-patch
+  namespace: {{ .Values.workshopGateway.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apikey-crd-patch
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    resourceNames: ["apikeys.devportal.kuadrant.io"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: apikey-crd-patch
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: apikey-crd-patch
+subjects:
+  - kind: ServiceAccount
+    name: apikey-crd-patch
+    namespace: {{ .Values.workshopGateway.namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apikey-crd-patch
+  namespace: {{ .Values.workshopGateway.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: apikey-crd-patch
+      containers:
+        - name: patch
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              REQUIRED=$(oc get crd apikeys.devportal.kuadrant.io \
+                -o jsonpath='{.spec.versions[0].schema.openAPIV3Schema.properties.spec.required}')
+              if echo "$REQUIRED" | grep -q secretRef; then
+                oc patch crd apikeys.devportal.kuadrant.io --type json \
+                  -p '[{"op":"replace","path":"/spec/versions/0/schema/openAPIV3Schema/properties/spec/required","value":["apiProductRef","planTier","requestedBy"]}]'
+                echo "Patched: removed secretRef from required"
+              else
+                echo "Already patched: secretRef not in required"
+              fi
