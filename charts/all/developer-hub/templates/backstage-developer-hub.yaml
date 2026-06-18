@@ -27,6 +27,10 @@ spec:
           mountPath: /opt/app-root/src/catalog-data/ie
           containers:
             - "*"
+        - name: developer-hub-catalog-ie-techdocs
+          mountPath: /opt/app-root/src/techdocs/industrial-edge
+          containers:
+            - "*"
         - name: developer-hub-catalog-onboarding
           mountPath: /opt/app-root/src/catalog-data/onboarding
           containers:

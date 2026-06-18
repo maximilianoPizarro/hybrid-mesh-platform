@@ -1,3 +1,7 @@
+{{- /*
+  Industrial Edge TechDocs — in-pod mount for local builder (no GitLab token required).
+  Preserves docs/ subdirectory structure for mkdocs.
+*/ -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,9 +12,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 data:
-  mkdocs.yml: |
-{{ .Files.Get "files/techdocs/industrial-edge/mkdocs.yml" | indent 4 }}
-  docs_index.md: |
-{{ .Files.Get "files/techdocs/industrial-edge/docs/index.md" | indent 4 }}
-  docs_data-flow.md: |
-{{ .Files.Get "files/techdocs/industrial-edge/docs/data-flow.md" | indent 4 }}
+{{- range $path, $_ := .Files.Glob "files/techdocs/industrial-edge/**" }}
+{{- $rel := trimPrefix "files/techdocs/industrial-edge/" $path }}
+  {{ $rel }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
