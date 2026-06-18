@@ -13,7 +13,7 @@ og_image: "/hybrid-mesh-platform/assets/images/arch-hub-spoke-flow.png"
 color_scheme: dark
 
 logo: "/assets/images/rh-logo.svg"
-favicon_ico: "/assets/images/favicon.svg"
+favicon_ico: "/assets/images/favicon.ico"
 
 aux_links:
   "GitHub":
