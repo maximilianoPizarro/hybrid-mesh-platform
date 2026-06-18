@@ -208,8 +208,7 @@ spec:
   lifecycle: production
   owner: platform-engineering
   system: workshop-kuadrant-apis
-  definition:
-    $text: |
+  definition: |
       openapi: 3.0.3
       info:
         title: httpbin (via workshop-apis)
@@ -253,8 +252,7 @@ spec:
   lifecycle: production
   owner: platform-engineering
   system: workshop-kuadrant-apis
-  definition:
-    $text: |
+  definition: |
       openapi: 3.0.3
       info:
         title: REST Countries (via workshop-apis)
@@ -300,8 +298,7 @@ spec:
   lifecycle: production
   owner: platform-engineering
   system: workshop-kuadrant-apis
-  definition:
-    $text: |
+  definition: |
       openapi: 3.0.3
       info:
         title: MaaS LLM (ai-gateway)
@@ -352,8 +349,7 @@ spec:
   lifecycle: production
   owner: platform-engineering
   system: workshop-kuadrant-apis
-  definition:
-    $text: |
+  definition: |
       openapi: 3.0.3
       info:
         title: MCP Gateway proxy

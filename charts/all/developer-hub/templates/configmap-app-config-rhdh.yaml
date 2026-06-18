@@ -128,7 +128,7 @@ data:
           rules:
             - allow: [System, Domain, Component, API, Resource]
         - type: url
-          target: {{ printf "%s/-/raw/main/software-templates/templates-catalog.yaml" (include "developer-hub.platformContentBaseUrl" .) | quote }}
+          target: {{ printf "%s/-/blob/main/software-templates/templates-catalog.yaml" (include "developer-hub.platformContentBaseUrl" .) | quote }}
           rules:
             - allow: [Template, Location]
         - type: file
