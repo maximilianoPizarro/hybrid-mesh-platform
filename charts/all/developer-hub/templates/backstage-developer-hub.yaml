@@ -61,6 +61,11 @@ spec:
           mountPath: /opt/app-root/src/catalog-data/cnv-workshop
           containers:
             - "*"
+        - name: developer-hub-catalog-software-templates
+          key: software-templates.yaml
+          mountPath: /opt/app-root/src/catalog-data/software-templates
+          containers:
+            - "*"
     route:
       enabled: true
       host: developer-hub.{{ include "developer-hub.clusterDomain" . }}

@@ -127,8 +127,8 @@ data:
           target: /opt/app-root/src/catalog-data/ie/industrial-edge-system.yaml
           rules:
             - allow: [System, Domain, Component, API, Resource]
-        - type: url
-          target: {{ printf "%s/-/blob/main/software-templates/templates-catalog.yaml" (include "developer-hub.platformContentBaseUrl" .) | quote }}
+        - type: file
+          target: /opt/app-root/src/catalog-data/software-templates/software-templates.yaml
           rules:
             - allow: [Template, Location]
         - type: file

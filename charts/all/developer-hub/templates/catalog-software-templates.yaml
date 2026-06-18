@@ -1,0 +1,30 @@
+{{- /*
+  Software template Location — blob URLs for GitLab integration (Backstage does not read /-/raw/).
+*/ -}}
+{{- $base := printf "%s/-/blob/main/software-templates" (include "developer-hub.platformContentBaseUrl" .) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: developer-hub-catalog-software-templates
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  software-templates.yaml: |
+    ---
+    apiVersion: backstage.io/v1alpha1
+    kind: Location
+    metadata:
+      name: software-templates
+      description: Software Templates for Developer Hub
+    spec:
+      targets:
+        - {{ $base }}/industrial-edge/template.yaml
+        - {{ $base }}/industrial-edge-camel-kaoto/template.yaml
+        - {{ $base }}/camel-kaoto-cdc/template.yaml
+        - {{ $base }}/industrial-edge-delete/template.yaml
+        - {{ $base }}/industrial-edge-api-product/template.yaml
+        - {{ $base }}/openshift-ai-workspace/template.yaml
+        - {{ $base }}/cnv-vm-workshop/template.yaml
