@@ -117,15 +117,15 @@ data:
                 mountPoints:
                   - mountPoint: entity.page.kafka/content
                     importName: EntityKafkaContent
-      - package: "@kuadrant/kuadrant-backstage-plugin-backend-dynamic@v0.1.0"
+      - package: "@kuadrant/kuadrant-backstage-plugin-backend-dynamic@v0.3.0"
         disabled: {{ not (.Values.plugins.kuadrant.enabled | default false) }}
-        integrity: sha512-+iz5a/38ZB/phehlHMcbM79S/bMZwslcxi+lnG5Tb2InlWtumloFK7OzZk11s0/CjJPytF3CipOz4QpFHQ09qw==
+        integrity: sha512-TWqq/0qW+ks3rNUSBF93/1Gw1ADu1MMVlQwl1xXbQpzPWyabZm/2F9MFsznl+3DQ16/w/9e7QPNS7DiTis2urw==
         pluginConfig:
           kuadrant:
             dev: true
-      - package: "@kuadrant/kuadrant-backstage-plugin-frontend@v0.1.0"
+      - package: "@kuadrant/kuadrant-backstage-plugin-frontend@v0.3.0"
         disabled: {{ not (.Values.plugins.kuadrant.enabled | default false) }}
-        integrity: sha512-3RLpjskJX4UqUQrc3gqg2TJL60cRKT+4mpnHH5OTi8leUxHgbyx2RnOmdRXivgXB1DwHK/oY7BsnPPft4Up2NQ==
+        integrity: sha512-v1AgCXqouFlpINPWUnNDfuayO1krkRY5XJLPsne4mzBiKp5dDY993Zu+YdRVHsrrIbuNoRUcotWOZqjLwuLWuw==
         pluginConfig:
           dynamicPlugins:
             frontend:
