@@ -252,6 +252,8 @@ data:
 
     WKA_ARGS=(--set "deployer.domain=$HUB_DOMAIN" --set "clusterDomain=$HUB_DOMAIN")
     [[ -n "$MAAS_KEY" ]] && WKA_ARGS+=(--set "apis.maas.apiKey=$MAAS_KEY")
+    # Delete immutable PostSync Job before re-apply (Jobs cannot be updated once created)
+    oc delete job workshop-kuadrant-sync-plans -n workshop-kuadrant-apis --ignore-not-found
     /tmp/helm template wka /tmp/pattern/charts/all/workshop-kuadrant-apis "${WKA_ARGS[@]}" | oc apply -f -
 
     oc rollout restart deployment/kuadrant-operator-controller-manager -n redhat-connectivity-link-operator 2>/dev/null || true
