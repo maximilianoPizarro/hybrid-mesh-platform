@@ -6,8 +6,8 @@
 {{- $hub := include "developer-hub.clusterDomain" . -}}
 {{- $east := .Values.spokeDomains.east | default "apps.cluster-east.example.com" -}}
 {{- $west := .Values.spokeDomains.west | default "apps.cluster-west.example.com" -}}
-{{- $ieDocs := "dir:/opt/app-root/src/techdocs/industrial-edge" -}}
-{{- $githubIeDocs := "dir:/opt/app-root/src/techdocs/industrial-edge" -}}
+{{- $ieDocs := "url:https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/developer-hub/files/techdocs/industrial-edge" -}}
+{{- $githubIeDocs := $ieDocs -}}
 {{- $ghPages := .Values.techdocs.githubPagesUrl | default "https://maximilianopizarro.github.io/hybrid-mesh-platform/" -}}
 {{- $mqttSpec := .Files.Get "files/catalog/asyncapi/mqtt-sensor.yaml" | replace "__EAST_APPS_DOMAIN__" $east | replace "__WEST_APPS_DOMAIN__" $west -}}
 {{- $kafkaSpec := .Files.Get "files/catalog/asyncapi/kafka-iot-topics.yaml" -}}
