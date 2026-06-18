@@ -1,0 +1,9 @@
+image: quay.io/kuadrant/developer-portal-controller:latest
+replicas: 1
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi

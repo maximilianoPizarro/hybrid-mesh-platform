@@ -44,6 +44,8 @@ apis:
     apiKey: "" # inject via litemaas.apiKey at deploy (never commit)
     displayName: AI Gateway — MaaS LLM (TokenRateLimit)
 
+approvalMode: manual # manual = platform admin approves from Developer Hub; automatic = instant
+
 plans:
   tiers:
     - bronze

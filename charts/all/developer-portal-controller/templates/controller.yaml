@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: developer-portal-controller-system
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: developer-portal-controller
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: developer-portal-controller-controller-manager
+  namespace: developer-portal-controller-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: developer-portal-controller-manager-role
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [create, delete, get, list, watch]
+  - apiGroups: [devportal.kuadrant.io]
+    resources: [apikeyapprovals, apikeyrequests, apiproducts]
+    verbs: [create, delete, get, list, patch, update, watch]
+  - apiGroups: [devportal.kuadrant.io]
+    resources: [apikeyapprovals/status, apikeyrequests/status, apikeys/status, apiproducts/status]
+    verbs: [get, patch, update]
+  - apiGroups: [devportal.kuadrant.io]
+    resources: [apikeyrequests/finalizers]
+    verbs: [update]
+  - apiGroups: [devportal.kuadrant.io]
+    resources: [apikeys]
+    verbs: [get, list, watch]
+  - apiGroups: [extensions.kuadrant.io]
+    resources: [planpolicies]
+    verbs: [get, list, watch]
+  - apiGroups: [extensions.kuadrant.io]
+    resources: [planpolicies/status]
+    verbs: [get]
+  - apiGroups: [gateway.networking.k8s.io]
+    resources: [httproutes]
+    verbs: [get, list, watch]
+  - apiGroups: [gateway.networking.k8s.io]
+    resources: [httproutes/status]
+    verbs: [get]
+  - apiGroups: [kuadrant.io]
+    resources: [authpolicies, kuadrants]
+    verbs: [get, list, watch]
+  - apiGroups: [kuadrant.io]
+    resources: [authpolicies/status]
+    verbs: [get]
+  - apiGroups: [coordination.k8s.io]
+    resources: [leases]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [create, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: developer-portal-controller-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: developer-portal-controller-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: developer-portal-controller-controller-manager
+    namespace: developer-portal-controller-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: developer-portal-controller-controller-manager
+  namespace: developer-portal-controller-system
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: developer-portal-controller
+spec:
+  replicas: {{ .Values.replicas | default 1 }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      app.kubernetes.io/name: developer-portal-controller
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+        app.kubernetes.io/name: developer-portal-controller
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: developer-portal-controller-controller-manager
+      containers:
+        - name: manager
+          image: {{ .Values.image | quote }}
+          command: [/manager]
+          args: [--leader-elect, --health-probe-bind-address=:8081]
+          env:
+            - name: OPENAPI_SPEC_MAX_SIZE
+              value: "512000"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      terminationGracePeriodSeconds: 10

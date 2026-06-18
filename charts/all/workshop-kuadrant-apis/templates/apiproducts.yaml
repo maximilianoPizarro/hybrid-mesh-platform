@@ -19,7 +19,7 @@ spec:
   displayName: {{ .Values.apis.httpbin.displayName | default "Workshop httpbin (external)" }}
   description: Public httpbin.org via dedicated workshop-apis Gateway API. ExternalName backend + PlanPolicy tiers.
   publishStatus: Published
-  approvalMode: automatic
+  approvalMode: {{ .Values.approvalMode | default "manual" }}
   version: v1
   tags: [workshop, httpbin, external-api]
   documentation:
@@ -46,7 +46,7 @@ spec:
   displayName: {{ .Values.apis.restcountries.displayName | default "Workshop REST Countries (external)" }}
   description: External restcountries.com via workshop-apis gateway. Kuadrant API keys + PlanPolicy.
   publishStatus: Published
-  approvalMode: automatic
+  approvalMode: {{ .Values.approvalMode | default "manual" }}
   version: v1
   tags: [workshop, restcountries, external-api]
   documentation:
@@ -75,7 +75,7 @@ spec:
     Kuadrant MCP Gateway (ArgoCD + Kubernetes MCP tools) exposed via workshop-apis with API key auth.
     Use Developer Hub Kuadrant plugin to request keys; consume from MCP clients at /mcp.
   publishStatus: Published
-  approvalMode: automatic
+  approvalMode: {{ .Values.approvalMode | default "manual" }}
   version: v1
   tags: [workshop, mcp, gateway-api, external-api]
   documentation:
@@ -104,7 +104,7 @@ spec:
     OpenAI-compatible MaaS on dedicated ai-gateway. ExternalName to MaaS RHDP; TokenRateLimitPolicy on chat completions.
     Workshop users use Kuadrant API keys; gateway injects upstream MaaS Bearer token.
   publishStatus: Published
-  approvalMode: automatic
+  approvalMode: {{ .Values.approvalMode | default "manual" }}
   version: v1
   tags: [workshop, llm, maas, ai-gateway, token-rate-limit]
   documentation:

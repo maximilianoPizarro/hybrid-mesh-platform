@@ -409,6 +409,12 @@ clusterGroup:
       argoProject: fleet
       path: charts/all/acm-hub-spoke
       syncWave: '6'
+    developer-portal-controller:
+      name: developer-portal-controller
+      namespace: developer-portal-controller-system
+      argoProject: workshop
+      path: charts/all/developer-portal-controller
+      syncWave: '5'
     workshop-kuadrant-apis:
       name: workshop-kuadrant-apis
       namespace: workshop-kuadrant-apis
