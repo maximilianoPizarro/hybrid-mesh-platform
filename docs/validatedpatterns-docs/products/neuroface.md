@@ -9,6 +9,8 @@ weight: 26
 
 Workshop participants need a **multimodal AI demo** (webcam + LLM chat + PPE detection) without deploying a full custom vision pipeline. **NeuroFace** combines browser-based face analysis, **YOLO PPE serving** (hardhat, safety vest, goggles), and **MaaS** (`llama-scout-17b`) for contextual responses — one Route on the hub, integrated into Developer Hub and the Hybrid Mesh AI Workshop.
 
+![NeuroFace UI](../../assets/images/neuroface.png)
+
 | Item | Location |
 |------|----------|
 | Helm wrapper | `charts/all/neuroface/` |
