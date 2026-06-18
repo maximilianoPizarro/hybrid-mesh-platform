@@ -70,6 +70,13 @@ Full product matrix: [Validation Guide](../validation-guide.md).
 | Developer Hub **/lightspeed** chat 401 | Missing MaaS key | `maas-facilitator-seed` in `vault` + refresh `vault-maas-external-secrets` |
 | NeuroFace **/api/chat** 401 | ESO secret placeholder | RHDP `litemaas.apiKey` or `maas-facilitator-seed`; PostSync `neuroface-maas-key-sync` |
 | GitLab UI **503/500** | GitLab still starting or hub undersized | Wait for `GitLab` CR Ready; verify hub **4×16/64**; `bash scripts/verify-node-capacity.sh` |
+| Argo `gitlab-operator` **Missing** (runner resources) | `gitlab-runner` namespace removed | Set `runnerEnabled: false`; remove stuck finalizer from Runner CR |
+| Argo operation stuck on `Subscription/gitlab-runner-operator` | Old operation not terminated | `oc patch application gitlab-operator -n openshift-gitops --type merge -p '{"operation":null}'` |
+| TechDocs `FetchUrlReader does not implement readTree` | GitHub Pages URL in `techdocs-ref` | Use `url:https://github.com/<owner>/<repo>/tree/main/<path>` |
+| Developer Hub GitLab API `/repos/` 404 | GitLab host in `integrations.github` | Remove from `github` block — only in `integrations.gitlab` |
+| `workshop-kuadrant-sync-plans` job immutable error | Existing Job cannot be updated | `oc delete job workshop-kuadrant-sync-plans -n workshop-kuadrant-apis --ignore-not-found` before apply |
+| `unsealvault-cronjob` Init:Error flooding | Vault already initialized, token lacks write permissions | `oc patch cronjob unsealvault-cronjob -n imperative --type merge -p '{"spec":{"suspend":true}}'` |
+| hub-post-install-bootstrap workshop-surfaces CrashLoop | SA lacks `bind`/`escalate` RBAC | Chart includes rule; break deadlock with `oc patch application ... --type merge -p '{"operation":null}'` then patch ClusterRole live |
 | Orphan apps in **`default`** | `helm template \| oc apply` without `-n` | Delete orphan stack; always sync via Argo CD (namespace in Application spec) |
 | workshop-apis **401** without key | Expected (Kuadrant AuthPolicy) | Request key at Developer Hub `/kuadrant` |
 | Developer Hub Kuadrant tab missing / catalog parse error | Catalog ConfigMap truncated to hub domain only | Re-sync `developer-hub` chart ≥ v1.5.1; verify `oc get cm developer-hub-catalog-workshop-kuadrant-apis -n developer-hub -o yaml \| grep 'kind: API'` returns 4 lines |

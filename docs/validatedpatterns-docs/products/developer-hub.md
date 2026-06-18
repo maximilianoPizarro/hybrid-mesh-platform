@@ -106,21 +106,27 @@ Focus points for this platform:
 
 ## Software templates
 
-Templates are published as **GitHub Pages** static assets under `docs/assets/backstage/software-templates/`:
+Templates are seeded to GitLab (`developer-hub/platform-content`) by the `gitlab-platform-content-seed` CronJob. The catalog Location is bundled in-chart (not via GitLab `/-/raw/` URLs which Backstage doesn't support for readTree):
 
 | Template | Description |
 | -------- | ----------- |
 | Industrial Edge | IoT instance on east/west → GitLab + ArgoCD + catalog |
 | Camel Kaoto | Camel routes, DevSpaces, Continue AI |
 | Industrial Edge Delete | Remove ArgoCD app + GitLab repo + notification |
+| Industrial Edge API Product | Kuadrant APIProduct for scaffolded IE service |
 | **CNV VM Workshop** | Hub KubeVirt VM → GitLab + catalog (+ optional Argo CD app) |
 | **OpenShift AI Workspace** | Data Science project metadata on hub |
 
-Catalog location (in `app-config-rhdh`):
+Catalog location (in-chart `ConfigMap/developer-hub-catalog-software-templates`):
 
-```text
-https://maximilianopizarro.github.io/hybrid-mesh-platform/assets/backstage/software-templates/templates-catalog.yaml
+```yaml
+# type: file (not url) — mounts at /opt/app-root/src/catalog-data/software-templates/
+targets:
+  - https://gitlab.apps.<hub>/developer-hub/platform-content/-/blob/main/software-templates/industrial-edge/template.yaml
+  # ... (all templates use /-/blob/ not /-/raw/ for GitLab reader readTree support)
 ```
+
+> **Note:** Backstage `FetchUrlReader` (plain `url:`) does **not** implement `readTree`. Template targets must use `/-/blob/` (GitlabUrlReader) or `https://github.com/...` (GithubUrlReader). Never use `/-/raw/` for template files.
 
 Scaffolding flow (after template run):
 
@@ -226,6 +232,18 @@ Post-install: Argo app `hub-post-install-bootstrap` PostSync Jobs + `bash script
 | No **Request API key** / Kuadrant tab on API entities | Corrupt catalog ConfigMap (Helm `$var = replace` bug) | ConfigMap `developer-hub-catalog-workshop-kuadrant-apis` must contain full YAML (4× `kind: API`), not only the hub domain string; fixed in chart templates v1.5.1+ — re-sync `field-content-developer-hub` |
 | Lightspeed chat 401 | Missing MaaS key | `maas-facilitator-seed` in `vault` or RHDP litemaas |
 | TechDocs 404 for scaffolded app | Missing mkdocs in repo | Re-scaffold or add `mkdocs.yml` + `docs/index.md` to GitLab repo |
+| TechDocs `readTree` not implemented | GitHub Pages URL in `techdocs-ref` | Use GitHub repo tree URL: `url:https://github.com/<owner>/<repo>/tree/main/<path>` |
+| GitLab API calls return 404 `/repos/` | GitLab host under `integrations.github` | Remove GitLab from `github` block; leave only in `integrations.gitlab` |
+| Catalog warns `cnv-workshop.yaml does not exist` | Missing `extraFiles` mount | Add mount for `developer-hub-catalog-cnv-workshop` in `backstage-developer-hub.yaml` |
+| Software templates empty after login | GitLab `/-/raw/` URL | Bundle `catalog-software-templates.yaml` with `/-/blob/main/...` targets |
+| DH rollout slow (5–10 min) | OCI plugin `install-dynamic-plugins` init | Expected — `oc rollout status deployment/backstage-developer-hub -n developer-hub` |
+
+## GitLab integration notes
+
+- `integrations.gitlab` — correct host and `apiBaseUrl`
+- `integrations.github` — **only** `github.com`; never add GitLab host here (causes `/repos/` 404)
+- Software templates use `/-/blob/main/...` targets (not `/-/raw/`) — `GitlabUrlReader` supports readTree
+- Onboarding TechDocs points to GitHub repo tree URL (not GitHub Pages) — `GithubUrlReader` supports readTree
 
 See also [Backstage assets README]({{ site.baseurl }}/assets/backstage/README.html) and the **developer-hub-scaffolder** Cursor skill.
 
