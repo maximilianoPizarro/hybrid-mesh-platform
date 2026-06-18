@@ -132,6 +132,18 @@ oc annotate application console-links -n openshift-gitops argocd.argoproj.io/ref
 oc annotate application neuroface -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
 
+### GitLab dedicated gateway
+
+```bash
+oc get gateway gitlab-gateway -n gitlab \
+  -o custom-columns='NAME:.metadata.name,PROGRAMMED:.status.conditions[?(@.type=="Programmed")].status'
+oc get httproute gitlab-http -n gitlab -o jsonpath='{.spec.hostnames}{"\n"}'
+curl -sk -o /dev/null -w "%{http_code}\n" "https://gitlab-gw.${HUB_DOMAIN}/"
+# SmartScalingPolicies
+oc get smartscalingpolicy -n kairos-system -l kairos.io/policy-type=workshop-platform \
+  -o custom-columns='NAME:.metadata.name,TARGET:.spec.target.name,PAUSED:.spec.paused'
+```
+
 ### Developer Hub validation
 
 ```bash
@@ -188,6 +200,9 @@ oc get pods -n open-cluster-management-agent
 | ApplicationSet PUSH | ✓ | - | `oc get applicationset fleet-spoke-push` |
 | Skupper VAN | ✓ | ✓ | `oc get site,link -n service-interconnect` |
 | Industrial Edge | - | ✓ | `bash scripts/verify-industrial-edge.sh`; pods in `industrial-edge-tst-all` on east |
+| GitLab Gateway | ✓ | - | `oc get gateway gitlab-gateway -n gitlab` → PROGRAMMED=True |
+| Kairos SmartScalingPolicies | ✓ | - | `oc get smartscalingpolicy -n kairos-system -l kairos.io/policy-type=workshop-platform` |
+| Unsealvault CronJob | ✓ | - | `oc get cronjob unsealvault-cronjob -n imperative -o jsonpath='{.spec.suspend}'` → true (if vault initialized) |
 | Grafana Kafka metrics | ✓ | ✓ | Explore `kafka_server_kafkaserver_brokerstate` via `prometheus-east`/`west` |
 | Developer Hub templates | ✓ | - | Login → `/create` — industrial-edge, cnv-vm-workshop, openshift-ai-workspace |
 | NeuroFace PPE | ✓ | - | `oc get deploy yolo-ppe-serving -n neuroface` |

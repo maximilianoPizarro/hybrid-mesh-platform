@@ -288,6 +288,88 @@ oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditio
 
 **Kuadrant APIProducts plans sync:** PostSync Job `workshop-kuadrant-sync-plans` — Python 3.6 on UBI needs `universal_newlines=True` (not `text=True`) in `subprocess` calls (`charts/all/workshop-kuadrant-apis/templates/job-sync-apiproduct-plans.yaml`).
 
+**Kuadrant sync-plans Job immutable:** the `workshop-surfaces.sh` script runs `helm template | oc apply` on the kuadrant chart. Jobs are immutable — delete existing job before apply: `oc delete job workshop-kuadrant-sync-plans -n workshop-kuadrant-apis --ignore-not-found` (included in `charts/all/hub-post-install-bootstrap/templates/configmap-scripts.yaml`).
+
+### GitLab Runner (`runnerEnabled`)
+
+The `gitlab-runner-operator` and `Runner` CR are guarded by `runnerEnabled: true/false` in `charts/all/gitlab-operator/values.yaml`. Set `runnerEnabled: false` when the `gitlab-runner` namespace is removed or the runner operator is not installed. Resources guarded: OperatorGroup, Subscription, Runner CR, Role, RoleBinding, bootstrap job runner token setup.
+
+**Bootstrap job runner token:** checks `oc get ns ${RUNNER_NS}` before trying to create `gitlab-runner-token` secret — fails gracefully when namespace is absent.
+
+### GitLab Dedicated Gateway
+
+Chart `charts/all/gitlab-operator/templates/gitlab-gateway.yaml`:
+- `Gateway/gitlab-gateway` in `gitlab` namespace — Istio mesh visibility, circuit breaking
+- `HTTPRoute/gitlab-http` — routes LFS/upload (120s timeout), KAS WebSocket (`/-/kubernetes`), default HTTP
+- `Route/gitlab-gateway-route` → `gitlab-gw.apps.<domain>` (edge TLS)
+- Separate from the operator-managed `gitlab-apps` Route
+
+**GitLab workshop scaling** (`charts/all/gitlab-operator/values.yaml`):
+- webservice: maxReplicas **8**, CPU request 1/limit 3, memory limit 5Gi
+- sidekiq: maxReplicas **6**
+- gitlabShell: maxReplicas **5**
+
+### Kairos SmartScalingPolicies for GitLab
+
+File: `charts/all/kairos/templates/gitlab-scaling-policies.yaml`
+- Policies: `gitlab-webservice-workshop`, `gitlab-sidekiq-workshop`, `gitlab-kas-workshop`, `gitlab-registry-workshop`
+- Label: `kairos.io/policy-type: workshop-platform`
+- Makes GitLab resources visible in Kairos Console UI
+- Note: Kairos agent "Watching 0 resources" = no policy-triggered events yet (all healthy) — this is correct behavior
+
+### hub-post-install-bootstrap RBAC escalation
+
+The SA `system:serviceaccount:openshift-gitops:hub-post-install-bootstrap` needs `bind` and `escalate` verbs on `rbac.authorization.k8s.io` to create ClusterRoleBindings granting the `edit` ClusterRole to the showroom SA.
+
+**Fix:** `charts/all/hub-post-install-bootstrap/templates/rbac.yaml` includes:
+```yaml
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterroles","clusterrolebindings","roles","rolebindings"]
+  verbs: ["get","list","watch","create","update","patch","delete","bind","escalate"]
+```
+
+**Deadlock pattern:** if Argo is stuck in a PostSync hook waiting for a resource that needs the RBAC rule to be applied, break the deadlock:
+```bash
+oc patch application hub-post-install-bootstrap -n openshift-gitops --type merge -p '{"operation":null}'
+oc patch clusterrole hub-post-install-bootstrap --type json -p '[{"op":"add","path":"/rules/-","value":{...}}]'
+# then re-sync
+```
+
+### Developer Hub TechDocs — integrations.github vs gitlab
+
+**Bug:** adding GitLab host under `integrations.github` causes Backstage to call GitLab with GitHub API paths (`/repos/` → 404 instead of `/projects/`). Fix: GitLab host ONLY under `integrations.gitlab`, never under `integrations.github`.
+
+**TechDocs readTree:** `FetchUrlReader` (used for generic `url:` and GitHub Pages URLs) does NOT implement `readTree`. Use:
+- `url:https://github.com/<owner>/<repo>/tree/main/<path>` → `GithubUrlReader` supports readTree via GitHub API
+- `url:https://gitlab.../.../-/tree/main/<path>` → `GitlabUrlReader` supports readTree (only works if host NOT in `integrations.github`)
+- `dir:./techdocs` → local (works only for entities with proper filesystem source)
+
+### VP Interop Tests
+
+Location: `tests/interop/` — run with `make qe-tests` or `cd tests/interop && ./run_tests.sh`.
+
+Required env: `KUBECONFIG` (hub), `KUBECONFIG_EDGE` (east), `INFRA_PROVIDER`, optional `HUB_APPS_DOMAIN`.
+
+Test files:
+- `test_subscription_status_hub.py` — 13 hub operators (ACM, GitLab, RHCL, Kairos, ESO…)
+- `test_subscription_status_edge.py` — 4 spoke operators
+- `test_validate_hub_site_components.py` — pods, ArgoCD apps, ACM spokes
+- `test_validate_edge_site_components.py` — IE, Skupper, Argo CD on spoke
+- `test_workshop_surfaces.py` — 17 HTTP checks + Kuadrant 401 assertions
+- `test_platform_components.py` — Skupper VAN sites, GitLab Gateway, Kairos policies, Kuadrant
+- `test_modify_web_content.py` — E2E GitOps roundtrip via showroom title
+
+GitHub Actions: `.github/workflows/interop-tests.yml` (manual trigger via `workflow_dispatch`).
+
+### Unsealvault CronJob
+
+The `unsealvault-cronjob` in the `imperative` namespace runs every 5 min and tries to create the `secret` KV backend in Vault. **If Vault is already initialized and unsealed** (Sealed=false), suspend the CronJob to stop flooding:
+
+```bash
+oc patch cronjob unsealvault-cronjob -n imperative --type merge -p '{"spec":{"suspend":true}}'
+oc delete pods -n imperative --field-selector=status.phase=Failed
+```
+
 ## External links
 
 - GitHub Pages: https://maximilianopizarro.github.io/hybrid-mesh-platform/

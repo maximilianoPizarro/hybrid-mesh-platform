@@ -135,7 +135,11 @@ python scripts/verify-gitops-strategies.py
 - **ACM 2.16:** New installs get `resourceExclusions` from `openshift-gitops` chart + `cluster-proxy-addon: false` from `acm-operator`
 - **OperatorGroups:** Do not set `operatorGroup: true` on `redhat-ods-operator` — RHODS needs AllNamespaces OG (`spec: {}`). Kubecost: **`kubecost-operator-group`**. Remove duplicate Kairos OG if present.
 - **GitLab:** approve **Manual** InstallPlans in `gitlab` + `gitlab-runner`; Route `https://gitlab.apps.<domain>/`; seed `platform-content` for Developer Hub scaffolder templates
-- **Developer Hub:** GitLab host must use `developer-hub.gitlabHost` helper (not `gitlab.apps.{{ clusterDomain }}`); catalog CMs need `extraFiles` mounts; software templates via `catalog-software-templates.yaml`
+- **Developer Hub:** GitLab host must use `developer-hub.gitlabHost` helper (not `gitlab.apps.{{ clusterDomain }}`); catalog CMs need `extraFiles` mounts; software templates via `catalog-software-templates.yaml`; TechDocs use GitHub repo URL (not GitHub Pages) for readTree support
+- **GitLab Runner:** disabled by default (`runnerEnabled: false`); namespace `gitlab-runner` must exist before enabling; stuck namespace → remove `finalizer.gitlab.com` from Runner CR
+- **hub-post-install RBAC:** SA needs `bind`/`escalate` on `rbac.authorization.k8s.io` to create ClusterRoleBindings — already in chart; if deadlock, terminate operation + patch live + resync
+- **VP Tests:** `make qe-tests` → `tests/interop/run_tests.sh`; requires `KUBECONFIG` + `INFRA_PROVIDER`; auto-resolves `HUB_APPS_DOMAIN` from cluster
+- **Unsealvault:** suspend CronJob if Vault already initialized (`oc patch cronjob unsealvault-cronjob -n imperative --type merge -p '{"spec":{"suspend":true}}'`)
 - **hub-gateway:** default **`gateway.mode: proxy`** (nginx → Skupper); syncWave **5** after `fleet-values-sync`
 - **Workshop users:** IdP **`workshop-users`**; `grantClusterReader: true`; fix job `scripts/fix-htpasswd-users-secret-job.yaml`
 - **CNV:** `cnv-example` includes Subscription + VM in **`cnv-workshop`**

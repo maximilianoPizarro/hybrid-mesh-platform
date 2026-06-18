@@ -389,6 +389,63 @@ oc patch argocd openshift-gitops -n openshift-gitops --type merge -p '{
 
 ---
 
+### 12c. Argo CD stuck operation deadlock (PostSync + RBAC)
+
+**Symptom:** Argo app stuck in `Running` phase waiting for a PostSync hook that fails because a ClusterRole lacks `bind`/`escalate`. Fixing the ClusterRole via `oc patch` gets overwritten when Argo syncs the old version.
+
+**Root cause:** Argo applies ClusterRole from Git (old version), then runs PostSync hook which fails → operation never completes → Argo can't apply new Git version → deadlock.
+
+**Break cycle:**
+```bash
+# 1. Terminate stuck operation
+oc patch application <app> -n openshift-gitops --type merge -p '{"operation":null}'
+# 2. Patch ClusterRole live with missing verbs
+oc patch clusterrole hub-post-install-bootstrap --type json -p '[{"op":"add","path":"/rules/-","value":{
+  "apiGroups":["rbac.authorization.k8s.io"],
+  "resources":["clusterroles","clusterrolebindings","roles","rolebindings"],
+  "verbs":["get","list","watch","create","update","patch","delete","bind","escalate"]
+}}]'
+# 3. Re-sync to latest commit (which has the RBAC fix)
+oc patch application <app> -n openshift-gitops --type merge -p '{"operation":{"sync":{"revision":"HEAD","prune":true}}}'
+```
+
+---
+
+### 12d. Job immutable field error in PostSync/apply scripts
+
+**Symptom:** `workshop-surfaces.sh` or similar scripts fail with `The Job "..." is invalid: spec.template: Invalid value ... field is immutable`.
+
+**Cause:** `helm template | oc apply` on a Job that already exists — Jobs cannot be updated once created.
+
+**Fix:** delete the Job before re-applying:
+```bash
+oc delete job <job-name> -n <namespace> --ignore-not-found
+# then re-run helm template | oc apply
+```
+
+In `configmap-scripts.yaml`:
+```bash
+oc delete job workshop-kuadrant-sync-plans -n workshop-kuadrant-apis --ignore-not-found
+/tmp/helm template wka /tmp/pattern/charts/all/workshop-kuadrant-apis "${WKA_ARGS[@]}" | oc apply -f -
+```
+
+---
+
+### 12e. GitLab Runner namespace Terminating (finalizer stuck)
+
+**Symptom:** `gitlab-runner` namespace stuck `Terminating` with message "Some content in the namespace has finalizers remaining: `finalizer.gitlab.com` in 1 resource instances".
+
+**Fix:** remove finalizer from the `Runner` CR:
+```bash
+oc get runner.apps.gitlab.com -n gitlab-runner  # find name
+oc patch runner.apps.gitlab.com gitlab-runner -n gitlab-runner \
+  --type json -p '[{"op":"remove","path":"/metadata/finalizers"}]'
+```
+
+After namespace is gone, set `runnerEnabled: false` in `charts/all/gitlab-operator/values.yaml` to guard all runner resources (OperatorGroup, Subscription, Runner CR, Role, RoleBinding, bootstrap token).
+
+---
+
 ### 12b. Kuadrant APIProduct plans not discovered
 
 **Symptom:** Developer Hub Kuadrant tab shows API Products without plans; `discoveredPlans` empty on APIProduct CRs.
