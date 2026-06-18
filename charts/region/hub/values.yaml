@@ -372,6 +372,12 @@ clusterGroup:
       argoProject: mesh
       path: charts/all/hub-gateway
       syncWave: '5'
+    neuroface-gateway:
+      name: neuroface-gateway
+      namespace: neuroface-gateway-system
+      argoProject: mesh
+      path: charts/all/neuroface-gateway
+      syncWave: '7'
     distributed-tracing:
       name: distributed-tracing
       namespace: distributed-tracing

@@ -242,6 +242,20 @@ spec:
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
 metadata:
+  name: platform-neuroface-cv
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  applicationMenu:
+    imageURL: {{ include "console-links.iconURL" (dict "root" . "icon" "openshift-ai.svg") | quote }}
+    section: "Platform Hub-Spoke"
+  href: "https://neuroface-cv.{{ $hubDomain }}"
+  location: ApplicationMenu
+  text: "NeuroFace CV"
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
   name: platform-workshop-apis
   annotations:
     argocd.argoproj.io/sync-wave: "10"

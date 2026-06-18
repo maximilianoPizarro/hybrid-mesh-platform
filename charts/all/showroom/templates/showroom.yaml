@@ -349,7 +349,7 @@ spec:
               echo
             }
             kuadrant-test-ai() {
-              local hub="${CLUSTER_DOMAIN}" model="${MAAS_MODEL:-granite-3-2-8b-instruct}"
+              local hub="${CLUSTER_DOMAIN}" model="${MAAS_MODEL:-llama-scout-17b}"
               curl -sk -o /dev/null -w 'ai-gateway without key: %{http_code}\n' \
                 -H "Content-Type: application/json" \
                 -X POST "https://ai-gateway.${hub}/v1/chat/completions" \
@@ -373,6 +373,16 @@ spec:
               oc get httproute,apiproducts -n ai-gateway-system 2>/dev/null || true
               oc get authpolicy,tokenratelimitpolicy -n ai-gateway-system 2>/dev/null || true
             }
+            neuroface-cv-status() {
+              local hub="${CLUSTER_DOMAIN}"
+              curl -sk "https://neuroface-cv.${hub}/api/ppe/status" | head -c 400
+              echo
+            }
+            neuroface-cv-traffic() {
+              sa-login 2>/dev/null || hub-login "${1:-user1}"
+              oc get httproute,gateway,route -n neuroface-gateway-system 2>/dev/null || true
+              oc get listener,connector -n service-interconnect 2>/dev/null | grep -E 'neuroface-cv|NAME' || true
+            }
 
             echo "╔══════════════════════════════════════════════════════════════╗"
             echo "║  Hybrid Mesh AI Workshop Terminal                            ║"
@@ -382,6 +392,7 @@ spec:
             echo "║  Kuadrant:     kuadrant-set-key <key>                        ║"
             echo "║                kuadrant-test-httpbin | kuadrant-test-ai      ║"
             echo "║                kuadrant-verify-oc  (oc get routes/policies)  ║"
+            echo "║  NeuroFace CV: neuroface-cv-status | neuroface-cv-traffic   ║"
             echo "║  rosa login:   rosa login --token=<token>                   ║"
             echo "║  gcloud:       gcloud auth login --no-launch-browser         ║"
             echo "║  aws config:   aws configure                                ║"

@@ -29,6 +29,8 @@ showroom:
       - industrial-edge-tst-all
       - maas-workshop
       - neuroface
+      - neuroface-cv
+      - neuroface-gateway-system
       - cnv-workshop
       - hub-gateway-system
       - gitlab

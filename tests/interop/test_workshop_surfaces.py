@@ -112,6 +112,16 @@ def test_surface_neuroface():
     logger.info(f"PASS: NeuroFace {url}")
 
 
+@pytest.mark.workshop_surface_neuroface_cv
+def test_surface_neuroface_cv():
+    """NeuroFace CV hub gateway PPE status is reachable."""
+    _skip_if_no_hub()
+    url = f"https://neuroface-cv.{HUB_DOMAIN}/api/ppe/status"
+    err = _check_url(url)
+    assert not err, f"NeuroFace CV unreachable at {url}: {err}"
+    logger.info(f"PASS: NeuroFace CV {url}")
+
+
 @pytest.mark.workshop_surface_industrial_edge
 def test_surface_industrial_edge():
     """Industrial Edge hub gateway route is reachable."""

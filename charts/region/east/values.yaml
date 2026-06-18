@@ -17,6 +17,7 @@ clusterGroup:
     devspaces: {}
     camel-dashboard: {}
     spoke-gateway-system: {}
+    neuroface-cv: {}
     service-interconnect: {}
     kairos-system:
       operatorGroup: true
@@ -260,6 +261,15 @@ clusterGroup:
       argoProject: mesh
       syncWave: '8'
       path: charts/all/spoke-interconnect
+      overrides:
+        - name: clusterName
+          value: east
+    spoke-neuroface-cv:
+      name: spoke-neuroface-cv
+      namespace: neuroface-cv
+      argoProject: mesh
+      syncWave: '7'
+      path: charts/all/spoke-neuroface-cv
       overrides:
         - name: clusterName
           value: east

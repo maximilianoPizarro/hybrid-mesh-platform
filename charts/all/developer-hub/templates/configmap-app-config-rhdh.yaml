@@ -176,6 +176,10 @@ data:
           target: /opt/app-root/src/catalog-data/cnv-workshop/cnv-workshop.yaml
           rules:
             - allow: [System, Component]
+        - type: file
+          target: /opt/app-root/src/catalog-data/neuroface-cv/neuroface-cv-system.yaml
+          rules:
+            - allow: [System, Component]
       providers:
         ocm:
           default:

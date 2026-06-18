@@ -1,0 +1,18 @@
+clusterName: ""
+
+yoloPpeServing:
+  image: registry.access.redhat.com/ubi9/python-311:latest
+  modelRepo: Hexmon/vyra-yolo-ppe-detection
+  modelFile: best.pt
+  storageClassName: ocs-external-storagecluster-ceph-rbd-immediate
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 3Gi
+  hpa:
+    minReplicas: 1
+    maxReplicas: 4
+    targetCPUUtilization: 70
