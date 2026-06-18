@@ -283,7 +283,49 @@ oc get podmonitor -n istio-monitoring | grep strimzi
 
 **Symptom:** `industrial-edge-tst` stuck on PostSync `camel-k-registry-bootstrap`.
 
-**Fix:** Sync-wave Job instead of PostSync hook in `camel-registry-bootstrap.yaml`. Verify: `bash scripts/verify-industrial-edge.sh`.
+**Fix:** Sync-wave Job instead of PostSync hook in `camel-registry-bootstrap.yaml`. TTL 24h. Verify: `bash scripts/verify-industrial-edge.sh`.
+
+---
+
+### 3n. Line Dashboard sensors not loading (localhost:3000)
+
+**Symptom:** Line Dashboard at `industrial-edge.<hub>` loads HTML but no sensor data; browser console shows WebSocket to `http://localhost:3000`.
+
+**Cause:** `config.json` has `"websocketHost": ""` — socket.io v2 resolves empty string to `localhost:3000`.
+
+**Fix (Git):** `global.hubClusterDomain` override in `charts/region/east|west/values.yaml` for `industrial-edge-tst`; ConfigMap template uses hub gateway URL.
+
+**Fix (live):** `oc patch configmap line-dashboard-config -n industrial-edge-tst-all --type merge -p '{"data":{"config.json":"{\"websocketHost\":\"https://industrial-edge.<hub-domain>\",\"websocketPath\":\"/api/service-web/socket\",\"SERVER_TIMEOUT\":7500}"}}'` then restart.
+
+---
+
+### 3o. AMQ broker rejects MQTT sensors (Connection lost immediately)
+
+**Symptom:** Sensors log `Connection lost!` right after `MQTT Connect options`; broker log shows `Connection reset by peer`.
+
+**Cause:** AMQ Operator default security restricts all operations to `admin` role; Paho MQTT sensors connect without credentials.
+
+**Fix (Git):** `ActiveMQArtemisSecurity` CR + `brokerProperties: securityEnabled=false` in `charts/all/industrial-edge-tst/templates/messaging.yaml`.
+
+---
+
+### 3p. mqtt-to-kafka UnknownHostException (advertised broker DNS)
+
+**Symptom:** Camel K `mqtt-to-kafka` logs `UnknownHostException: dev-cluster-broker-0-east.dev-cluster-kafka-brokers.*`.
+
+**Cause:** Strimzi `advertisedHost` includes clusterName suffix; in-cluster DNS doesn't resolve it without an ExternalName Service.
+
+**Fix (Git):** `charts/all/industrial-edge-tst/templates/kafka-broker-advertised-dns.yaml` creates ExternalName Service `dev-cluster-broker-0-<clusterName>` → CNAME to real headless pod.
+
+---
+
+### 3q. spoke-gateway HTTPRoute not programmed
+
+**Symptom:** `spoke-gateway` Gateway status `Pending/Unknown`; Skupper ie-gateway returns frontend HTML for `/api` paths.
+
+**Cause:** RHDP spokes may not have `istio` GatewayClass (only `data-science-gateway-class` from OSSM3 openshift-ingress revision).
+
+**Fix:** ie-gateway Skupper connector points directly to `line-dashboard:8080` (not `spoke-gateway-istio`); hub Gateway HTTPRoute splits `/api/service-web/socket` → ie-api:3000 and `/*` → ie-gateway:8080.
 
 ---
 

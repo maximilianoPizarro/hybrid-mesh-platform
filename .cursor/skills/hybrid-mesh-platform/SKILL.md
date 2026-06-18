@@ -238,11 +238,20 @@ Verify from hub: query `kafka_server_kafkaserver_brokerstate` via `prometheus-ea
 - If Argo operation stuck on old PVC: `oc patch application neuroface -n openshift-gitops --type merge -p '{"operation":null}'` then resync
 - Chart: `charts/all/neuroface/values.yaml` → `yoloPpeServing.storageClassName`
 
-### Industrial Edge GitOps (east spoke)
+### Industrial Edge GitOps (east/west spokes)
 
 - Hub app `industrial-edge-tst-all` only has ambient waypoint (expected)
-- Full IE stack deploys on **east** via `industrial-edge-tst` Argo app on spoke GitOps
-- **PostSync hook trap:** `camel-k-registry-bootstrap` as PostSync hook can stall sync indefinitely — use sync-wave Job instead (`charts/all/industrial-edge-tst/templates/camel-registry-bootstrap.yaml`)
+- Full IE stack deploys on **east/west** via `industrial-edge-tst` Argo app on spoke GitOps
+- **PostSync hook trap:** `camel-k-registry-bootstrap` as PostSync hook can stall sync indefinitely — use sync-wave Job instead; TTL extended to 24h to survive Argo resync
+- **AMQ broker security:** sensors connect without MQTT credentials — `ActiveMQArtemisSecurity` CR with `guestLoginModule` + `brokerProperties: securityEnabled=false` in `messaging.yaml`
+- **Kafka advertised DNS:** Strimzi `advertisedHost` includes clusterName (`-east/-west`); ExternalName Service `dev-cluster-broker-0-<clusterName>` CNAMEs to real headless pod
+- **Camel K registry auth:** `camel-k-registry-docker` secret expires when SA token rotates; bootstrap Job recreates it; TTL 24h keeps Job visible in Argo
+- **Hub gateway architecture:** single URL `industrial-edge.<hub>` serves both frontend (port 8080) and WebSocket API (port 3000) via separate Skupper listeners/connectors:
+  - `ie-gateway-east/west:8080` → `line-dashboard:8080` (Angular frontend)
+  - `ie-api-east/west:3000` → `line-dashboard:3000` (iot-consumer socket.io)
+  - HTTPRoute: `/api/service-web/socket` → ie-api (port 3000), `/*` → ie-gateway (port 8080)
+- **config.json `websocketHost`:** must be `https://industrial-edge.<hub-domain>` (not empty string — socket.io v2 resolves `""` to `localhost:3000`); injected via `global.hubClusterDomain` override in region values
+- **Spoke-gateway bypass:** `ie-gateway` Skupper connector points directly to `line-dashboard:8080` (not `spoke-gateway-istio`) because spoke Istio GatewayClass may not be programmed on RHDP spokes
 
 ### Skupper network observer
 
