@@ -8,7 +8,9 @@ Before diving into Argo sync status, prove the platform delivers value:
 | ------- | ----- |
 | Fleet inventory | `oc get managedclusters` — east/west **Available** |
 | One-click access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **19** links HTTP 200 |
-| Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — showroom, MCP, IE, DevSpaces spokes, **workshop-apis (401)**, **vault /ui/** |
+| Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — **20** links (incl. AI gateway 401, workshop-apis 401, vault `/ui/`) |
+| Kuadrant enforcement | `bash scripts/verify-workshop-kuadrant-curl.sh` — 401 without API key |
+| Industrial Edge | `bash scripts/verify-industrial-edge.sh` — hub route 200, Skupper `sitesInNetwork=3` |
 | Private mesh | `oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'` → **3** |
 | Edge ingress | `curl -sk -o /dev/null -w '%{http_code}\n' https://industrial-edge.apps.<hub-domain>/` |
 | Fleet GitOps | `oc get applicationset fleet-spoke-push -n openshift-gitops` |
@@ -65,10 +67,15 @@ oc get applications -n openshift-gitops -o jsonpath='{range .items[*]}{.metadata
 oc login --token=<token> --server=<hub-api-url>
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 bash scripts/verify-workshop-http200.sh
+bash scripts/verify-workshop-kuadrant-curl.sh
+bash scripts/verify-industrial-edge.sh
 bash scripts/verify-fleet.sh
 ```
 
-**Success criteria:** `Summary: 19 OK (200-399), 0 503 (route exists / pods down), 0 other` — exit code **0**.
+**Success criteria:**
+
+- `verify-console-links.sh`: `Summary: 19 OK (200-399), 0 503` — exit **0**
+- `verify-workshop-http200.sh`: `Summary: 20 OK` — exit **0** (401 on `platform-ai-gateway` and `platform-workshop-apis` counts as OK)
 
 Script behavior: uses `oc whoami -t` for OAuth routes; excludes operator duplicate **`rhodslink`** ConsoleLinks.
 
@@ -114,7 +121,9 @@ Interpret results:
 - GitLab: approve Manual InstallPlans; verify `oc get gitlab -n gitlab`; scaffolder uses `GITLAB_TOKEN`
 - OpenShift AI: AllNamespaces OG; DSC v2 + RawDeployment; URL `rh-ai.apps.<domain>`; bearer token for curl
 - Kubecost: OG **`kubecost-operator-group`**; Route from `global.localClusterDomain`
-- Developer Hub: `developer-hub-catalog-demos`; TechDocs CM keys without `/`; mounts `.../ie` vs `.../ie/techdocs`
+- Developer Hub: `developer-hub-catalog-demos`; TechDocs CM keys without `/`; all catalog CMs mounted in `backstage-developer-hub.yaml` (`cnv-workshop`, `software-templates`, …); GitLab host via `developer-hub.gitlabHost` (no double `apps`)
+- Grafana Kafka: spoke `prometheus-auth-proxy` Running; `strimzi-kafka-metrics` PodMonitors on east/west (`istio-monitoring` + `clusterSuffix`)
+- NeuroFace YOLO: PVC `yolo-ppe-model` Bound (`ocs-external-storagecluster-ceph-rbd-immediate`); `yolo-ppe-serving` deployment Available
 
 After Git fix, refresh:
 
@@ -122,6 +131,34 @@ After Git fix, refresh:
 oc annotate application console-links -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 oc annotate application neuroface -n openshift-gitops argocd.argoproj.io/refresh=hard --overwrite
 ```
+
+### Developer Hub validation
+
+```bash
+oc get backstage developer-hub -n developer-hub
+oc rollout status deployment/backstage-developer-hub -n developer-hub
+oc get configmap -n developer-hub -l rhdh.redhat.com/ext-config-sync
+
+# GitLab host (must NOT be gitlab.apps.apps.*)
+oc get configmap app-config-rhdh -n developer-hub -o yaml | grep gitlab.apps
+
+# Catalog mounts present in pod
+POD=$(oc get pods -n developer-hub -o name | grep backstage-developer-hub | head -1 | cut -d/ -f2)
+oc exec -n developer-hub $POD -c backstage-backend -- ls \
+  /opt/app-root/src/catalog-data/cnv-workshop/ \
+  /opt/app-root/src/catalog-data/software-templates/ 2>/dev/null
+
+# Catalog warnings (non-fatal if templates load after login)
+oc logs -n developer-hub $POD -c backstage-backend --tail=100 | grep -iE 'catalog.*warn|template'
+
+# Software templates require OIDC login (RBAC)
+curl -sk "https://developer-hub.${HUB_DOMAIN}/api/catalog/entities?filter=kind=template"
+# [] unauthenticated is expected when plugins.rbac.enabled=true
+```
+
+**Rollout:** after `Backstage` CR `extraFiles` or dynamic-plugins change, wait for `install-dynamic-plugins` init (5–10 min).
+
+**Argo drift (OK):** `Secret/developer-hub-oidc-auth`, `Secret/llama-stack-secrets` often OutOfSync.
 
 ### Key CRs
 
@@ -150,7 +187,10 @@ oc get pods -n open-cluster-management-agent
 | ACM / fleet | ✓ | - | `oc get managedclusters` |
 | ApplicationSet PUSH | ✓ | - | `oc get applicationset fleet-spoke-push` |
 | Skupper VAN | ✓ | ✓ | `oc get site,link -n service-interconnect` |
-| Industrial Edge | - | ✓ | `oc get pods -n industrial-edge-tst-all` |
+| Industrial Edge | - | ✓ | `bash scripts/verify-industrial-edge.sh`; pods in `industrial-edge-tst-all` on east |
+| Grafana Kafka metrics | ✓ | ✓ | Explore `kafka_server_kafkaserver_brokerstate` via `prometheus-east`/`west` |
+| Developer Hub templates | ✓ | - | Login → `/create` — industrial-edge, cnv-vm-workshop, openshift-ai-workspace |
+| NeuroFace PPE | ✓ | - | `oc get deploy yolo-ppe-serving -n neuroface` |
 | fleet-values-sync | ✓ | ✓ | `oc get cronjob -n openshift-gitops \| grep fleet-values` |
 
 ## ArgoCD Sync Status
@@ -158,8 +198,10 @@ oc get pods -n open-cluster-management-agent
 | Status | Meaning |
 |--------|---------|
 | Synced | Resources match Git |
+| OutOfSync | Drift from Git — **often OK** for runtime secrets (`developer-hub-oidc-auth`, `llama-stack-secrets`) |
+| Progressing | Long deploys: `openshift-ai-hub` (InferenceService), `workshop-demos` (Camel), `neuroface` (YOLO model) |
 | Unknown | Often ACM 2.16 schema bug — **may block real sync on existing hubs** |
-| Healthy | Resource health OK (can coexist with Unknown sync) |
+| Healthy | Resource health OK (can coexist with Unknown/OutOfSync) |
 | ComparisonError | Schema load failure — apps won't sync until fixed |
 
 ```bash

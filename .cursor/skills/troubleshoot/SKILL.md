@@ -191,32 +191,17 @@ oc get securedcluster -n stackrox
 
 ---
 
-### 3e. OpenShift AI 403 in verify script
+### 3e. Developer Hub stuck Init / 503
 
-**Symptom:** `platform-openshift-ai` returns 403; other links OK.
-
-**Fix:** Run `oc login` on hub before `verify-console-links.sh` — script sends `Authorization: Bearer $(oc whoami -t)`. Exclude duplicate operator `rhodslink` from count (script filters automatically).
-
----
-
-### 3f. Skupper observer 503 — wrong namespace or TLS
-
-**Symptom:** Skupper console link 503; observer in `default` or Route uses edge TLS instead of passthrough.
-
-**Fix:** Deploy wrapper `charts/all/skupper-network-observer` to **`service-interconnect`**. Route spec: `tls.termination: passthrough`, `port.targetPort: https`. Requires Skupper Site + TLS secrets on hub.
-
----
-
-### 3d. Developer Hub stuck Init / 503
-
-**Symptom:** Backstage pod `Init:2/3`; Developer Hub link 503.
+**Symptom:** Backstage pod `Init:2/3` or `Init:0/3`; Developer Hub link 503; rollout pending >10 min.
 
 **Checks:**
 
 ```bash
 oc get configmap developer-hub-catalog-demos -n developer-hub
 oc get pods -n developer-hub
-oc logs -n developer-hub deploy/developer-hub -c backstage --tail=30
+oc logs -n developer-hub deploy/backstage-developer-hub -c install-dynamic-plugins --tail=30
+oc logs -n developer-hub deploy/backstage-developer-hub -c backstage-backend --tail=50 | grep -iE 'catalog|warn|error'
 ```
 
 **Fixes:**
@@ -224,6 +209,97 @@ oc logs -n developer-hub deploy/developer-hub -c backstage --tail=30
 - Ensure `workshop-demos` chart synced (provides `developer-hub-catalog-demos`)
 - TechDocs ConfigMap keys must not contain `/` (use flat keys like `index.md` not `docs/index.md`)
 - Separate volume mounts: IE catalog at `.../ie`, techdocs at `.../ie/techdocs`
+- **Wait for `install-dynamic-plugins` init** — OCI plugin install can take 5–10 min per rollout
+- After `Backstage` CR `extraFiles` change: `oc rollout status deployment/backstage-developer-hub -n developer-hub`
+
+---
+
+### 3f. Developer Hub — GitLab integration broken (double `apps`)
+
+**Symptom:** GitLab scaffolder/pipelines/proxy fail; live `app-config` shows `gitlab.apps.apps.<cluster>`; catalog warns `no matching files found` for GitLab URLs.
+
+**Cause:** `clusterDomain` is already `apps.cluster-…` but templates used `gitlab.apps.{{ clusterDomain }}`.
+
+**Fix (Git):** Use `{{ include "developer-hub.gitlabHost" . }}` everywhere — `configmap-app-config-rhdh.yaml`, `gitlab-token-setup.yaml`.
+
+**Verify:**
+
+```bash
+oc get configmap app-config-rhdh -n developer-hub -o yaml | grep -E 'gitlab\.apps'
+# Expect: gitlab.apps.cluster-….redhatworkshops.io (single apps)
+```
+
+---
+
+### 3g. Developer Hub — catalog warnings / missing templates
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `cnv-workshop.yaml does not exist` | ConfigMap exists but no `extraFiles` mount | Add mount in `backstage-developer-hub.yaml` |
+| `/spec/definition must be string` on Kuadrant APIs | Nested YAML or `$text: \|` for inline | Use `definition: \|` in `workshop-kuadrant-apis.yaml` |
+| `no matching files found` for `/-/raw/main/...` | Backstage rejects GitLab raw URLs | `catalog-software-templates.yaml` with `/-/blob/main/...` targets |
+| Templates empty via API | RBAC enabled | Log in — `/create` UI |
+| `httpbin.org/spec.json` 503 | External spec down | Inline OpenAPI pointing at workshop-apis gateway |
+
+---
+
+### 3h. Developer Hub — GitLab platform-content seed
+
+**Symptom:** Software template files 404 on GitLab; scaffolder actions work but no templates.
+
+```bash
+curl -sk -o /dev/null -w '%{http_code}\n' \
+  "https://gitlab.apps.${HUB_DOMAIN}/developer-hub/platform-content/-/raw/main/software-templates/templates-catalog.yaml"
+oc create job --from=cronjob/gitlab-platform-content-seed gitlab-platform-content-seed-manual -n gitlab
+```
+
+**Fix:** Seed job must pull remote before copy when `main` is protected (`charts/all/gitlab-operator/templates/*-platform-content-seed.yaml`).
+
+---
+
+### 3i. Grafana Kafka panels "No data"
+
+**Symptom:** Platform Overview Kafka panels empty on hub Grafana.
+
+```bash
+# On east/west spoke:
+oc get pods -n spoke-interconnect -l app=prometheus-auth-proxy
+oc get podmonitor -n istio-monitoring | grep strimzi
+```
+
+**Fix:** OpenShift-compatible nginx in `prometheus-auth-proxy`; sync `istio-monitoring` on spokes with `clusterSuffix` in `charts/region/east|west/values.yaml`.
+
+---
+
+### 3j. NeuroFace Missing / Argo stuck on PVC
+
+**Symptom:** `waiting for healthy state of PVC/yolo-ppe-model`; PVC Pending `WaitForFirstConsumer`.
+
+**Fix:** `yoloPpeServing.storageClassName: ocs-external-storagecluster-ceph-rbd-immediate`. If stuck: `oc patch application neuroface -n openshift-gitops --type merge -p '{"operation":null}'` then resync.
+
+---
+
+### 3k. Industrial Edge Argo sync stall (east spoke)
+
+**Symptom:** `industrial-edge-tst` stuck on PostSync `camel-k-registry-bootstrap`.
+
+**Fix:** Sync-wave Job instead of PostSync hook in `camel-registry-bootstrap.yaml`. Verify: `bash scripts/verify-industrial-edge.sh`.
+
+---
+
+### 3l. OpenShift AI 403 in verify script
+
+**Symptom:** `platform-openshift-ai` returns 403; other links OK.
+
+**Fix:** Run `oc login` before verify scripts — bearer token required. Script sends `Authorization: Bearer $(oc whoami -t)`. Excludes duplicate `rhodslink` ConsoleLink automatically.
+
+---
+
+### 3m. Skupper observer 503 — wrong namespace or TLS
+
+**Symptom:** Skupper console link 503; observer in `default` or Route uses edge TLS instead of passthrough.
+
+**Fix:** Deploy wrapper `charts/all/skupper-network-observer` to **`service-interconnect`**. Route spec: `tls.termination: passthrough`, `port.targetPort: https`. Requires Skupper Site + TLS secrets on hub.
 
 ---
 
@@ -313,6 +389,23 @@ oc patch argocd openshift-gitops -n openshift-gitops --type merge -p '{
 
 ---
 
+### 12b. Kuadrant APIProduct plans not discovered
+
+**Symptom:** Developer Hub Kuadrant tab shows API Products without plans; `discoveredPlans` empty on APIProduct CRs.
+
+**Cause:** PostSync Job `workshop-kuadrant-sync-plans` failed on Python 3.6 (`text=True` invalid in `subprocess`).
+
+**Fix:** `universal_newlines=True` in `charts/all/workshop-kuadrant-apis/templates/job-sync-apiproduct-plans.yaml`.
+
+**Verify:**
+
+```bash
+bash scripts/verify-workshop-kuadrant-curl.sh   # 401 without key = OK
+oc get apiproduct -A -o custom-columns='NAME:.metadata.name,PLANS:.status.discoveredPlans'
+```
+
+---
+
 ### 12. Kuadrant AuthPolicy Not Accepted (MissingDependency)
 
 **Symptom:** RHCL console or `oc get authpolicy` shows **Not Accepted** / `MissingDependency` — gateway provider not installed.
@@ -341,15 +434,25 @@ Docs: `docs/validatedpatterns-docs/products/connectivity-link.md`
 ## Diagnostic Commands
 
 ```bash
+# Session — re-login if Unauthorized
+oc whoami || oc login --token=<token> --server=<hub-api-url>
+
 # Bootstrap chain
 oc get application field-content hybrid-mesh-platform-hub -n openshift-gitops
 oc get application acm-hub-spoke -n openshift-gitops
 oc get applicationset fleet-spoke-push -n openshift-gitops
 
-# Console + routes
-oc login --token=<token> --server=<hub-api-url>
+# Console + routes + workshop surfaces
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
+bash scripts/verify-workshop-http200.sh
+bash scripts/verify-workshop-kuadrant-curl.sh
+bash scripts/verify-industrial-edge.sh
 oc get routes -A | wc -l
+
+# Developer Hub
+oc get backstage developer-hub -n developer-hub
+oc rollout status deployment/backstage-developer-hub -n developer-hub
+oc get configmap -n developer-hub -l rhdh.redhat.com/ext-config-sync
 
 # ACM
 oc get multiclusterhub -n open-cluster-management

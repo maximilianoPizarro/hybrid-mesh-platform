@@ -38,7 +38,7 @@ Validate **what the platform delivers**, not only Argo CD sync status:
 | Fleet GitOps | `managedclusters` east/west **Available**; `fleet-spoke-push` ApplicationSet present |
 | Cross-cluster observability | Grafana + Kiali + Kafka Console console links HTTP 200 |
 | Secure fleet | ACS Central link 200; SecuredClusters on spokes |
-| Developer experience | Developer Hub 200; catalog shows IE + `hybrid-mesh-shared-demos` |
+| Developer experience | Developer Hub 200; catalog IE + demos + Kuadrant APIs; software templates in `/create` (auth required) |
 | Edge reachability | `industrial-edge.<hub-domain>` 200 after spokes + Skupper |
 | Private mesh | Skupper `sitesInNetwork: 3` on hub site |
 
@@ -47,7 +47,9 @@ Smoke test (hub):
 ```bash
 oc login --token=<token> --server=<hub-api-url>
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh   # expect 19 OK, exit 0
-bash scripts/verify-workshop-http200.sh                # workshop + MCP + spokes
+bash scripts/verify-workshop-http200.sh                # 20 workshop surfaces (incl. AI gateway, workshop-apis)
+bash scripts/verify-workshop-kuadrant-curl.sh            # 401 without API key = OK
+bash scripts/verify-industrial-edge.sh                 # Skupper VAN=3, hub IE route 200
 bash scripts/verify-fleet.sh
 ```
 
@@ -131,7 +133,8 @@ bash scripts/verify-industrial-edge.sh   # IE dashboard chain
 | `charts/all/acm-hub-spoke/` | Placement, ApplicationSet `fleet-spoke-push`, GitOpsCluster |
 | `charts/all/openshift-gitops/templates/argocd.yaml` | ArgoCD CR + ACM 2.16 resourceExclusions |
 | `charts/all/acm-operator/` | ACM subscription + MCE `cluster-proxy-addon: false` automation |
-| `charts/all/gitlab-operator/` | GitLab Operator + Runner + PostSync bootstrap |
+| `charts/all/gitlab-operator/` | GitLab Operator + Runner + platform-content seed (CronJob/Job) |
+| `charts/all/developer-hub/` | RHDH Backstage, catalog CMs, Kuadrant plugin, GitLab/Tekton dynamic plugins |
 | `charts/all/skupper-network-observer/` | OCI network-observer wrapper + passthrough Route |
 | `charts/all/openshift-ai-hub/` | DSCInitialization v2, DataScienceCluster v2 RawDeployment |
 | `charts/all/console-links/templates/all.yaml` | ConsoleLink hrefs |
@@ -201,6 +204,45 @@ Wait for MCH **Running** before importing spokes.
 - ConfigMap `developer-hub-catalog-demos` (from `workshop-demos`) before Backstage starts
 - TechDocs ConfigMap keys must **not** contain `/` (OpenShift rejects `docs/index.md` as key)
 - Separate mounts: IE catalog `.../ie` vs techdocs `.../ie/techdocs`
+- **Every catalog ConfigMap** referenced in `app-config` must have a matching `extraFiles` mount in `charts/all/developer-hub/templates/backstage-developer-hub.yaml` (e.g. `cnv-workshop`, `software-templates`)
+- **GitLab host helper:** use `developer-hub.gitlabHost` in templates — **never** `gitlab.apps.{{ clusterDomain }}` because `clusterDomain` is already `apps.<cluster>` → double `apps` (`gitlab.apps.apps.*`) breaks integrations, proxy, scaffolder, pipelines UI
+- **Software templates:** Backstage cannot read GitLab `/-/raw/` URLs. Bundle Location in `catalog-software-templates.yaml` with explicit `/-/blob/main/...` targets; mount at `/opt/app-root/src/catalog-data/software-templates/`
+- **OpenAPI catalog entities:** `spec.definition` must be a **string** — use `definition: |` for inline YAML; `$text: <url>` only for external URLs; nested YAML objects fail validation
+- **RBAC:** `plugins.rbac.enabled: true` — unauthenticated `/api/catalog/entities?filter=kind=template` returns `[]`; templates visible only after OIDC login
+- **Rollout triggers:** changes to `Backstage` CR `extraFiles`, `dynamic-plugins-rhdh`, or init-heavy config → expect 5–10 min `install-dynamic-plugins` init before pod Ready
+- **Argo drift (non-blocking):** `Secret/developer-hub-oidc-auth`, `Secret/llama-stack-secrets`, `ServiceAccount/pipeline` often stay OutOfSync (runtime-managed)
+
+### Developer Hub GitLab + scaffolder
+
+| Piece | Path / note |
+|-------|-------------|
+| App config | `charts/all/developer-hub/templates/configmap-app-config-rhdh.yaml` |
+| GitLab host helper | `charts/all/developer-hub/templates/_helpers.tpl` → `developer-hub.gitlabHost`, `platformContentBaseUrl` |
+| Dynamic plugins (Tekton, GitLab pipelines OCI) | `configmap-dynamic-plugins-rhdh.yaml` |
+| Platform content seed | `charts/all/gitlab-operator/templates/*-gitlab-platform-content-seed.yaml` → GitLab project `developer-hub/platform-content` |
+| Software templates source | `docs/assets/backstage/software-templates/` (seeded to GitLab; catalog index bundled in-chart) |
+| Kuadrant APIs catalog | `files/catalog/workshop-kuadrant-apis.yaml` → CM `developer-hub-catalog-workshop-kuadrant-apis` |
+
+### Grafana Kafka metrics (hub dashboards, spoke data)
+
+Hub Grafana queries `prometheus-east` / `prometheus-west` via `prometheus-auth-proxy` on spokes. **No data** causes:
+
+1. **`prometheus-auth-proxy` CrashLoop** on restricted SCC — nginx needs OpenShift-compatible cache paths (`charts/all/spoke-interconnect/templates/deployment-prometheus-auth-proxy.yaml`)
+2. **Missing `strimzi-kafka-metrics` PodMonitors** on spokes — sync `istio-monitoring` on east/west; hub values need `clusterSuffix: "-east"` / `"-west"` in `charts/region/east|west/values.yaml`
+
+Verify from hub: query `kafka_server_kafkaserver_brokerstate` via `prometheus-east` datasource in Grafana or Thanos.
+
+### NeuroFace YOLO serving
+
+- PVC `yolo-ppe-model` must use **Immediate** binding storage class (`ocs-external-storagecluster-ceph-rbd-immediate`) — default `WaitForFirstConsumer` blocks Argo sync (`waiting for healthy state of PVC`)
+- If Argo operation stuck on old PVC: `oc patch application neuroface -n openshift-gitops --type merge -p '{"operation":null}'` then resync
+- Chart: `charts/all/neuroface/values.yaml` → `yoloPpeServing.storageClassName`
+
+### Industrial Edge GitOps (east spoke)
+
+- Hub app `industrial-edge-tst-all` only has ambient waypoint (expected)
+- Full IE stack deploys on **east** via `industrial-edge-tst` Argo app on spoke GitOps
+- **PostSync hook trap:** `camel-k-registry-bootstrap` as PostSync hook can stall sync indefinitely — use sync-wave Job instead (`charts/all/industrial-edge-tst/templates/camel-registry-bootstrap.yaml`)
 
 ### Skupper network observer
 
@@ -243,6 +285,8 @@ oc get kuadrant kuadrant -n kuadrant-system -o jsonpath='Ready={.status.conditio
 ```
 
 **Developer Hub API keys:** `/kuadrant` — ClusterRole `developer-hub-kuadrant`; AuthPolicy secret selector `app` must match APIProduct name (`workshop-mcp-gateway`, `workshop-llm-tokens`, …).
+
+**Kuadrant APIProducts plans sync:** PostSync Job `workshop-kuadrant-sync-plans` — Python 3.6 on UBI needs `universal_newlines=True` (not `text=True`) in `subprocess` calls (`charts/all/workshop-kuadrant-apis/templates/job-sync-apiproduct-plans.yaml`).
 
 ## External links
 

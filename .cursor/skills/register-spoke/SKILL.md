@@ -161,7 +161,23 @@ Manual domain fallback: patch `field-content` helm.values on spoke — see `docs
 
 Playbook: `docs/validatedpatterns-docs/install-improvements.md#spoke-tokens-and-field-content`
 
-## Troubleshooting join
+## Spoke workload validation
+
+After spoke GitOps syncs `hybrid-mesh-platform-east|west`:
+
+```bash
+# Industrial Edge (east)
+oc get application industrial-edge-tst -n openshift-gitops   # on east spoke Argo
+oc get pods -n industrial-edge-tst-all
+
+# Spoke monitoring (Grafana Kafka panels on hub)
+oc get podmonitor -n istio-monitoring | grep strimzi
+oc get pods -n spoke-interconnect -l app=prometheus-auth-proxy
+```
+
+IE full stack runs on **east spoke**, not hub (`industrial-edge-tst-all` on hub is waypoint-only). If Argo stuck on PostSync hooks, see `troubleshoot` §3k.
+
+## Troubleshooting
 
 ```bash
 # Hub — namespace churn

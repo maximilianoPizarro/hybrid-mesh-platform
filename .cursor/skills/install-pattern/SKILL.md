@@ -122,8 +122,11 @@ python scripts/verify-gitops-strategies.py
 3. Trigger domain sync: `oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops`
 4. Verify `east-spoke-components` / `west-spoke-components` on hub Argo CD
 5. Console links — expect partial 503 until operators/CRs converge (60–90 min); target **19/19 HTTP 200**
-6. Skupper: hub `Site` + spoke `Site` + AccessToken sync job (`accesstoken-sync`); target `sitesInNetwork: 3`
-7. MaaS secrets on hub if not via RHDP: `kairos-ai-credentials`, `openshift-ai-maas-credentials`
+6. Full workshop gate: `bash scripts/verify-workshop-http200.sh` (**20** surfaces), `verify-workshop-kuadrant-curl.sh`, `verify-industrial-edge.sh`
+7. Skupper: hub `Site` + spoke `Site` + AccessToken sync job (`accesstoken-sync`); target `sitesInNetwork: 3`
+8. MaaS secrets on hub if not via RHDP: `kairos-ai-credentials`, `openshift-ai-maas-credentials`
+9. GitLab platform-content seed: CronJob `gitlab-platform-content-seed` in `gitlab` namespace (software templates for Developer Hub)
+10. Developer Hub rollout after catalog/plugin changes: allow 5–10 min for `install-dynamic-plugins` init
 
 ## Known install gotchas
 
@@ -131,7 +134,8 @@ python scripts/verify-gitops-strategies.py
 - **ACM spoke import:** Create **`ManagedCluster` before** any pre-labeled `Namespace` — see `charts/all/acm-hub-spoke/templates/managed-clusters.yaml`
 - **ACM 2.16:** New installs get `resourceExclusions` from `openshift-gitops` chart + `cluster-proxy-addon: false` from `acm-operator`
 - **OperatorGroups:** Do not set `operatorGroup: true` on `redhat-ods-operator` — RHODS needs AllNamespaces OG (`spec: {}`). Kubecost: **`kubecost-operator-group`**. Remove duplicate Kairos OG if present.
-- **GitLab:** approve **Manual** InstallPlans in `gitlab` + `gitlab-runner`; Route `https://gitlab.apps.<domain>/`
+- **GitLab:** approve **Manual** InstallPlans in `gitlab` + `gitlab-runner`; Route `https://gitlab.apps.<domain>/`; seed `platform-content` for Developer Hub scaffolder templates
+- **Developer Hub:** GitLab host must use `developer-hub.gitlabHost` helper (not `gitlab.apps.{{ clusterDomain }}`); catalog CMs need `extraFiles` mounts; software templates via `catalog-software-templates.yaml`
 - **hub-gateway:** default **`gateway.mode: proxy`** (nginx → Skupper); syncWave **5** after `fleet-values-sync`
 - **Workshop users:** IdP **`workshop-users`**; `grantClusterReader: true`; fix job `scripts/fix-htpasswd-users-secret-job.yaml`
 - **CNV:** `cnv-example` includes Subscription + VM in **`cnv-workshop`**
