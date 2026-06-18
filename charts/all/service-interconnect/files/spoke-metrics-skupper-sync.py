@@ -231,8 +231,11 @@ def manifests_for(cluster: str) -> list[dict]:
                                 "command": [
                                     "/bin/sh",
                                     "-ec",
-                                    "mkdir -p /tmp/client_temp /tmp/proxy_temp /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp\n"
-                                    "exec nginx -g 'daemon off;' -c /etc/nginx/nginx.conf",
+                                    (
+                                        "mkdir -p /tmp/client_temp /tmp/proxy_temp"
+                                        " /tmp/fastcgi_temp /tmp/uwsgi_temp /tmp/scgi_temp\n"
+                                        "exec nginx -g 'daemon off;' -c /etc/nginx/nginx.conf"
+                                    ),
                                 ],
                                 "ports": [{"containerPort": 9091}],
                                 "securityContext": {
