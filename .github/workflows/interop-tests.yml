@@ -62,7 +62,7 @@ jobs:
           oc whoami
 
       - name: Configure kubeconfig (east spoke)
-        if: ${{ inputs.skip_edge != 'true' && secrets.EAST_KUBECONFIG_B64 != '' }}
+        if: inputs.skip_edge != 'true'
         run: |
           echo "${{ secrets.EAST_KUBECONFIG_B64 }}" | base64 -d > "$HOME/.kube/east-config"
           echo "KUBECONFIG_EDGE=$HOME/.kube/east-config" >> "$GITHUB_ENV"
