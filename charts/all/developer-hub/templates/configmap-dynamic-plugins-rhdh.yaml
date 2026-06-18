@@ -187,6 +187,8 @@ data:
           dynamicPlugins:
             frontend:
               internal.plugin-kuadrant:
+                apiFactories:
+                  - importName: kuadrantApiFactory
                 appIcons:
                   - name: kuadrantIcon
                     importName: KuadrantIcon
