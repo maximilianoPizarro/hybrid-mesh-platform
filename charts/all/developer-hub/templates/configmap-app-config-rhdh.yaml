@@ -271,9 +271,6 @@ data:
         - host: github.com
           apiBaseUrl: https://api.github.com
           rawBaseUrl: https://raw.githubusercontent.com
-        - host: {{ include "developer-hub.gitlabHost" . }}
-          apiBaseUrl: https://{{ include "developer-hub.gitlabHost" . }}/api/v4
-          token: ${GITLAB_TOKEN}
     gitlab:
       default:
         baseUrl: https://{{ include "developer-hub.gitlabHost" . }}

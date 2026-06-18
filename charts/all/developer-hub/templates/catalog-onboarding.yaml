@@ -1,8 +1,9 @@
 {{- /*
-  Workshop onboarding catalog — TechDocs served from GitHub Pages (readTree not supported by FetchUrlReader).
+  Workshop onboarding catalog — TechDocs via GitHub repo URL (readTree supported by GithubUrlReader).
+  Do NOT use GitHub Pages URLs (FetchUrlReader) or ConfigMap dir:. (flattened keys, no docs/ subdir).
 */ -}}
 {{- $ghPages := .Values.techdocs.githubPagesUrl | default "https://maximilianopizarro.github.io/hybrid-mesh-platform/" -}}
-{{- $onboardingDocs := printf "url:%s" $ghPages -}}
+{{- $onboardingDocs := "url:https://github.com/maximilianoPizarro/hybrid-mesh-platform/tree/main/charts/all/developer-hub/files/onboarding" -}}
 {{- $platformDocs := printf "%sdocs/onboarding/" $ghPages -}}
 apiVersion: v1
 kind: ConfigMap
