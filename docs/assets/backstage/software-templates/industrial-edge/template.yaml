@@ -58,7 +58,7 @@ spec:
         clusterDomain:
           title: Hub cluster apps domain
           type: string
-          description: "Hub RHDP apps domain for Gitea, Quay, Developer Hub (e.g. apps.cluster-r7964.dynamic2.redhatworkshops.io)"
+          description: "Hub RHDP apps domain for GitLab, Quay, Developer Hub (e.g. apps.cluster-r7964.dynamic2.redhatworkshops.io)"
           default: apps.cluster.example.com
       dependencies:
         targetCluster:
@@ -96,7 +96,7 @@ spec:
           clusterDomain: ${{ parameters.clusterDomain }}
           spokeAppsDomain: ${{ parameters.spokeAppsDomain }}
     - id: publish
-      name: Publish to Gitea
+      name: Publish to GitLab
       action: publish:github
       input:
         repoUrl: "gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-${{ parameters.targetCluster }}-${{ parameters.environment }}"

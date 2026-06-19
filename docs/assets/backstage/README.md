@@ -7,7 +7,7 @@ nav_exclude: true
 
 # Backstage assets
 
-Static catalog entities for Red Hat Developer Hub. Software templates are managed via Gitea (local SCM), not GitHub Pages.
+Static catalog entities for Red Hat Developer Hub. Software templates are managed via GitLab (local SCM), not GitHub Pages.
 
 ## Catalog entities
 

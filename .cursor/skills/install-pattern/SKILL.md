@@ -113,7 +113,7 @@ python scripts/verify-gitops-strategies.py
 
 **Success:** `Summary: 19 OK (200-399), 0 503, 0 other`, exit code **0**. Requires `oc login` for OpenShift AI (OAuth).
 
-**503 on first hour is normal** for Developer Hub, Gitea, ODS, Skupper — routes exist, backends still syncing. Strict gate: `MIN_OK_CODE=200 bash scripts/verify-console-links.sh`.
+**503 on first hour is normal** for Developer Hub, GitLab, ODS, Skupper — routes exist, backends still syncing. Strict gate: `MIN_OK_CODE=200 bash scripts/verify-console-links.sh`.
 
 ## Post-Install Tasks
 

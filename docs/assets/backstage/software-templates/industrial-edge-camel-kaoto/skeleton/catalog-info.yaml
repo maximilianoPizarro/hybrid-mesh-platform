@@ -16,7 +16,7 @@ metadata:
     quay.io/repository-slug: workshop/${{ values.uniqueName }}
   links:
     - url: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}
-      title: Source Code (Gitea)
+      title: Source Code (GitLab)
       icon: code
     - url: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}-${{ values.targetCluster }}-${{ values.environment }}/raw/branch/main/README.md
       title: Documentation

@@ -56,7 +56,7 @@ spec:
           clusterDomain: ${{ parameters.clusterDomain }}
           model: ${{ parameters.model }}
     - id: publish
-      name: Publish to Gitea
+      name: Publish to GitLab
       action: publish:github
       input:
         repoUrl: gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-osai

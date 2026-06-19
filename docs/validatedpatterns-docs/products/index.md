@@ -23,7 +23,7 @@ Keep **[Discover workloads consistently](../architecture.md#components-on-the-hu
 | [Connectivity Link](connectivity-link.md) | RHCL / Gateway API (hub + spoke gateway screenshots) | `charts/all/rhcl-operator/` |
 | [Service Interconnect](../service-interconnect.md) | Skupper VAN for cross-cluster connectivity | `charts/all/service-interconnect/` |
 | [OpenShift AI](openshift-ai.md) | DataScienceCluster, model serving | `charts/all/openshift-ai/` |
-| [NeuroFace](neuroface.md) | Workshop face/object AI + MaaS chat | `charts/all/neuroface/` |
+| [NeuroFace](neuroface.md) | Vision + MaaS chat (hub) and CV inference journey (hub-spoke) | `charts/all/neuroface/`, `neuroface-gateway/`, `spoke-neuroface-cv/` |
 | [AMQ Streams](amq-streams.md) | Kafka for telemetry pipelines | `charts/all/industrial-edge-*/` |
 | [Apache Camel / Camel K](camel-k.md) | Integrations (MQTT, S3, Kafka) | `charts/all/camel-k/` |
 | [OpenShift Pipelines](pipelines.md) | Tekton CI/CD for Industrial Edge | `charts/all/industrial-edge-pipelines/` |

@@ -47,7 +47,7 @@ https://maximilianopizarro.github.io/hybrid-mesh-platform/assets/backstage/softw
 Behind the scenes:
 
 1. `fetch:template` — skeleton from GitHub Pages (`maximilianopizarro.github.io` integration).
-2. `publish:github` — repo `ws-platformadmin/edge-factory-1-east` on Gitea.
+2. `publish:github` — repo `ws-platformadmin/edge-factory-1-east` on GitLab.
 3. `catalog:register` — new Component in the catalog.
 4. `http:backstage:request` — ArgoCD Application `gen-platformadmin-edge-factory-1-east` on cluster **east**.
 5. Notification to `user:default/platformadmin`.

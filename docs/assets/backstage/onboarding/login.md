@@ -4,7 +4,7 @@
 
 1. Open `https://developer-hub.<hub-apps-domain>`
 2. Sign in with **OIDC** (Keycloak).
-3. Username: `userN` (e.g. `user1`) — same as Gitea.
+3. Username: `userN` (e.g. `user1`) — same as GitLab.
 4. Password: `Welcome123!` (demo default).
 
 ## OpenShift console (hub, east, west)
@@ -34,7 +34,7 @@ If login fails after choosing the wrong provider, sign out completely and try ag
 
 Workshop users have **cluster-reader** on all clusters (view namespaces, workloads, routes; not cluster-admin).
 
-## Gitea
+## GitLab
 
 - URL: `https://gitlab.apps.<hub-apps-domain>`
 - User: `user1` (your workshop id)
@@ -49,4 +49,4 @@ DevSpaces runs **on the spoke** you selected in the template — not on the hub.
 - West: `https://devspaces.<west-apps-domain>`
 - Login: same `userN` / `Welcome123!` via cluster htpasswd on that spoke.
 
-Use the **Open in DevSpaces** link on your catalog component so the correct spoke and Gitea repo are pre-filled.
+Use the **Open in DevSpaces** link on your catalog component so the correct spoke and GitLab repo are pre-filled.

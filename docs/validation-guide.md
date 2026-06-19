@@ -17,7 +17,7 @@ When validation fails, start with [Verification scripts](validatedpatterns-docs/
 | Outcome | Validation |
 | ------- | ---------- |
 | Fleet inventory | `oc get managedclusters` — east/west **Available** |
-| One-click platform access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **19** links HTTP 200 (see [checklist](#hub-console-links-19-expected)) |
+| One-click platform access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **20** links HTTP 200 (see [checklist](#hub-console-links-20-expected)) |
 | Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — **20** surfaces (incl. DevSpaces, IE line-dashboard, AI gateway) |
 | Kuadrant protection | `bash scripts/verify-workshop-kuadrant-curl.sh` — `workshop-apis` and `ai-gateway` return **401** without API key |
 | Private hub↔spoke mesh | `bash scripts/verify-industrial-edge.sh` — Skupper `sitesInNetwork: 3`, hub IE route 200 |
@@ -137,11 +137,11 @@ oc get consolelink -o custom-columns='NAME:.metadata.name,URL:.spec.href'
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 ```
 
-Expected summary on a fully synced hub: **`19 OK (200-399), 0 503, 0 other`**, exit code **0**.
+Expected summary on a fully synced hub: **`20 OK (200-399), 0 503, 0 other`**, exit code **0**.
 
 The script skips operator-created duplicate **`rhodslink`** ConsoleLinks and sends `Authorization: Bearer` when `oc whoami -t` succeeds.
 
-#### Hub console links (19 expected)
+#### Hub console links (20 expected)
 
 | ConsoleLink name | Product surface |
 | ---------------- | --------------- |
@@ -160,6 +160,7 @@ The script skips operator-created duplicate **`rhodslink`** ConsoleLinks and sen
 | `platform-mailpit` | Mailpit (workshop email) |
 | `platform-minio` | MinIO console (IE ML workspace) |
 | `platform-neuroface` | NeuroFace demo |
+| `platform-neuroface-cv` | NeuroFace CV gateway |
 | `platform-openshift-ai` | OpenShift AI dashboard (OAuth) |
 | `platform-quay-registry` | Quay registry |
 | `platform-skupper-console` | Skupper network observer |
@@ -206,7 +207,7 @@ python scripts/verify-gitops-strategies.py
 
 ## Troubleshooting
 
-See the full [Troubleshooting guide](validatedpatterns-docs/troubleshooting.md) and [RHDP install playbook](validatedpatterns-docs/install-improvements.md) for production lessons (ACM 2.16, tokens, Gitea SCC, Developer Hub catalog).
+See the full [Troubleshooting guide](validatedpatterns-docs/troubleshooting.md) and [RHDP install playbook](validatedpatterns-docs/install-improvements.md) for production lessons (ACM 2.16, tokens, GitLab SCC, Developer Hub catalog).
 
 ### Common Issues
 

@@ -2,7 +2,7 @@
   Backstage realm on the cluster Keycloak instance (namespace keycloak).
   Client secret must match Secret developer-hub-oidc-auth key OIDC_CLIENT_SECRET.
   Set via: helm --set keycloakOidcClientSecret='<value>' (do not commit real secrets).
-  Workshop users user1..userN share password with htpasswd/Gitea (default Welcome123!).
+  Workshop users user1..userN share password with htpasswd/GitLab (default Welcome123!).
 */ -}}
 {{- $count := int (.Values.userCount | default 50) }}
 {{- $password := .Values.defaultPassword | default "Welcome123!" }}

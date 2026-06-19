@@ -19,6 +19,14 @@ Recorded against the live RHDP hub-spoke fleet while the workshop still runs the
 
 Full `./pattern.sh install` requires Podman (utility container). On Windows without Podman machine admin rights, run install from a Linux bastion or demo.redhat.com provisioning flow.
 
+## NeuroFace CV
+
+```bash
+curl -sk "https://neuroface-cv.<hub-domain>/api/ppe/status"
+oc get httproute -n neuroface-gateway-system
+oc get listener -n service-interconnect | grep neuroface-cv
+```
+
 ## Post-VP install checklist
 
 After installing from `hybrid-mesh-platform`:

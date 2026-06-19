@@ -26,7 +26,7 @@ spec:
           pattern: "^[a-z0-9-]+$"
           default: my-vm-lab
           ui:autofocus: true
-          description: "Lowercase DNS label — used for Namespace, VirtualMachine, and Gitea repo suffix."
+          description: "Lowercase DNS label — used for Namespace, VirtualMachine, and GitLab repo suffix."
         owner:
           title: Owner
           type: string
@@ -75,7 +75,7 @@ spec:
           vmUsername: ${{ parameters.vmUsername }}
           vmPassword: ${{ parameters.vmPassword }}
     - id: publish
-      name: Publish to Gitea
+      name: Publish to GitLab
       action: publish:github
       input:
         repoUrl: gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-cnv
@@ -132,7 +132,7 @@ spec:
             entityRef: "user:default/${{ parameters.owner }}"
           payload:
             title: "CNV VM '${{ parameters.name }}' on hub"
-            description: "VirtualMachine manifests published to Gitea. Apply via Argo CD or oc apply from the repo."
+            description: "VirtualMachine manifests published to GitLab. Apply via Argo CD or oc apply from the repo."
             link: ${{ steps['register'].output.entityRef }}
             severity: normal
   output:

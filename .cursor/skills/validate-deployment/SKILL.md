@@ -7,7 +7,7 @@ Before diving into Argo sync status, prove the platform delivers value:
 | Outcome | Check |
 | ------- | ----- |
 | Fleet inventory | `oc get managedclusters` — east/west **Available** |
-| One-click access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **19** links HTTP 200 |
+| One-click access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **20** links HTTP 200 |
 | Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — **20** links (incl. AI gateway 401, workshop-apis 401, vault `/ui/`) |
 | Kuadrant enforcement | `bash scripts/verify-workshop-kuadrant-curl.sh` — 401 without API key |
 | Industrial Edge | `bash scripts/verify-industrial-edge.sh` — hub route 200, Skupper `sitesInNetwork=3` |
@@ -74,12 +74,12 @@ bash scripts/verify-fleet.sh
 
 **Success criteria:**
 
-- `verify-console-links.sh`: `Summary: 19 OK (200-399), 0 503` — exit **0**
+- `verify-console-links.sh`: `Summary: 20 OK (200-399), 0 503` — exit **0**
 - `verify-workshop-http200.sh`: `Summary: 20 OK` — exit **0** (401 on `platform-ai-gateway` and `platform-workshop-apis` counts as OK)
 
 Script behavior: uses `oc whoami -t` for OAuth routes; excludes operator duplicate **`rhodslink`** ConsoleLinks.
 
-#### Hub console links (19 expected)
+#### Hub console links (20 expected)
 
 | ConsoleLink | Surface |
 | ----------- | ------- |
@@ -98,6 +98,7 @@ Script behavior: uses `oc whoami -t` for OAuth routes; excludes operator duplica
 | `platform-mailpit` | Mailpit |
 | `platform-minio` | MinIO |
 | `platform-neuroface` | NeuroFace |
+| `platform-neuroface-cv` | NeuroFace CV |
 | `platform-openshift-ai` | OpenShift AI (OAuth) |
 | `platform-quay-registry` | Quay |
 | `platform-skupper-console` | Skupper observer |
@@ -206,6 +207,7 @@ oc get pods -n open-cluster-management-agent
 | Grafana Kafka metrics | ✓ | ✓ | Explore `kafka_server_kafkaserver_brokerstate` via `prometheus-east`/`west` |
 | Developer Hub templates | ✓ | - | Login → `/create` — industrial-edge, cnv-vm-workshop, openshift-ai-workspace |
 | NeuroFace PPE | ✓ | - | `oc get deploy yolo-ppe-serving -n neuroface` |
+| NeuroFace CV PPE (spokes) | - | ✓ | `oc get deploy yolo-ppe-serving -n neuroface-cv` |
 | fleet-values-sync | ✓ | ✓ | `oc get cronjob -n openshift-gitops \| grep fleet-values` |
 
 ## ArgoCD Sync Status

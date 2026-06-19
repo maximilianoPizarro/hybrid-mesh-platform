@@ -140,7 +140,7 @@ Entity links include **Source Code**, **Documentation** (GitLab README), and **O
 
 ### clusterDomain in templates
 
-Use the **hub apps domain** including the `apps.` prefix, e.g. `apps.cluster-xqg4c.dynamic2.redhatworkshops.io`. This is used for Gitea, DevSpaces, and Developer Hub URLs in generated repos.
+Use the **hub apps domain** including the `apps.` prefix, e.g. `apps.cluster-xqg4c.dynamic2.redhatworkshops.io`. This is used for GitLab, DevSpaces, and Developer Hub URLs in generated repos.
 
 ## Quay and container images
 
@@ -192,7 +192,7 @@ With `plugins.rbac.enabled: true`, Backstage uses **deny-by-default**. The platf
 
 **Lightspeed** (`plugins.lightspeed.enabled`): API key syncs from `kairos-system/kairos-ai-credentials` (PostSync Job + ESO) or RHDP `litemaas.apiKey`.
 
-**TechDocs:** `techdocs.builder: local` builds from entity repos (Gitea) on demand. Onboarding mkdocs lives under `files/onboarding/`; scaffolded entities include `mkdocs.yml` and `backstage.io/techdocs-ref: dir:.` in skeletons.
+**TechDocs:** `techdocs.builder: local` builds from entity repos (GitLab) on demand. Onboarding mkdocs lives under `files/onboarding/`; scaffolded entities include `mkdocs.yml` and `backstage.io/techdocs-ref: dir:.` in skeletons.
 
 Rollout DevHub after Git merge: sync Argo app `field-content-developer-hub` on the hub.
 

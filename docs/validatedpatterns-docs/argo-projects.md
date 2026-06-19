@@ -44,7 +44,7 @@ python scripts/apply-vp-argo-layout.py
 | `fleet-push` | ApplicationSet parents `*-spoke-components` |
 | `fleet-pull` | fleet-pull-overview |
 | `security` | acs-operator, kairos |
-| `mesh` | servicemesh, rhcl, hub-gateway, service-interconnect |
+| `mesh` | servicemesh, rhcl, hub-gateway, neuroface-gateway, service-interconnect |
 | `observability` | grafana, kiali, kafka-console, kubecost |
 | `workshop` | developer-hub, showroom, gitlab-operator |
 | `ai` | openshift-ai-hub, neuroface |

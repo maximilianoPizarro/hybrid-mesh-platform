@@ -129,7 +129,7 @@ Applied on `catalog-info.yaml` entities (static catalog or scaffolder-generated)
 
 | Link title | Purpose |
 | ---------- | ------- |
-| Source Code (Gitea) | Repository browser |
+| Source Code (GitLab) | Repository browser |
 | Documentation | Raw `README.md` on GitLab |
 | Open in DevSpaces | `https://devspaces.<domain>/#<gitlab-repo-url>` |
 

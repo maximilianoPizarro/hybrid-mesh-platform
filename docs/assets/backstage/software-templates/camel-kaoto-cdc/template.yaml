@@ -49,7 +49,7 @@ spec:
         clusterDomain:
           title: Hub apps domain
           type: string
-          description: Gitea on hub
+          description: GitLab on hub
           default: apps.cluster.example.com
         description:
           title: Description
@@ -103,7 +103,7 @@ spec:
           clusterDomain: ${{ parameters.clusterDomain }}
           spokeAppsDomain: ${{ parameters.spokeAppsDomain }}
     - id: publish
-      name: Publish to Gitea
+      name: Publish to GitLab
       action: publish:github
       input:
         repoUrl: "gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-${{ parameters.targetCluster }}"

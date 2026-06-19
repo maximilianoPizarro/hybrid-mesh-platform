@@ -6,7 +6,7 @@ Operational architecture for the ACM hub-spoke IoT workshop.
 
 | Role | Workloads |
 |------|-----------|
-| **Hub** | Gateway, MinIO, Kafka Console, Gitea, Developer Hub, Mailpit, Quay |
+| **Hub** | Gateway, MinIO, Kafka Console, GitLab, Developer Hub, Mailpit, Quay |
 | **East / West** | Machine sensors, AMQ MQTT, Kafka, Camel K, line dashboard, Tekton CI |
 
 ## End-to-end flow

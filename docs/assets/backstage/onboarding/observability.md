@@ -17,7 +17,7 @@ With **cluster-reader**, use the **Platform Hub-Spoke** application menu:
 | Skupper Console | Service interconnect topology |
 | Grafana Dashboards | Platform metrics |
 | ACS Central | Vulnerability and policy |
-| Gitea | Source repos |
+| GitLab | Source repos |
 | Quay Registry | Container images |
 
 ## Spoke consoles

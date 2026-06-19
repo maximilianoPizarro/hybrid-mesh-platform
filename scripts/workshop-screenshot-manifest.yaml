@@ -159,6 +159,12 @@ screenshots:
     wait_for: "NeuroFace"
     notes: NeuroFace PPE Safety UI
 
+  - filename: 28-neuroface-cv.png
+    dest: docs/assets/images/workshop/28-neuroface-cv.png
+    url: "https://neuroface-cv.{hub_domain}/api/ppe/status"
+    wait_for: "status"
+    notes: NeuroFace CV PPE gateway health
+
   - filename: 28-ai-end-user-apps.png
     dest: docs/assets/images/workshop/28-ai-end-user-apps.png
     url: "https://industrial-edge.{hub_domain}/"

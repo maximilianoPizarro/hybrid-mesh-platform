@@ -10,6 +10,9 @@ common/pattern-vault.init
 node_modules/
 package-lock.json
 
+# Local spoke/hub kubeconfigs (tokens from ACM cluster secrets)
+.tmp-kc/
+
 # Python local env / secrets (never commit)
 .env
 .env.*

@@ -13,4 +13,4 @@ Industrial Edge IoT instance on spoke **${{ values.targetCluster }}** (environme
 - Line dashboard deployment
 - Tekton CI pipeline
 
-See the Gitea repository README for build and deploy details.
+See the GitLab repository README for build and deploy details.

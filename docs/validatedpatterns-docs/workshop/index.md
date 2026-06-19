@@ -27,7 +27,7 @@ Charts: `charts/all/showroom`, `charts/all/workshop-registration`, `charts/all/w
 | **Part B — Hands-on** | 10–28 | `userN` lab | Fleet → IE → mesh → GitOps → Vault/ESO → AI stack → operator apps |
 | **Facilitator** | 29 (not in nav), 30 | Agents / facilitators | Full-stack verification · AI show-and-tell script |
 
-AI track order: **30** (facilitator) → **Vault & External Secrets** (after module 20) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **27** NeuroFace → **28** End-user apps.
+AI track order: **30** (facilitator) → **Vault & External Secrets** (after module 20) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **27** NeuroFace → **28** NeuroFace CV (federated PPE inference) → **28** End-user apps.
 
 ## Hero screenshots (Gemini + manual overrides)
 

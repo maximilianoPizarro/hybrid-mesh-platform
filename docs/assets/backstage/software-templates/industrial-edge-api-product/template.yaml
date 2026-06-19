@@ -58,7 +58,7 @@ spec:
           gatewayHost: ${{ parameters.gatewayHost }}
           openApiUrl: ${{ parameters.openApiUrl }}
     - id: publish
-      name: Publish to Gitea
+      name: Publish to GitLab
       action: publish:github
       input:
         repoUrl: "gitlab.apps.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}-api"
@@ -85,7 +85,7 @@ spec:
             entityRef: "user:default/${{ parameters.owner }}"
           payload:
             title: "API Product '${{ parameters.name }}' registered"
-            description: "Kuadrant manifests published to Gitea; apply via ArgoCD or oc."
+            description: "Kuadrant manifests published to GitLab; apply via ArgoCD or oc."
             link: ${{ steps['register'].output.entityRef }}
             severity: normal
   output:

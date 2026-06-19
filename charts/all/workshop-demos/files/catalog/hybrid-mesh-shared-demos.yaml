@@ -45,7 +45,7 @@ metadata:
   tags: [workshop, camel, plan-b]
   links:
     - url: https://gitlab.apps.YOUR_HUB_DOMAIN/workshop-demos/camel-kaoto-showcase-east
-      title: Gitea repo
+      title: GitLab repo
       icon: catalog
 spec:
   type: service

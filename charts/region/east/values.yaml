@@ -268,7 +268,7 @@ clusterGroup:
       name: spoke-neuroface-cv
       namespace: neuroface-cv
       argoProject: mesh
-      syncWave: '7'
+      syncWave: '9'
       path: charts/all/spoke-neuroface-cv
       overrides:
         - name: clusterName
