@@ -1,8 +1,8 @@
 {{- /*
-  Patch APIKey CRD to remove secretRef from required fields.
-  The Kuadrant Backstage plugin v0.1.0 creates APIKey CRs without secretRef;
-  the plugin creates the backing Secret separately. Without this patch,
-  the CRD validation rejects the APIKey CR with "spec.secretRef: Required value".
+  Patch APIKey CRD for Kuadrant Backstage plugin compatibility:
+  1. Remove secretRef from required fields (plugin creates Secret separately).
+  2. Add status.phase/reviewedBy/reviewedAt — plugin v0.2.1 reads phase for UI;
+     developer-portal-controller approves via conditions only unless phase is set.
 */ -}}
 apiVersion: v1
 kind: ServiceAccount
@@ -27,6 +27,12 @@ rules:
     resources: ["customresourcedefinitions"]
     resourceNames: ["apikeys.devportal.kuadrant.io"]
     verbs: ["get", "patch"]
+  - apiGroups: ["devportal.kuadrant.io"]
+    resources: ["apikeys"]
+    verbs: ["get", "list", "patch"]
+  - apiGroups: ["devportal.kuadrant.io"]
+    resources: ["apikeys/status"]
+    verbs: ["get", "patch", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -76,3 +82,18 @@ spec:
               else
                 echo "Already patched: secretRef not in required"
               fi
+
+              PHASE=$(oc get crd apikeys.devportal.kuadrant.io \
+                -o jsonpath='{.spec.versions[0].schema.openAPIV3Schema.properties.status.properties.phase}' 2>/dev/null || true)
+              if [ -z "$PHASE" ]; then
+                oc patch crd apikeys.devportal.kuadrant.io --type json -p '[
+                  {"op":"add","path":"/spec/versions/0/schema/openAPIV3Schema/properties/status/properties/phase","value":{"type":"string","enum":["Pending","Approved","Rejected"],"description":"Backstage plugin lifecycle phase"}},
+                  {"op":"add","path":"/spec/versions/0/schema/openAPIV3Schema/properties/status/properties/reviewedBy","value":{"type":"string","description":"Who approved or rejected the request"}},
+                  {"op":"add","path":"/spec/versions/0/schema/openAPIV3Schema/properties/status/properties/reviewedAt","value":{"type":"string","format":"date-time","description":"When the request was reviewed"}}
+                ]'
+                echo "Patched: added status.phase fields for Backstage plugin"
+              else
+                echo "Already patched: status.phase present in CRD"
+              fi
+              # Do NOT patch status.phase on APIKey objects — developer-portal-controller
+              # treats unexpected phase as drift and resets the key to Pending.

@@ -182,14 +182,14 @@ spec:
           authorizationHeader:
             prefix: APIKEY
         {{- $maasKey := include "workshop-kuadrant-apis.maasApiKey" . -}}
-        {{- if $maasKey }}
+        {{- /* Always emit Bearer injection header when MaaS route is enabled.
+             With Vault/ESO, maas-authpolicy-sync CronJob patches the real token. */ -}}
     response:
       success:
         headers:
-          authorization:
+          Authorization:
             plain:
-              value: {{ printf "Bearer %s" $maasKey | quote }}
-        {{- end }}
+              value: {{ printf "Bearer %s" ($maasKey | default "SYNC_FROM_VAULT_ESO") | quote }}
     authorization:
       allow-groups:
         opa:

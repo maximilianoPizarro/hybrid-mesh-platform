@@ -3,7 +3,7 @@
 set -euo pipefail
 
 HUB_DOMAIN="${HUB_DOMAIN:-$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}' 2>/dev/null || true)}"
-MAAS_MODEL="${MAAS_MODEL:-granite-3-2-8b-instruct}"
+MAAS_MODEL="${MAAS_MODEL:-llama-scout-17b}"
 API_KEY="${KUADRANT_API_KEY:-${WORKSHOP_API_KEY:-}}"
 
 if [[ -z "$HUB_DOMAIN" ]]; then

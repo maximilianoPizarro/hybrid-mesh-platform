@@ -80,7 +80,7 @@ spec:
                     exit 0
                   fi
                   BEARER="Bearer ${API_KEY}"
-                  CURRENT="$(oc get authpolicy "${AUTH_POLICY}" -n "${NAMESPACE}" -o jsonpath='{.spec.rules.response.success.headers.authorization.plain.value}' 2>/dev/null || true)"
+                  CURRENT="$(oc get authpolicy "${AUTH_POLICY}" -n "${NAMESPACE}" -o jsonpath='{.spec.rules.response.success.headers.Authorization.plain.value}' 2>/dev/null || true)"
                   if [[ "${CURRENT}" == "${BEARER}" ]]; then
                     echo "AuthPolicy ${AUTH_POLICY} already has current MaaS Bearer token"
                     exit 0
@@ -92,7 +92,7 @@ spec:
                         "response": {
                           "success": {
                             "headers": {
-                              "authorization": {
+                              "Authorization": {
                                 "plain": {
                                   "value": "${BEARER}"
                                 }
