@@ -18,6 +18,7 @@ spec:
   containers:
     - name: kserve-container
       image: {{ $yolo.image | quote }}
+      imagePullPolicy: Always
       env:
         - name: MODEL_PATH
           value: /mnt/models/{{ $modelFile }}
