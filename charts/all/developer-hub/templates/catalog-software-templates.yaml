@@ -1,7 +1,4 @@
-{{- /*
-  Software template Location — blob URLs for GitLab integration (Backstage does not read /-/raw/).
-*/ -}}
-{{- $base := printf "%s/-/blob/main/software-templates" (include "developer-hub.platformContentBaseUrl" .) -}}
+{{- $base := printf "%s/-/raw/main/software-templates" (include "developer-hub.platformContentBaseUrl" .) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -20,6 +17,7 @@ data:
       name: software-templates
       description: Software Templates for Developer Hub
     spec:
+      type: url
       targets:
         - {{ $base }}/industrial-edge/template.yaml
         - {{ $base }}/industrial-edge-camel-kaoto/template.yaml
