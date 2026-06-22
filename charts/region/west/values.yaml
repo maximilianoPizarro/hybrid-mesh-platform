@@ -115,6 +115,12 @@ clusterGroup:
   - /overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name
     }}.yaml
   applications:
+    openshift-gitops:
+      name: openshift-gitops
+      namespace: openshift-gitops
+      argoProject: platform
+      syncWave: '0'
+      path: charts/all/openshift-gitops
     platform-users:
       name: platform-users
       namespace: openshift-gitops
