@@ -22,10 +22,11 @@ neuroface:
     enabled: false
   ppe:
     enabled: true
-    # Route UI PPE traffic through federated CV gateway (50/50 east/west via Skupper).
-    useFederatedGateway: true
+    # Hub-local YOLO InferenceService (KServe v1.4.1).
+    # CV gateway (neuroface-cv.<hub>) handles federated 50/50 east/west separately.
+    useFederatedGateway: false
     # Injected into neuroface-config ConfigMap as NEUROFACE_PPE_* (backend envFrom).
-    endpoint: "http://neuroface-gateway-istio.neuroface-gateway-system.svc:8080"
+    endpoint: "http://yolo-ppe-serving:8080"
     classes: "hardhat,safety-vest,goggles"
     confidence: "0.5"
     serving:
