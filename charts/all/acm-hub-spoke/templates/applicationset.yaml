@@ -9,6 +9,7 @@ metadata:
     cluster.open-cluster-management.io/placement: hub-spoke-placement
   annotations:
     argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     apps.open-cluster-management.io/source-repository: {{ include "acm-hub-spoke.gitopsRepoUrl" . | quote }}
 spec:
   generators:

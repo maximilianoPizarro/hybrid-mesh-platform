@@ -11,6 +11,11 @@ spec:
   source: {{ .Values.operator.source }}
   sourceNamespace: openshift-marketplace
   installPlanApproval: {{ .Values.operator.installPlanApproval }}
+{{- with .Values.operator.controllerResources }}
+  config:
+    resources:
+      {{- toYaml . | nindent 6 }}
+{{- end }}
 {{- if .Values.runnerEnabled }}
 ---
 apiVersion: operators.coreos.com/v1alpha1

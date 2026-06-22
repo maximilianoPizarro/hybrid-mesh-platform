@@ -11,6 +11,14 @@ operator:
   channel: stable
   source: community-operators
   installPlanApproval: Automatic
+  # OLM default controller limit (300Mi) OOMs reconciling full GitLab CR on hub.
+  controllerResources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
 runnerOperator:
   packageName: gitlab-runner-operator

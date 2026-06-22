@@ -35,7 +35,6 @@ stringData:
   token: {{ $cluster.token }}
 type: Opaque
 {{- end }}
-{{- end }}
 ---
 apiVersion: agent.open-cluster-management.io/v1
 kind: KlusterletAddonConfig
@@ -44,6 +43,7 @@ metadata:
   namespace: {{ $name }}
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   clusterName: {{ $name }}
   clusterNamespace: {{ $name }}
@@ -60,4 +60,5 @@ spec:
     enabled: true
   searchCollector:
     enabled: true
+{{- end }}
 {{- end }}
