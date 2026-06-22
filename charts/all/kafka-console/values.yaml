@@ -4,10 +4,3 @@ clusterDomain: ""
 apiRoute:
   enabled: true
 
-brokerDns:
-  eastTst: ""
-  westTst: ""
-  eastStormshift: ""
-  westStormshift: ""
-  eastDatalake: ""
-  westDatalake: ""
