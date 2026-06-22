@@ -4,10 +4,10 @@ neuroface:
   fullnameOverride: neuroface
   backend:
     image:
-      tag: v1.3.0
+      tag: v1.4.0
   frontend:
     image:
-      tag: v1.3.0
+      tag: v1.4.0
   chat:
     enabled: true
     autoServiceAccount: false
@@ -28,8 +28,21 @@ neuroface:
     endpoint: "http://neuroface-gateway-istio.neuroface-gateway-system.svc:8080"
     classes: "hardhat,safety-vest,goggles"
     confidence: "0.5"
+    serving:
+      image:
+        repository: quay.io/maximilianopizarro/neuroface-ppe-serving
+        tag: v1.4.0
     kafka:
       enabled: false
+    dataPersistence:
+      enabled: true
+      s3Endpoint: "http://minio.industrial-edge-ml-workspace.svc:9000"
+      s3Bucket: "models"
+      s3Prefix: "ppe-detection/training-data"
+      s3AccessKey: "minio"
+      s3SecretKey: "minio123"
+      s3Secure: false
+      samplingRate: 1.0
   route:
     enabled: true
     host: ""
@@ -37,8 +50,7 @@ neuroface:
 yoloPpeServing:
   enabled: true
   replicas: 1
-  image: registry.access.redhat.com/ubi9/python-311:latest
-  modelRepo: Hexmon/vyra-yolo-ppe-detection
+  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.4.0
   modelFile: best.pt
   storageSecretName: aws-connection-ppe-models
   storagePath: ppe-detection/model
@@ -48,7 +60,6 @@ yoloPpeServing:
     region: us-east-1
     bucket: models
     endpoint: http://minio.industrial-edge-ml-workspace.svc:9000
-  storageClassName: ocs-external-storagecluster-ceph-rbd-immediate
   resources:
     requests:
       cpu: 200m

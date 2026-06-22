@@ -14,8 +14,8 @@ Workshop participants need a **multimodal AI demo** (webcam + LLM chat + PPE det
 | Item | Location |
 |------|----------|
 | Helm wrapper | `charts/all/neuroface/` |
-| Upstream chart | [maximilianoPizarro/neuroface](https://github.com/maximilianoPizarro/neuroface) **v1.3.0** |
-| YOLO PPE serving | KServe `InferenceService` **yolo-ppe-serving** (RawDeployment, MinIO model storage) |
+| Upstream chart | [maximilianoPizarro/neuroface](https://github.com/maximilianoPizarro/neuroface) **v1.4.0** |
+| YOLO PPE serving | KServe `InferenceService` **yolo-ppe-serving** (RawDeployment, pre-built image `neuroface-ppe-serving:v1.4.0`, KServe v2) |
 | PPE Workbench | OpenShift AI `Notebook` **ppe-workbench** + route `ppe-workbench.<hub-domain>` |
 | PPE Retrain Workbench | OpenShift AI `Notebook` **ppe-retrain-workbench** + MinIO data connection |
 | Route | `https://neuroface.<hub-domain>` (single Route — nginx proxies `/api/*` to backend) |
@@ -131,6 +131,6 @@ for i in $(seq 1 20); do curl -sk "https://neuroface-cv.<hub-domain>/health"; do
 | CV route 503 | Check `neuroface-gateway-istio` endpoints; Istio gateway pod must be Programmed |
 | `/api/ppe/status` 502 | Skupper listeners/connectors missing; verify `oc get listener,connector -n service-interconnect \| grep neuroface-cv` |
 | One spoke never receives traffic | HTTPRoute weights; confirm both `clusters.east.domain` and `clusters.west.domain` on hub |
-| PPE pod not ready on spoke | KServe model download + pip install ~3–5 min; check predictor pod logs |
+| PPE pod not ready on spoke | Model download from MinIO ~30s; check predictor pod logs |
 | No Grafana metrics | `istio-monitoring` PodMonitor in `neuroface-gateway-system` and `neuroface-cv` (spokes); allow ~2 min after first traffic |
 | No Tempo traces | Confirm `Telemetry/mesh-default` and OTel collector in `openshift-opentelemetry` |
