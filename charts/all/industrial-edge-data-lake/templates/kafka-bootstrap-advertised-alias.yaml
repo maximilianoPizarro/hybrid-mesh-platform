@@ -1,0 +1,20 @@
+{{- /*
+  Region-specific advertised bootstrap hostname resolves to the Strimzi bootstrap
+  service on the spoke so local producers/consumers can follow broker metadata.
+*/ -}}
+{{- $cn := include "industrial-edge-data-lake.clusterName" . -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prod-cluster-kafka-bootstrap-{{ $cn }}
+  namespace: industrial-edge-data-lake
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: ExternalName
+  externalName: prod-cluster-kafka-bootstrap.industrial-edge-data-lake.svc.cluster.local
+  ports:
+    - name: tcp
+      port: 9092
+      protocol: TCP
+      targetPort: 9092

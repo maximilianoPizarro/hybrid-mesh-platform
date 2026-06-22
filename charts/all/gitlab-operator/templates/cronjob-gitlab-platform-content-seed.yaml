@@ -110,7 +110,7 @@ spec:
                   git config user.name platform-content-seed
                   REMOTE="https://oauth2:${GITLAB_PAT}@${GITLAB_WEB#https://}/${PROJECT_PATH}.git"
                   git remote add origin "${REMOTE}"
-                  if git ls-remote origin refs/heads/main >/dev/null 2>&1; then
+                  if git ls-remote --heads origin main | grep -q 'refs/heads/main'; then
                     git fetch origin main
                     git checkout -B main origin/main
                   fi

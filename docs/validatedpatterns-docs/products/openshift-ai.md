@@ -45,7 +45,26 @@ Developer Hub: **Catalog** → System **openshift-ai-workshop** → Component **
 |-----------|----------------------------|
 | Workbenches | `workbenches.managementState: Managed` |
 | KServe | `RawDeployment` — MaaS proxy InferenceServices in `maas-workshop` |
-| ModelMesh / Serverless | Optional — disabled in chart defaults for simpler RHDP workshop |
+| ModelMesh / Serverless | **Optional** — disabled by default (see below) |
+
+### Do I need OpenShift Serverless for KServe?
+
+**No**, for this pattern’s default. OpenShift AI 3.x + KServe can run in **`RawDeployment`** mode (`modelServing.defaultDeploymentMode: RawDeployment`, `kserve.serving.managementState: Removed`). InferenceServices deploy as normal Deployments — no Knative, no `KnativeServing` CR.
+
+Install **OpenShift Serverless** only if you explicitly enable `modelServing.serverlessEnabled: true` (Knative-based autoscaling / scale-to-zero). The hub chart still lists `serverless-operator` in subscriptions for optional use; KServe on the hub does **not** depend on it with current values.
+
+### CPU models on MinIO (automated)
+
+| Step | Chart | What happens |
+|------|-------|----------------|
+| 1 | `industrial-edge-minio` | MinIO + bucket `models` (+ `quay`, `kubecost`) |
+| 2 | `industrial-edge-minio` PostSync | Job `minio-model-seed` uploads CPU sklearn model to `s3://models/anomaly-detection/model/` |
+| 3 | `openshift-ai-hub` | Secret `aws-connection-models` in `maas-workshop` and each `ai-userN` (OpenShift AI dashboard S3 connection) |
+| 4 | `openshift-ai-hub` | InferenceService `workshop-sklearn` (KServe RawDeployment) reads the MinIO model |
+
+Spokes reach the same bucket via Skupper `minio-hub` (`http://minio-hub.service-interconnect.svc:9000`) — see `industrial-edge-data-science-project`.
+
+**Console:** `https://minio-console-industrial-edge-ml-workspace.<hub-apps-domain>` — browse/upload CPU model artifacts to bucket `models`.
 
 ## MaaS models (external)
 

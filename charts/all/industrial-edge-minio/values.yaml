@@ -10,3 +10,10 @@ bucketInit:
   buckets:
     - quay
     - kubecost
+    - models
+# PostSync Job: trains a small CPU sklearn model and uploads to s3://models/anomaly-detection/model/
+# for KServe RawDeployment (hub workshop-sklearn + optional spoke anomaly-detection).
+modelSeed:
+  enabled: true
+  bucket: models
+  image: registry.redhat.io/ubi9/python-311:latest

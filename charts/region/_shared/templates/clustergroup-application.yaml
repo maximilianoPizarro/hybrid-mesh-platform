@@ -19,15 +19,15 @@
 {{- $localDomain = .Values.deployer.domain | default "" }}
 {{- end }}
 {{- $hubDomain := .Values.global.hubClusterDomain | default "" }}
-{{- if and (not $hubDomain) .Values.deployer }}
-{{- $hubDomain = .Values.deployer.domain | default "" }}
-{{- end }}
 {{- if and (not $hubDomain) .Values.clusters }}
 {{- with index .Values.clusters "hub" }}
 {{- if .domain }}
 {{- $hubDomain = .domain }}
 {{- end }}
 {{- end }}
+{{- end }}
+{{- if and (not $hubDomain) (eq $cg "hub") .Values.deployer }}
+{{- $hubDomain = .Values.deployer.domain | default "" }}
 {{- end }}
 ---
 apiVersion: argoproj.io/v1alpha1

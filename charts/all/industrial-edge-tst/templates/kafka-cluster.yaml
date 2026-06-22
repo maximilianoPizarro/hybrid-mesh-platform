@@ -35,7 +35,7 @@ spec:
         configuration:
           brokers:
             - broker: 0
-              advertisedHost: dev-cluster-kafka-bootstrap.industrial-edge-tst-all.svc.cluster.local
+              advertisedHost: dev-cluster-kafka-bootstrap-{{ include "industrial-edge-tst.clusterName" . }}.industrial-edge-tst-all.svc.cluster.local
               advertisedPort: 9092
     config:
       offsets.topic.replication.factor: 1

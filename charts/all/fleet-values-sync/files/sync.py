@@ -53,6 +53,14 @@ SPOKE_CLUSTERS = [
 ]
 CONFIGMAP_NAME = os.environ.get("CONFIGMAP_NAME", "fleet-cross-cluster-config")
 CLUSTER_NAME = os.environ.get("CLUSTER_NAME", "")
+SPOKE_PATCH_APPS = [
+    a.strip()
+    for a in os.environ.get(
+        "SPOKE_PATCH_APPS",
+        "field-content,industrial-edge-tst,ie-anomaly-alerter",
+    ).split(",")
+    if a.strip()
+]
 
 
 def api_request(
@@ -198,11 +206,11 @@ def save_helm_values(app: dict, values: dict) -> dict:
     return merged
 
 
-def get_field_content_app() -> dict | None:
+def get_argo_application(name: str) -> dict | None:
     try:
         return api_request(
             "GET",
-            f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{FIELD_CONTENT_APP}",
+            f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{name}",
         )
     except urllib.error.HTTPError as e:
         if e.code == 404:
@@ -210,25 +218,31 @@ def get_field_content_app() -> dict | None:
         raise
 
 
-def patch_field_content_values(patch: dict) -> bool:
-    app = get_field_content_app()
+def get_field_content_app() -> dict | None:
+    return get_argo_application(FIELD_CONTENT_APP)
+
+
+def patch_application_values(app_name: str, patch: dict) -> bool:
+    app = get_argo_application(app_name)
     if not app:
-        print(
-            f"Application {FIELD_CONTENT_APP} not found in {ARGOCD_NS}; skipping patch"
-        )
+        print(f"Application {app_name} not found in {ARGOCD_NS}; skipping patch")
         return False
     current = load_helm_values(app)
     merged = deep_merge(current, patch)
     if merged == current:
-        print("field-content helm values already up to date")
+        print(f"{app_name} helm values already up to date")
         return False
     updated = save_helm_values(app, merged)
     api_patch_merge(
-        f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{FIELD_CONTENT_APP}",
+        f"/apis/argoproj.io/v1alpha1/namespaces/{ARGOCD_NS}/applications/{app_name}",
         {"spec": updated["spec"]},
     )
-    print(f"Patched {FIELD_CONTENT_APP} helm values")
+    print(f"Patched {app_name} helm values")
     return True
+
+
+def patch_field_content_values(patch: dict) -> bool:
+    return patch_application_values(FIELD_CONTENT_APP, patch)
 
 
 def refresh_argo_apps(names: list[str]) -> None:
@@ -407,7 +421,10 @@ def run_spoke() -> int:
     hub_api = (cm.get("data") or {}).get("hub-api-url", "").strip()
     if hub_api:
         patch["clusters"]["hub"]["apiUrl"] = hub_api
-    changed = patch_field_content_values(patch)
+    changed = False
+    for app_name in SPOKE_PATCH_APPS:
+        if patch_application_values(app_name, patch):
+            changed = True
     if changed and patch.get("clusters", {}).get("hub", {}).get("domain"):
         refresh_argo_apps(
             [

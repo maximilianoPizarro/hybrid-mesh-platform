@@ -1,6 +1,9 @@
 clusterDomain: ""
 clusterName: ""
 clusterRole: ""
+clusters:
+  hub:
+    domain: ""
 global:
   localClusterDomain: ""
   hubClusterDomain: ""

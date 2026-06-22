@@ -1,0 +1,68 @@
+{{- if .Values.modelSeed.enabled | default true }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-model-seed
+  namespace: industrial-edge-ml-workspace
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 900
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: {{ .Values.modelSeed.image | default "registry.redhat.io/ubi9/python-311:latest" | quote }}
+          env:
+            - name: MINIO_ENDPOINT
+              value: http://minio.industrial-edge-ml-workspace.svc:9000
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.minioAccessKey | default "minio" | quote }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.minioSecretKey | default "minio123" | quote }}
+            - name: MODEL_BUCKET
+              value: {{ .Values.modelSeed.bucket | default "models" | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              pip install --no-cache-dir joblib scikit-learn boto3 >/dev/null
+              python3 - <<'PY'
+              import os, joblib, numpy as np, boto3
+              from botocore.exceptions import ClientError
+              from sklearn.ensemble import IsolationForest
+
+              endpoint = os.environ["MINIO_ENDPOINT"]
+              bucket = os.environ["MODEL_BUCKET"]
+              prefix = "anomaly-detection/model"
+              key = f"{prefix}/model.joblib"
+
+              s3 = boto3.client(
+                  "s3",
+                  endpoint_url=endpoint,
+                  aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
+                  aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
+                  region_name="us-east-1",
+              )
+
+              try:
+                  s3.head_object(Bucket=bucket, Key=key)
+                  print(f"Model already present at s3://{bucket}/{key} — skip")
+                  raise SystemExit(0)
+              except ClientError as e:
+                  if e.response.get("Error", {}).get("Code") not in ("404", "NoSuchKey"):
+                      raise
+
+              X = np.random.randn(500, 2)
+              model = IsolationForest(n_estimators=50, random_state=42).fit(X)
+              os.makedirs("/tmp/model", exist_ok=True)
+              path = "/tmp/model/model.joblib"
+              joblib.dump(model, path)
+              s3.upload_file(path, bucket, key)
+              print(f"Uploaded CPU sklearn model to s3://{bucket}/{key}")
+              PY
+{{- end }}

@@ -8,25 +8,27 @@ userProjects:
     image: quay.io/opendatahub-contrib/workbench-images:jupyter-minimal-elyra-py311-ubi9
     cpu: "250m"
     memory: 1Gi
-  # Example KServe InferenceService on ModelMesh (shared sklearn model on hub MinIO).
+  # KServe InferenceService (CPU sklearn on hub MinIO) — RawDeployment, no Serverless/Knative.
   inferenceService:
     enabled: true
     name: workshop-sklearn
-    displayName: Workshop sklearn (ModelMesh)
+    displayName: Workshop sklearn (CPU / MinIO)
     modelFormat: sklearn
     runtime: mlserver-1.x
     storageSecretName: aws-connection-models
     storagePath: anomaly-detection/model
-    s3:
-      accessKeyId: minio
-      secretAccessKey: minio123
-      region: us-east-1
-      bucket: models
-      endpoint: http://minio-hub.service-interconnect.svc:9000
+# S3 connection for OpenShift AI dashboard + KServe (hub MinIO; spokes use Skupper minio-hub).
+modelStorage:
+  enabled: true
+  accessKeyId: minio
+  secretAccessKey: minio123
+  region: us-east-1
+  bucket: models
+  endpoint: http://minio.industrial-edge-ml-workspace.svc:9000
 dashboardExtensions:
   enabled: true
 modelServing:
-  # Workshop hub: dashboard + workbenches; KServe RawDeployment for MaaS proxies.
+  # RawDeployment: KServe without OpenShift Serverless / Knative (recommended for this pattern).
   modelMeshEnabled: false
   serverlessEnabled: false
   defaultDeploymentMode: RawDeployment

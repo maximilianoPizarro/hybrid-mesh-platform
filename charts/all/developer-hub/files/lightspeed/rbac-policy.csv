@@ -70,6 +70,7 @@ p, role:default/authenticated, kuadrant.ratelimitpolicy.list, read, allow
 g, user:default/platformadmin, role:default/admin
 # Admin: explicit permissions (rbac-backend does not support role inheritance)
 p, role:default/admin, catalog-entity, read, allow
+p, role:default/admin, scaffolder-template, read, allow
 p, role:default/admin, scaffolder.action.execute, use, allow
 p, role:default/admin, kubernetes.clusters.read, read, allow
 p, role:default/admin, kubernetes.resources.read, read, allow

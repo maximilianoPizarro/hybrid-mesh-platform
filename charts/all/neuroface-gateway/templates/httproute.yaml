@@ -52,6 +52,23 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /api/ppe/v1/predict
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /v1/predict
+      backendRefs:
+        - name: neuroface-cv-east
+          port: 8080
+          weight: {{ $w.east | default 50 }}
+        - name: neuroface-cv-west
+          port: 8080
+          weight: {{ $w.west | default 50 }}
+    - matches:
+        - path:
+            type: PathPrefix
             value: /api/ppe
       backendRefs:
         - name: neuroface-cv-east
@@ -121,6 +138,20 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /api/ppe/v1/predict
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /v1/predict
+      backendRefs:
+        - name: neuroface-cv-east
+          port: 8080
+          weight: 100
+    - matches:
+        - path:
+            type: PathPrefix
             value: /api/ppe
       backendRefs:
         - name: neuroface-cv-east
@@ -155,6 +186,20 @@ spec:
             path:
               type: ReplaceFullPath
               replaceFullPath: /health
+      backendRefs:
+        - name: neuroface-cv-west
+          port: 8080
+          weight: 100
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/ppe/v1/predict
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /v1/predict
       backendRefs:
         - name: neuroface-cv-west
           port: 8080

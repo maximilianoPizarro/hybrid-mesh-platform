@@ -31,3 +31,13 @@
 {{- end -}}
 {{- $model -}}
 {{- end -}}
+
+{{- define "openshift-ai-hub.minioEndpoint" -}}
+{{- $ms := .Values.modelStorage | default dict -}}
+{{- $ms.endpoint | default "http://minio.industrial-edge-ml-workspace.svc:9000" -}}
+{{- end -}}
+
+{{- define "openshift-ai-hub.minioBucket" -}}
+{{- $ms := .Values.modelStorage | default dict -}}
+{{- $ms.bucket | default "models" -}}
+{{- end -}}
