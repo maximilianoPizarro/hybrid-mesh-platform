@@ -41,8 +41,20 @@ data:
 
     @app.post("/v1/predict")
     async def predict(request: Request):
+        import base64, json
         conf = float(request.headers.get("X-Confidence", "0.5"))
+        ct = request.headers.get("Content-Type", "")
         raw = await request.body()
+        img = None
+        if "json" in ct:
+            try:
+                body = json.loads(raw)
+                b64 = body.get("image", "")
+                if "," in b64:
+                    b64 = b64.split(",", 1)[1]
+                raw = base64.b64decode(b64)
+            except Exception:
+                pass
         arr = np.frombuffer(raw, dtype=np.uint8)
         img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         if img is None:
