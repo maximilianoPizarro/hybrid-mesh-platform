@@ -63,7 +63,7 @@ oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n opens
 python scripts/sync-fleet-values.py
 ```
 
-**Still manual (if needed):** spoke API tokens for legacy `managedClusters.*.token` import — RHDP/ACM auto-import usually covers enrollment. MaaS keys remain RHDP-injected or secret-based.
+**Spoke import tokens (`managedClusters`):** `fleet-values-sync` populates `managedClusters.*.apiUrl` from ACM `ManagedCluster` API URLs but does **not** inject tokens. To enable fully automated spoke auto-import via `acm-hub-spoke`, inject tokens at runtime — see [Spoke auto-import](install-improvements.md#spoke-auto-import-via-helm-values-acm-hub-spoke). Tokens are one-time; remove them from the Application patch after spokes are **Available**. MaaS keys remain RHDP-injected or secret-based.
 
 ## Recommended order
 
@@ -81,7 +81,7 @@ Allow **60–90 minutes** for full fleet sync. See [RHDP install playbook](insta
 
 1. **Hub** — revision `main`, path `charts/region/hub`; wait for `multiclusterhub` **Running**.
 2. **East / West** — revision `main`, paths `charts/region/east` / `charts/region/west` (parallel OK).
-3. **Import spokes in ACM** — prefer UI or one-time `auto-import-secret`; avoid token churn in auto-syncing `field-content` (see playbook).
+3. **Import spokes in ACM** — prefer auto-import via `managedClusters.*.token` runtime patch (see [Spoke auto-import](install-improvements.md#spoke-auto-import-via-helm-values-acm-hub-spoke)) or ACM UI; avoid token churn in auto-syncing `field-content` (see playbook).
 4. **Sync domains** — trigger `fleet-values-sync` once after clusters are **Available**:
 
 ```bash

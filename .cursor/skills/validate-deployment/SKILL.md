@@ -47,6 +47,39 @@ oc get applications -n openshift-gitops | grep spoke-components
 
 If hub apps show **Sync=Unknown** / `ComparisonError` (ACM 2.16): sync `openshift-gitops` (includes `acm-argocd-openapi-fix` CronJob) or see `troubleshooting.md#argocd-unknown-sync-status-acm-216`.
 
+### Fleet & Spoke Push
+
+```bash
+# Fleet — east/west must show JOINED and AVAILABLE
+oc get managedclusters
+# Expected: east  true  true  ...
+#           west  true  true  ...
+
+# Spoke push ApplicationSet
+oc get applicationset fleet-spoke-push -n openshift-gitops
+```
+
+### ACS (Advanced Cluster Security)
+
+```bash
+oc get central -n stackrox
+# Expected: central  ...  (conditions show Initialized)
+
+oc get route central -n stackrox -o jsonpath='https://{.spec.host}{"\n"}'
+# Verify route is accessible
+
+oc get securedcluster -n stackrox
+```
+
+### GitLab
+
+```bash
+oc get gitlab -n gitlab
+# Expected: STATUS=Running
+
+oc get route gitlab -n gitlab -o jsonpath='https://{.spec.host}{"\n"}'
+```
+
 ### ArgoCD Applications
 
 ```bash

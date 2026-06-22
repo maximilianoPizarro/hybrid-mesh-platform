@@ -38,7 +38,7 @@ Expect **60–90 minutes** after hub sync for all **19** hub console links to re
 
 1. **Hub** — `charts/region/hub`, wait for `multiclusterhub` phase **Running** (~10–15 min).
 2. **East / West** — `charts/region/east` and `charts/region/west` (parallel is fine).
-3. **Import spokes** — ACM UI or `auto-import-secret` (see [Getting started → Phase 3](getting-started.md#phase-3-register-spokes-acm--tokens)).
+3. **Import spokes** — auto-import via `managedClusters` values (see [Spoke auto-import](#spoke-auto-import-via-helm-values-acm-hub-spoke)) or ACM UI (see [Getting started → Phase 3](getting-started.md#phase-3-register-spokes-acm--tokens)).
 4. **Sync domains** — trigger `fleet-values-sync` once (domains only; see below).
 5. **Day-2 bootstrap** — automatic PostSync Jobs via Argo app `hub-post-install-bootstrap` (sync wave 9) when spokes are **Available**. Create facilitator secrets for ACS and MaaS — see [Post-install day-2](install-improvements.md#post-install-day-2-gitops-postsync-jobs).
 6. **Verify** — console links + Skupper VAN (`sitesInNetwork: 3`).
@@ -65,6 +65,141 @@ Wait for MCH **Running** before importing spokes or enabling heavy `acm-hub-spok
 
 ---
 
+## Spoke auto-import via Helm values (`acm-hub-spoke`)
+
+The chart `charts/all/acm-hub-spoke` can **automatically import spoke clusters** into ACM when `managedClusters.{east,west}.apiUrl` and `.token` are provided in hub values. No manual ACM UI steps are needed.
+
+### How it works
+
+Setting `managedClusters.east.apiUrl` (and optionally `.token`) in the hub's Helm values triggers a sync-wave chain that registers and imports the spoke:
+
+| Sync wave | Resource | Purpose |
+| --------- | -------- | ------- |
+| **0** | `ManagedCluster` | Registers the spoke with ACM (created first — ACM creates the cluster namespace) |
+| **1** | `auto-import-secret` | One-time secret with spoke API URL + token; ACM klusterlet uses it to join, then ACM maintains the connection via its own certificates |
+| **2** | `KlusterletAddonConfig` | Enables `application-manager`, `policyController`, `searchCollector`, etc. |
+| **3** | `GitOpsCluster` | Binds ACM-managed clusters to Argo CD via `hub-spoke-placement` |
+| **3** | `Placement` | Selects clusters with label `region: east` or `west` from ClusterSet `global` |
+| **4** | `ApplicationSet fleet-spoke-push` | PUSH-based GitOps: creates `{name}-spoke-components` Application per matched cluster |
+
+### Values needed
+
+```yaml
+managedClusters:
+  east:
+    apiUrl: https://api.cluster-<east-id>.dynamic2.redhatworkshops.io:6443
+    token: sha256~...   # one-time import token (see below)
+  west:
+    apiUrl: https://api.cluster-<west-id>.dynamic2.redhatworkshops.io:6443
+    token: sha256~...
+```
+
+- **`apiUrl`** gates everything — without it, no `ManagedCluster`, `auto-import-secret`, or `KlusterletAddonConfig` is rendered for that spoke.
+- **`token`** is optional in the values; without it, `ManagedCluster` and `KlusterletAddonConfig` are still created, but you must import manually via ACM UI. With a token, the `auto-import-secret` enables fully automated import.
+- **Tokens are one-time** — after the klusterlet agent joins, ACM maintains the connection using its own certificates. The token can be removed from values after import succeeds.
+
+### Values chain (how managedClusters reaches the chart)
+
+The hub region chart (`charts/region/hub/templates/clustergroup-application.yaml`) passes `managedClusters` from hub values into the clustergroup Application as `valuesObject.managedClusters`. The clustergroup then injects these values into child apps including `acm-hub-spoke`.
+
+### Creating a spoke import token
+
+Create a long-lived ServiceAccount token on the **spoke** cluster:
+
+```bash
+# On the spoke cluster (east or west)
+oc create sa acm-auto-import -n kube-system
+oc adm policy add-cluster-role-to-user cluster-admin -z acm-auto-import -n kube-system
+oc create token acm-auto-import -n kube-system --duration=168h
+```
+
+The `--duration=168h` gives a 7-day window to complete the import. After klusterlet joins, the token is no longer needed.
+
+### Patching the Application at runtime (without committing tokens to Git)
+
+**Tokens must NOT be committed to Git.** Inject them at runtime by patching the Argo CD `Application` (or via RHDP `field-content` injection):
+
+```bash
+# Patch the hub's field-content Application with managed cluster credentials
+oc patch application field-content -n openshift-gitops --type merge -p '
+spec:
+  source:
+    helm:
+      values: |
+        managedClusters:
+          east:
+            apiUrl: "https://api.cluster-<east-id>.dynamic2.redhatworkshops.io:6443"
+            token: "sha256~<east-token>"
+          west:
+            apiUrl: "https://api.cluster-<west-id>.dynamic2.redhatworkshops.io:6443"
+            token: "sha256~<west-token>"
+'
+```
+
+This flows through the clustergroup Application into `acm-hub-spoke`, which renders the `ManagedCluster` + `auto-import-secret` + `KlusterletAddonConfig` resources.
+
+After spokes show **Available** in `oc get managedclusters`, remove the tokens from the Application patch (they are no longer needed):
+
+```bash
+oc patch application field-content -n openshift-gitops --type merge -p '
+spec:
+  source:
+    helm:
+      values: |
+        managedClusters:
+          east:
+            apiUrl: "https://api.cluster-<east-id>.dynamic2.redhatworkshops.io:6443"
+          west:
+            apiUrl: "https://api.cluster-<west-id>.dynamic2.redhatworkshops.io:6443"
+'
+```
+
+### Conditional rendering (fresh-install fix)
+
+Since commit `26bf800`, `KlusterletAddonConfig` is guarded by `{{- if $cluster.apiUrl }}` — it only renders when an API URL is set. Previously, the config was always rendered, causing "namespace not found" errors on fresh installs where the spoke namespace did not yet exist.
+
+### Verify import
+
+```bash
+oc get managedclusters                           # east/west should be Available
+oc get klusterletaddonconfig -n east              # KlusterletAddonConfig present
+oc get managedclusteraddon application-manager -n east   # addon active
+oc get secrets -n openshift-gitops -l argocd.argoproj.io/secret-type=cluster  # Argo cluster secrets
+oc get applicationset fleet-spoke-push -n openshift-gitops   # PUSH ApplicationSet present
+```
+
+---
+
+## ACS SecuredCluster auto-configuration (hub vs spoke)
+
+Chart `charts/all/acs-secured-cluster` automatically configures the `centralEndpoint` based on `clusterRole`:
+
+- **Hub** (`clusterRole: hub`): `central.stackrox.svc:443` — in-cluster Central service
+- **Spoke** (`clusterRole: spoke`): `central-stackrox.<hubClusterDomain>:443` — hub's Central route
+
+The hub domain is resolved via the helper `acs-secured-cluster.hubClusterDomain`, which reads from `hubClusterDomain` → `global.hubClusterDomain` → `global.localClusterDomain` (with fallback). On spokes, `fleet-values-sync` or RHDP injection populates `clusters.hub.domain`, which propagates to `global.hubClusterDomain`.
+
+Since commit `26bf800`, the `SecuredCluster` CR includes `SkipDryRunOnMissingResource=true` so it syncs cleanly on fresh installs before the ACS operator CRD is available.
+
+---
+
+## SkipDryRunOnMissingResource (fresh-install fixes)
+
+On fresh cluster installs, CRDs from operators (ACM, ACS) may not exist when Argo CD first tries to sync resources that depend on them. Without `SkipDryRunOnMissingResource=true`, Argo's dry-run fails with "resource not found" and blocks sync.
+
+The following charts include this annotation:
+
+| Chart | Resource | Commit |
+| ----- | -------- | ------ |
+| `acm-operator` | `MultiClusterHub`, MCE `disable-proxy` | `cb6d924` |
+| `acm-hub-spoke` | `KlusterletAddonConfig`, `GitOpsCluster`, `ApplicationSet fleet-spoke-push` | `26bf800` |
+| `acs-operator` | `Central` CR | `26bf800` |
+| `acs-secured-cluster` | `SecuredCluster` CR | `26bf800` |
+
+This allows Argo CD to skip the server-side dry-run for these resources and apply them once the operator CRDs become available.
+
+---
+
 ## Spoke tokens and `field-content`
 
 **`fleet-values-sync` patches domains only** — not API tokens. Tokens belong in RHDP-injected secrets or a **one-time** hub patch.
@@ -74,9 +209,10 @@ Wait for MCH **Running** before importing spokes or enabling heavy `acm-hub-spok
 **Preferred flow:**
 
 1. MCH **Running**
-2. Import east/west (ACM UI, or **`ManagedCluster` first** then `auto-import-secret` — see chart `acm-hub-spoke`; do **not** pre-create a `Namespace` with `cluster.open-cluster-management.io/managedCluster` label)
+2. Import east/west via auto-import (set `managedClusters.{east,west}.apiUrl` + `.token` — see [Spoke auto-import](#spoke-auto-import-via-helm-values-acm-hub-spoke)) or manually via ACM UI
 3. Optional: patch domains via `fleet-values-sync` manual job
 4. Re-enable automated sync on `acm-hub-spoke` once clusters are **Available**
+5. Remove tokens from the Application patch (no longer needed after import)
 
 **Manual ACM UI import:** Chart `acm-hub-spoke` still creates `KlusterletAddonConfig` for each `managedClusters` entry (east/west) even without `apiUrl`/`token` — required for `application-manager` and Argo cluster secrets (`east-spoke-components`). Verify:
 

@@ -70,6 +70,50 @@ Wait for MCH **Running** before spoke import.
 
 ---
 
+### 0e. ACM hub-spoke stuck "namespaces east/west not found"
+
+**Symptom:** `acm-hub-spoke` retries because KlusterletAddonConfig tries to create in namespace east/west before ManagedCluster exists.
+
+**Cause:** Chart bug (fixed in commit 26bf800) — KlusterletAddonConfig was outside `{{- if $cluster.apiUrl }}` guard.
+
+**Fix:** Update chart (already done). For stuck installs, manually sync after fix.
+
+---
+
+### 0f. ACS operator stuck (Central/SecuredCluster CRD not ready)
+
+**Symptom:** `acs-operator` and `acs-secured-cluster` apps retry indefinitely.
+
+**Cause:** Same as ACM — dry-run fails because CRD `platform.stackrox.io/v1alpha1` not installed until operator CSV succeeds.
+
+**Fix:** `SkipDryRunOnMissingResource=true` on Central and SecuredCluster CRs (commit 26bf800).
+
+---
+
+### 0g. GitLab operator OOMKilled
+
+**Symptom:** `gitlab-controller-manager` CrashLoopBackOff, CSV stuck at "Installing", GitLab CR stays "Preparing".
+
+**Cause:** Default memory limit 300Mi is insufficient for GitLab v3.1.0 CR reconciliation.
+
+**Fix:** Subscription config.resources sets 512Mi (commit 26bf800). Immediate:
+
+```bash
+oc set resources deploy/gitlab-controller-manager -n gitlab --limits=memory=512Mi
+```
+
+---
+
+### 0h. Kafka Console "Timed out waiting for node assignment"
+
+**Symptom:** Kafka Console shows timeout errors for some/all clusters.
+
+**Cause:** Kafka brokers advertise per-broker FQDNs (e.g. `dev-cluster-broker-0-east.dev-cluster-kafka-brokers...`) that don't resolve on the hub. The `kafka-console` chart has `broker-dns.yaml` that creates headless Services + EndpointSlices mapping these to Skupper IPs, but the `lookup` at sync time returns empty if Skupper services aren't ready yet.
+
+**Fix:** Re-sync `kafka-console` app after Skupper listeners are Ready. The template's `lookup` will resolve the Skupper ClusterIPs.
+
+---
+
 ### 1. MCE cluster-proxy-addon (ACM 2.16+)
 
 **Default:** MCE enables `cluster-proxy-addon` (apiserver-network-proxy for managed clusters).

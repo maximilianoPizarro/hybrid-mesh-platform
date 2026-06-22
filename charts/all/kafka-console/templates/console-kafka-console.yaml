@@ -8,33 +8,52 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   hostname: kafka-console.{{ include "kafka-console.clusterDomain" . }}
+  metricsSources:
+    - name: prometheus-east
+      type: standalone
+      url: http://prometheus-east.service-interconnect.svc.cluster.local:9091
+    - name: prometheus-west
+      type: standalone
+      url: http://prometheus-west.service-interconnect.svc.cluster.local:9091
   kafkaClusters:
     - name: prod-cluster-east
+      namespace: industrial-edge-data-lake
+      metricsSource: prometheus-east
       properties:
         values:
           - name: bootstrap.servers
             value: kafka-east-datalake.service-interconnect.svc.cluster.local:9092
     - name: prod-cluster-west
+      namespace: industrial-edge-data-lake
+      metricsSource: prometheus-west
       properties:
         values:
           - name: bootstrap.servers
             value: kafka-west-datalake.service-interconnect.svc.cluster.local:9092
     - name: dev-cluster-east
+      namespace: industrial-edge-tst-all
+      metricsSource: prometheus-east
       properties:
         values:
           - name: bootstrap.servers
             value: kafka-east-tst.service-interconnect.svc.cluster.local:9092
     - name: factory-cluster-east
+      namespace: industrial-edge-stormshift-messaging
+      metricsSource: prometheus-east
       properties:
         values:
           - name: bootstrap.servers
             value: kafka-east-stormshift.service-interconnect.svc.cluster.local:9092
     - name: dev-cluster-west
+      namespace: industrial-edge-tst-all
+      metricsSource: prometheus-west
       properties:
         values:
           - name: bootstrap.servers
             value: kafka-west-tst.service-interconnect.svc.cluster.local:9092
     - name: factory-cluster-west
+      namespace: industrial-edge-stormshift-messaging
+      metricsSource: prometheus-west
       properties:
         values:
           - name: bootstrap.servers

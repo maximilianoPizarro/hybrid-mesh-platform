@@ -78,6 +78,29 @@ Same pattern with `charts/region/east` or `west`. Spokes get `deployer.domain` l
 
 **Do not** put spoke API tokens in auto-syncing `field-content` helm.values — causes east/west namespace churn if import fails. Tokens = one-time ACM import or RHDP secret injection only.
 
+### Spoke auto-import via `managedClusters` values
+
+Setting `managedClusters.{east,west}.apiUrl` + `.token` in hub values triggers ACM auto-import. The `acm-hub-spoke` chart creates `ManagedCluster` + `KlusterletAddonConfig` + `auto-import-secret` when `apiUrl` is present.
+
+**SA token creation on each spoke:**
+
+```bash
+oc create sa acm-auto-import -n kube-system
+oc adm policy add-cluster-role-to-user cluster-admin -z acm-auto-import -n kube-system
+oc create token acm-auto-import -n kube-system --duration=168h
+```
+
+**Runtime Application patch (no tokens in Git):**
+
+Inject tokens via RHDP `field-content` Runtime Application `helm.values` or `oc patch`, never commit them to the repository. Example:
+
+```bash
+oc patch application field-content -n openshift-gitops --type merge -p '{
+  "spec":{"source":{"helm":{"values":"managedClusters:\n  east:\n    apiUrl: https://api.<east>:6443\n    token: <token>\n  west:\n    apiUrl: https://api.<west>:6443\n    token: <token>"}}}}'
+```
+
+**Tokens are one-time:** ACM takes over cluster management after klusterlet joins. The token is only needed for initial import; once the managed cluster shows `JOINED`/`AVAILABLE` in `oc get managedclusters`, the token is no longer used and can expire.
+
 ## What gets deployed (hub)
 
 Key clustergroup apps (see `charts/region/hub/values.yaml`):
