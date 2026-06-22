@@ -1,7 +1,7 @@
 clusterName: ""
 
 yoloPpeServing:
-  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.4.0
+  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.4.1
   modelFile: best.pt
   storageSecretName: aws-connection-ppe-models
   storagePath: ppe-detection/model
