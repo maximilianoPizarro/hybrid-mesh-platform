@@ -6,6 +6,7 @@ metadata:
   namespace: open-cluster-management
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -13,6 +14,7 @@ metadata:
   name: acm-mce-disable-cluster-proxy
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 rules:
   - apiGroups: ["multicluster.openshift.io"]
     resources: ["multiclusterengines"]
@@ -24,6 +26,7 @@ metadata:
   name: acm-mce-disable-cluster-proxy
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -40,6 +43,7 @@ metadata:
   namespace: open-cluster-management
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 data:
   disable-cluster-proxy-addon.py: |
 {{ .Files.Get "files/disable-cluster-proxy-addon.py" | nindent 4 }}
@@ -51,6 +55,7 @@ metadata:
   namespace: open-cluster-management
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
@@ -89,6 +94,7 @@ metadata:
   namespace: open-cluster-management
   annotations:
     argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   schedule: {{ .Values.mceDisableClusterProxySchedule | default "0 */6 * * *" | quote }}
   concurrencyPolicy: Forbid
