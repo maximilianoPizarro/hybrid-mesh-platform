@@ -31,6 +31,10 @@ spec:
           mountPath: /opt/app-root/src/catalog-data/onboarding
           containers:
             - "*"
+        - name: developer-hub-catalog-onboarding-docs
+          mountPath: /opt/app-root/src/catalog-data/onboarding/docs
+          containers:
+            - "*"
         - name: developer-hub-catalog-public-apis
           key: public-apis.yaml
           mountPath: /opt/app-root/src/catalog-data/public-apis
