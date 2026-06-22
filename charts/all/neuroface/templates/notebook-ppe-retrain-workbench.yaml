@@ -1,9 +1,10 @@
-{{- if .Values.ppeWorkbench.enabled }}
-{{- $wb := .Values.ppeWorkbench -}}
+{{- if .Values.ppeRetrainWorkbench.enabled }}
+{{- $wb := .Values.ppeRetrainWorkbench -}}
 {{- $domain := include "neuroface.hubClusterDomain" . -}}
-{{- $host := $wb.route.host | default (printf "ppe-workbench.%s" $domain) -}}
+{{- $host := $wb.route.host | default (printf "ppe-retrain-workbench.%s" $domain) -}}
 {{- $ppeEndpoint := include "neuroface.ppeEndpoint" . -}}
-{{- $neurofaceHost := .Values.neuroface.route.host | default (printf "neuroface.%s" $domain) -}}
+{{- $ms := .Values.yoloPpeServing.modelStorage | default dict -}}
+{{- $endpoint := include "neuroface.minioEndpoint" . -}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -12,12 +13,12 @@ metadata:
   namespace: neuroface
   labels:
     app.kubernetes.io/part-of: neuroface
-    app.kubernetes.io/component: ppe-workbench
+    app.kubernetes.io/component: ppe-retrain-workbench
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 data:
-  ppe-detection.ipynb: |
-{{ .Files.Get "files/notebooks/ppe-detection.ipynb" | indent 4 }}
+  ppe-retrain.ipynb: |
+{{ .Files.Get "files/notebooks/ppe-retrain.ipynb" | indent 4 }}
 ---
 apiVersion: kubeflow.org/v1
 kind: Notebook
@@ -26,13 +27,13 @@ metadata:
   namespace: neuroface
   labels:
     app.kubernetes.io/part-of: neuroface
-    app.kubernetes.io/component: ppe-workbench
+    app.kubernetes.io/component: ppe-retrain-workbench
     opendatahub.io/dashboard: "true"
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     opendatahub.io/username: workshop
     notebooks.opendatahub.io/last-image-selection: {{ $wb.image | quote }}
-    notebooks.opendatahub.io/last-size-selection: "Standard"
+    notebooks.opendatahub.io/last-size-selection: "Large"
 spec:
   template:
     spec:
@@ -50,27 +51,31 @@ spec:
           env:
             - name: PPE_ENDPOINT
               value: {{ $ppeEndpoint | quote }}
-            - name: PPE_CLASSES
-              value: {{ .Values.neuroface.ppe.classes | default "hardhat,safety-vest,goggles" | quote }}
-            - name: PPE_CONFIDENCE
-              value: {{ .Values.neuroface.ppe.confidence | default "0.5" | quote }}
-            - name: NEUROFACE_URL
-              value: {{ printf "https://%s" $neurofaceHost | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ $ms.accessKeyId | default "minio" | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ $ms.secretAccessKey | default "minio123" | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ $ms.region | default "us-east-1" | quote }}
+            - name: AWS_S3_BUCKET
+              value: {{ $ms.bucket | default "models" | quote }}
+            - name: AWS_S3_ENDPOINT
+              value: {{ $endpoint | quote }}
+            - name: PPE_MODEL_PREFIX
+              value: {{ .Values.yoloPpeServing.storagePath | default "ppe-detection/model" | quote }}
+            - name: PPE_DATA_PREFIX
+              value: ppe-detection/training-data
           volumeMounts:
             - name: notebook-src
-              mountPath: /opt/app-root/src/ppe-detection.ipynb
-              subPath: ppe-detection.ipynb
+              mountPath: /opt/app-root/src/ppe-retrain.ipynb
+              subPath: ppe-retrain.ipynb
             - name: notebook-data
-              mountPath: /opt/app-root/src/uploads
-            - name: notebook-models
-              mountPath: /opt/app-root/src/models
+              mountPath: /opt/app-root/src/training-data
       volumes:
         - name: notebook-src
           configMap:
             name: {{ $wb.name }}-notebook
         - name: notebook-data
-          emptyDir: {}
-        - name: notebook-models
           emptyDir: {}
 {{- if $wb.route.enabled }}
 ---
@@ -81,7 +86,7 @@ metadata:
   namespace: neuroface
   labels:
     app.kubernetes.io/part-of: neuroface
-    app.kubernetes.io/component: ppe-workbench
+    app.kubernetes.io/component: ppe-retrain-workbench
   annotations:
     argocd.argoproj.io/sync-wave: "4"
     haproxy.router.openshift.io/timeout: 300s

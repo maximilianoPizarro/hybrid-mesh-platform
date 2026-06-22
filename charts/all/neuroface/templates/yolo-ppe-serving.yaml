@@ -1,4 +1,6 @@
 {{- if .Values.yoloPpeServing.enabled }}
+{{- $yolo := .Values.yoloPpeServing -}}
+{{- $modelFile := $yolo.modelFile | default "best.pt" -}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -15,7 +17,18 @@ data:
     from fastapi import FastAPI, Request
     from ultralytics import YOLO
 
-    MODEL_PATH = os.environ.get("MODEL_PATH", "/models/best.pt")
+    def resolve_model_path() -> str:
+        candidates = [
+            os.environ.get("MODEL_PATH", ""),
+            "/mnt/models/{{ $modelFile }}",
+            "/models/{{ $modelFile }}",
+        ]
+        for path in candidates:
+            if path and os.path.isfile(path):
+                return path
+        return candidates[1]
+
+    MODEL_PATH = resolve_model_path()
     app = FastAPI()
     model = YOLO(MODEL_PATH)
 
@@ -41,20 +54,8 @@ data:
 
     @app.post("/v1/predict")
     async def predict(request: Request):
-        import base64, json
         conf = float(request.headers.get("X-Confidence", "0.5"))
-        ct = request.headers.get("Content-Type", "")
         raw = await request.body()
-        img = None
-        if "json" in ct:
-            try:
-                body = json.loads(raw)
-                b64 = body.get("image", "")
-                if "," in b64:
-                    b64 = b64.split(",", 1)[1]
-                raw = base64.b64decode(b64)
-            except Exception:
-                pass
         arr = np.frombuffer(raw, dtype=np.uint8)
         img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
         if img is None:
@@ -77,115 +78,92 @@ data:
                 })
         return {"detections": detections}
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
 metadata:
-  name: yolo-ppe-model
+  name: yolo-ppe-runtime
   namespace: neuroface
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  accessModes:
-    - ReadWriteOnce
-  {{- if .Values.yoloPpeServing.storageClassName }}
-  storageClassName: {{ .Values.yoloPpeServing.storageClassName | quote }}
-  {{- end }}
-  resources:
-    requests:
-      storage: 2Gi
+  supportedModelFormats:
+    - name: custom
+      version: "1"
+      autoSelect: true
+  containers:
+    - name: kserve-container
+      image: {{ $yolo.image | quote }}
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -euo pipefail
+          pip install --no-cache-dir fastapi uvicorn opencv-python-headless huggingface_hub \
+            numpy scipy pillow pyyaml requests polars psutil matplotlib ultralytics-thop
+          pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install --no-cache-dir ultralytics --no-deps
+          uvicorn server:app --host 0.0.0.0 --port 8080
+      env:
+        - name: MODEL_PATH
+          value: /mnt/models/{{ $modelFile }}
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 180
+        periodSeconds: 20
+        failureThreshold: 12
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 240
+        periodSeconds: 30
+        failureThreshold: 10
+      resources:
+        {{- toYaml $yolo.resources | nindent 8 }}
+      volumeMounts:
+        - name: code
+          mountPath: /opt/app
+        - name: tmp
+          mountPath: /tmp
+      workingDir: /opt/app
+  volumes:
+    - name: code
+      configMap:
+        name: yolo-ppe-serving
+    - name: tmp
+      emptyDir: {}
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
 metadata:
   name: yolo-ppe-serving
   namespace: neuroface
+  labels:
+    opendatahub.io/dashboard: "true"
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/skip-health-check: "true"
+    serving.kserve.io/deploymentMode: RawDeployment
+    openshift.io/display-name: YOLO PPE Detection (CPU)
 spec:
-  replicas: {{ .Values.yoloPpeServing.replicas | default 1 }}
-  selector:
-    matchLabels:
-      app: yolo-ppe-serving
-  template:
-    metadata:
-      labels:
-        app: yolo-ppe-serving
-    spec:
-      initContainers:
-        - name: model-download
-          image: {{ .Values.yoloPpeServing.image | quote }}
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              set -euo pipefail
-              if [ -f /models/{{ .Values.yoloPpeServing.modelFile }} ]; then
-                echo "Model already present"
-                exit 0
-              fi
-              pip install --no-cache-dir huggingface_hub
-              python - <<'PY'
-              from huggingface_hub import hf_hub_download
-              import shutil
-              src = hf_hub_download(
-                  repo_id={{ .Values.yoloPpeServing.modelRepo | quote }},
-                  filename={{ .Values.yoloPpeServing.modelFile | quote }},
-              )
-              shutil.copy(src, "/models/{{ .Values.yoloPpeServing.modelFile }}")
-              PY
-          volumeMounts:
-            - name: model
-              mountPath: /models
-      containers:
-        - name: serving
-          image: {{ .Values.yoloPpeServing.image | quote }}
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              set -euo pipefail
-              pip install --no-cache-dir fastapi uvicorn opencv-python-headless huggingface_hub \
-                numpy scipy pillow pyyaml requests polars psutil matplotlib ultralytics-thop
-              pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
-              pip install --no-cache-dir ultralytics --no-deps
-              uvicorn server:app --host 0.0.0.0 --port 8080
-          env:
-            - name: MODEL_PATH
-              value: /models/{{ .Values.yoloPpeServing.modelFile }}
-          ports:
-            - containerPort: 8080
-              name: http
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 180
-            periodSeconds: 20
-            failureThreshold: 12
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 240
-            periodSeconds: 30
-            failureThreshold: 10
-          resources:
-            {{- toYaml .Values.yoloPpeServing.resources | nindent 12 }}
-          volumeMounts:
-            - name: model
-              mountPath: /models
-            - name: code
-              mountPath: /opt/app
-            - name: tmp
-              mountPath: /tmp
-          workingDir: /opt/app
-      volumes:
-        - name: model
-          persistentVolumeClaim:
-            claimName: yolo-ppe-model
-        - name: code
-          configMap:
-            name: yolo-ppe-serving
-        - name: tmp
-          emptyDir: {}
+  predictor:
+    minReplicas: {{ $yolo.replicas | default 1 }}
+    maxReplicas: {{ $yolo.replicas | default 1 }}
+    labels:
+      istio.io/dataplane-mode: none
+    model:
+      modelFormat:
+        name: custom
+      runtime: yolo-ppe-runtime
+      storage:
+        key: {{ $yolo.storageSecretName | default "aws-connection-ppe-models" }}
+        path: {{ $yolo.storagePath | default "ppe-detection/model" }}
 ---
 apiVersion: v1
 kind: Service
@@ -196,9 +174,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   selector:
-    app: yolo-ppe-serving
+    serving.kserve.io/inferenceservice: yolo-ppe-serving
+    component: predictor
   ports:
     - name: http
       port: 8080
-      targetPort: http
+      targetPort: 8080
 {{- end }}

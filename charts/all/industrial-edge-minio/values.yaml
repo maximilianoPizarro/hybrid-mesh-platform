@@ -17,3 +17,10 @@ modelSeed:
   enabled: true
   bucket: models
   image: registry.redhat.io/ubi9/python-311:latest
+# PostSync Job: downloads YOLO PPE best.pt from HuggingFace → s3://models/ppe-detection/model/
+ppeModelSeed:
+  enabled: true
+  bucket: models
+  modelRepo: Hexmon/vyra-yolo-ppe-detection
+  modelFile: best.pt
+  image: registry.redhat.io/ubi9/python-311:latest

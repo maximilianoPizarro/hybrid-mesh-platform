@@ -57,9 +57,14 @@ for pair in east:"${EAST_DOMAIN:-}" west:"${WEST_DOMAIN:-}"; do
   domain="${pair#*:}"
   kc="/tmp/${cluster}-kubeconfig"
   if [[ -f "$kc" ]]; then
-    ready="$(oc --kubeconfig="$kc" get deploy yolo-ppe-serving -n neuroface-cv -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")"
-    echo "${cluster} yolo-ppe-serving readyReplicas=${ready:-0} (domain=${domain:-n/a})"
-    [[ "${ready:-0}" -ge 1 ]] || { echo "WARN: ${cluster} yolo-ppe-serving not ready"; fail=1; }
+    isvc_ready="$(oc --kubeconfig="$kc" get inferenceservice yolo-ppe-serving -n neuroface-cv -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || true)"
+    if [[ "$isvc_ready" == "True" ]]; then
+      echo "${cluster} yolo-ppe-serving InferenceService Ready (domain=${domain:-n/a})"
+    else
+      ready="$(oc --kubeconfig="$kc" get deploy yolo-ppe-serving-predictor -n neuroface-cv -o jsonpath='{.status.readyReplicas}' 2>/dev/null || oc --kubeconfig="$kc" get deploy yolo-ppe-serving -n neuroface-cv -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")"
+      echo "${cluster} yolo-ppe-serving readyReplicas=${ready:-0} (domain=${domain:-n/a})"
+      [[ "${ready:-0}" -ge 1 ]] || { echo "WARN: ${cluster} yolo-ppe-serving not ready"; fail=1; }
+    fi
   else
     echo "skip ${cluster}: no ${kc}"
   fi

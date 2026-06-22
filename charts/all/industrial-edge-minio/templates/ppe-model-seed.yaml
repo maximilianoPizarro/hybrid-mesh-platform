@@ -1,0 +1,75 @@
+{{- if .Values.ppeModelSeed.enabled | default true }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-ppe-model-seed
+  namespace: industrial-edge-ml-workspace
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 1800
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed
+          image: {{ .Values.ppeModelSeed.image | default .Values.modelSeed.image | default "registry.redhat.io/ubi9/python-311:latest" | quote }}
+          env:
+            - name: MINIO_ENDPOINT
+              value: http://minio.industrial-edge-ml-workspace.svc:9000
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.minioAccessKey | default "minio" | quote }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.minioSecretKey | default "minio123" | quote }}
+            - name: MODEL_BUCKET
+              value: {{ .Values.ppeModelSeed.bucket | default "models" | quote }}
+            - name: MODEL_REPO
+              value: {{ .Values.ppeModelSeed.modelRepo | default "Hexmon/vyra-yolo-ppe-detection" | quote }}
+            - name: MODEL_FILE
+              value: {{ .Values.ppeModelSeed.modelFile | default "best.pt" | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              pip install --no-cache-dir huggingface_hub boto3 >/dev/null
+              python3 - <<'PY'
+              import os, shutil, boto3
+              from botocore.exceptions import ClientError
+              from huggingface_hub import hf_hub_download
+
+              endpoint = os.environ["MINIO_ENDPOINT"]
+              bucket = os.environ["MODEL_BUCKET"]
+              model_file = os.environ["MODEL_FILE"]
+              prefix = "ppe-detection/model"
+              key = f"{prefix}/{model_file}"
+
+              s3 = boto3.client(
+                  "s3",
+                  endpoint_url=endpoint,
+                  aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
+                  aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
+                  region_name="us-east-1",
+              )
+
+              try:
+                  s3.head_object(Bucket=bucket, Key=key)
+                  print(f"PPE model already present at s3://{bucket}/{key} — skip")
+                  raise SystemExit(0)
+              except ClientError as e:
+                  if e.response.get("Error", {}).get("Code") not in ("404", "NoSuchKey"):
+                      raise
+
+              src = hf_hub_download(
+                  repo_id=os.environ["MODEL_REPO"],
+                  filename=model_file,
+              )
+              os.makedirs("/tmp/model", exist_ok=True)
+              dest = f"/tmp/model/{model_file}"
+              shutil.copy(src, dest)
+              s3.upload_file(dest, bucket, key)
+              print(f"Uploaded PPE model to s3://{bucket}/{key}")
+              PY
+{{- end }}

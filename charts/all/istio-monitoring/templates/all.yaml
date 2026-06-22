@@ -1,10 +1,14 @@
 {{- $uwmNs := "openshift-user-workload-monitoring" }}
 {{- $promSa := "prometheus-user-workload" }}
 {{- $baseMeshNs := list "hub-gateway-system" "neuroface-gateway-system" "industrial-edge-tst-all" "industrial-edge-data-lake" "industrial-edge-stormshift-messaging" }}
-{{- $hubMeshNs := list "workshop-kuadrant-apis" "ai-gateway-system" "mcp-system" }}
+{{- $hubMeshNs := list "workshop-kuadrant-apis" "ai-gateway-system" "mcp-system" "neuroface" }}
+{{- $spokeMeshNs := list "neuroface-cv" }}
 {{- $meshNamespaces := $baseMeshNs }}
 {{- if .Values.workshopGateways.enabled }}
 {{- $meshNamespaces = concat $baseMeshNs $hubMeshNs }}
+{{- end }}
+{{- if .Values.clusterSuffix }}
+{{- $meshNamespaces = concat $meshNamespaces $spokeMeshNs }}
 {{- end }}
 {{- $rbacNamespaces := concat (list "istio-system" "ztunnel") $meshNamespaces }}
 {{- /* Strimzi labels Kafka broker pods with strimzi.io/name=<cluster>-kafka (not the node pool name). */}}

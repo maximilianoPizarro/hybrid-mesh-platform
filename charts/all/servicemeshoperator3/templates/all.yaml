@@ -113,10 +113,12 @@ spec:
 }}
 {{- if eq .Values.clusterRole "hub" }}
 {{- $ambientNamespaces = append $ambientNamespaces "devspaces" }}
+{{- $ambientNamespaces = append $ambientNamespaces "neuroface" }}
 {{- end }}
 {{- if ne .Values.clusterRole "hub" }}
 {{- $ambientNamespaces = concat $ambientNamespaces $ieAmbientNamespaces }}
 {{- $ambientNamespaces = append $ambientNamespaces "spoke-gateway-system" }}
+{{- $ambientNamespaces = append $ambientNamespaces "neuroface-cv" }}
 {{- end }}
 {{- range $ambientNamespaces }}
 ---

@@ -22,8 +22,10 @@ neuroface:
     enabled: false
   ppe:
     enabled: true
+    # Route UI PPE traffic through federated CV gateway (50/50 east/west via Skupper).
+    useFederatedGateway: true
     # Injected into neuroface-config ConfigMap as NEUROFACE_PPE_* (backend envFrom).
-    endpoint: "http://yolo-ppe-serving:8080"
+    endpoint: "http://neuroface-gateway-istio.neuroface-gateway-system.svc:8080"
     classes: "hardhat,safety-vest,goggles"
     confidence: "0.5"
     kafka:
@@ -38,6 +40,14 @@ yoloPpeServing:
   image: registry.access.redhat.com/ubi9/python-311:latest
   modelRepo: Hexmon/vyra-yolo-ppe-detection
   modelFile: best.pt
+  storageSecretName: aws-connection-ppe-models
+  storagePath: ppe-detection/model
+  modelStorage:
+    accessKeyId: minio
+    secretAccessKey: minio123
+    region: us-east-1
+    bucket: models
+    endpoint: http://minio.industrial-edge-ml-workspace.svc:9000
   storageClassName: ocs-external-storagecluster-ceph-rbd-immediate
   resources:
     requests:
@@ -53,6 +63,16 @@ ppeWorkbench:
   image: image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/pytorch:2025.1
   cpu: "1"
   memory: 2Gi
+  route:
+    enabled: true
+    host: ""
+
+ppeRetrainWorkbench:
+  enabled: true
+  name: ppe-retrain-workbench
+  image: image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/pytorch:2025.1
+  cpu: "2"
+  memory: 4Gi
   route:
     enabled: true
     host: ""
