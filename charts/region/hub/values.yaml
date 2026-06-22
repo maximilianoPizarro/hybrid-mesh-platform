@@ -11,6 +11,7 @@ clusterGroup:
   namespaces:
     stackrox: {}
     openshift-gitops: {}
+    openshift-serverless: {}
 #    developer-hub: {}
 #    hub-gateway-system: {}
 #    workshop-kuadrant-apis: {}
