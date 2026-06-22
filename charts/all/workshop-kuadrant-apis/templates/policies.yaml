@@ -181,9 +181,7 @@ spec:
         credentials:
           authorizationHeader:
             prefix: APIKEY
-        {{- $maasKey := include "workshop-kuadrant-apis.maasApiKey" . -}}
-        {{- /* Always emit Bearer injection header when MaaS route is enabled.
-             With Vault/ESO, maas-authpolicy-sync CronJob patches the real token. */ -}}
+        {{- $maasKey := include "workshop-kuadrant-apis.maasApiKey" . }}
     response:
       success:
         headers:
