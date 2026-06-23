@@ -28,7 +28,7 @@ neuroface:
     # Injected into neuroface-config ConfigMap as NEUROFACE_PPE_* (backend envFrom).
     endpoint: "http://yolo-ppe-serving:8080"
     classes: "hardhat,safety-vest,goggles"
-    confidence: "0.5"
+    confidence: "0.15"
     serving:
       image:
         repository: quay.io/maximilianopizarro/neuroface-ppe-serving
