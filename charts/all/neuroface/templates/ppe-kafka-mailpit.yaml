@@ -1,0 +1,159 @@
+{{- if and .Values.neuroface.ppe.enabled .Values.neuroface.ppe.kafka.enabled }}
+{{- $kafka := .Values.neuroface.ppe.kafka -}}
+{{- $domain := include "neuroface.hubClusterDomain" . -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ppe-kafka-mailpit-consumer
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  consumer.py: |
+    """Kafka consumer: reads PPE violation events and sends email alerts via Mailpit SMTP."""
+    import json, os, smtplib, logging, time
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    log = logging.getLogger("ppe-mail")
+
+    KAFKA_BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "kafka-east-tst.service-interconnect.svc:9092")
+    KAFKA_TOPIC = os.environ.get("KAFKA_TOPIC", "cv.ppe.detections")
+    KAFKA_GROUP = os.environ.get("KAFKA_GROUP", "ppe-mailpit-consumer")
+    SMTP_HOST = os.environ.get("SMTP_HOST", "mailpit.mailpit.svc")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "1025"))
+    MAIL_FROM = os.environ.get("MAIL_FROM", "ppe-alerts@neuroface.local")
+    MAIL_TO = os.environ.get("MAIL_TO", "safety-team@workshop.local")
+    NEUROFACE_URL = os.environ.get("NEUROFACE_URL", "https://neuroface.{{ $domain }}")
+
+    def send_alert(event: dict) -> None:
+        status = event.get("ppe_status", "unknown")
+        missing = event.get("missing_ppe", [])
+        present = event.get("present_ppe", [])
+        persons = event.get("person_count", 0)
+        ts = event.get("timestamp", "")
+
+        subject = f"PPE {status.upper()}: {', '.join(missing) if missing else 'all present'}"
+
+        body = f"""<html><body style="font-family:sans-serif">
+    <h2 style="color:{'#F44336' if status=='violation' else '#4CAF50'}">PPE Detection: {status.upper()}</h2>
+    <table style="border-collapse:collapse">
+      <tr><td style="padding:4px 12px"><b>Persons detected</b></td><td>{persons}</td></tr>
+      <tr><td style="padding:4px 12px"><b>Present PPE</b></td><td style="color:#4CAF50">{', '.join(present) or 'none'}</td></tr>
+      <tr><td style="padding:4px 12px"><b>Missing PPE</b></td><td style="color:#F44336"><b>{', '.join(missing) or 'none'}</b></td></tr>
+      <tr><td style="padding:4px 12px"><b>Timestamp</b></td><td>{ts}</td></tr>
+    </table>
+    <p><a href="{NEUROFACE_URL}">Open NeuroFace</a></p>
+    </body></html>"""
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = MAIL_FROM
+        msg["To"] = MAIL_TO
+        msg.attach(MIMEText(body, "html"))
+
+        try:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
+                smtp.sendmail(MAIL_FROM, [MAIL_TO], msg.as_string())
+            log.info("Sent alert: %s", subject)
+        except Exception as e:
+            log.error("SMTP error: %s", e)
+
+    def main():
+        from confluent_kafka import Consumer, KafkaError
+
+        conf = {
+            "bootstrap.servers": KAFKA_BOOTSTRAP,
+            "group.id": KAFKA_GROUP,
+            "auto.offset.reset": "latest",
+            "enable.auto.commit": True,
+        }
+        consumer = Consumer(conf)
+        consumer.subscribe([KAFKA_TOPIC])
+        log.info("Consuming %s from %s (group %s)", KAFKA_TOPIC, KAFKA_BOOTSTRAP, KAFKA_GROUP)
+
+        try:
+            while True:
+                msg = consumer.poll(1.0)
+                if msg is None:
+                    continue
+                if msg.error():
+                    if msg.error().code() != KafkaError._PARTITION_EOF:
+                        log.error("Kafka error: %s", msg.error())
+                    continue
+                try:
+                    event = json.loads(msg.value().decode("utf-8"))
+                    status = event.get("ppe_status", "")
+                    if status in ("violation", "no_persons"):
+                        send_alert(event)
+                    else:
+                        log.debug("Skipped %s event", status)
+                except Exception as e:
+                    log.error("Parse error: %s", e)
+        finally:
+            consumer.close()
+
+    if __name__ == "__main__":
+        while True:
+            try:
+                main()
+            except Exception as e:
+                log.error("Consumer crashed: %s — restarting in 10s", e)
+                time.sleep(10)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ppe-kafka-mailpit
+  namespace: neuroface
+  labels:
+    app.kubernetes.io/part-of: neuroface
+    app.kubernetes.io/component: ppe-kafka-consumer
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ppe-kafka-mailpit
+  template:
+    metadata:
+      labels:
+        app: ppe-kafka-mailpit
+    spec:
+      containers:
+        - name: consumer
+          image: registry.access.redhat.com/ubi9/python-311:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              pip install --no-cache-dir confluent-kafka >/dev/null 2>&1
+              python /app/consumer.py
+          env:
+            - name: KAFKA_BOOTSTRAP
+              value: {{ $kafka.bootstrap | quote }}
+            - name: KAFKA_TOPIC
+              value: {{ $kafka.topic | default "cv.ppe.detections" | quote }}
+            - name: SMTP_HOST
+              value: "mailpit.mailpit.svc"
+            - name: SMTP_PORT
+              value: "1025"
+            - name: NEUROFACE_URL
+              value: {{ printf "https://neuroface.%s" $domain | quote }}
+          volumeMounts:
+            - name: code
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      volumes:
+        - name: code
+          configMap:
+            name: ppe-kafka-mailpit-consumer
+{{- end }}

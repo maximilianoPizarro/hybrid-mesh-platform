@@ -34,7 +34,9 @@ neuroface:
         repository: quay.io/maximilianopizarro/neuroface-ppe-serving
         tag: v1.4.1
     kafka:
-      enabled: false
+      enabled: true
+      bootstrap: "kafka-east-tst.service-interconnect.svc:9092"
+      topic: "cv.ppe.detections"
     dataPersistence:
       enabled: true
       s3Endpoint: "http://minio.industrial-edge-ml-workspace.svc:9000"
