@@ -219,7 +219,7 @@ Wait for MCH **Running** before importing spokes.
 - Separate mounts: IE catalog `.../ie` vs techdocs `.../ie/techdocs`
 - **Every catalog ConfigMap** referenced in `app-config` must have a matching `extraFiles` mount in `charts/all/developer-hub/templates/backstage-developer-hub.yaml` (e.g. `cnv-workshop`, `software-templates`)
 - **GitLab host helper:** use `developer-hub.gitlabHost` in templates — **never** `gitlab.apps.{{ clusterDomain }}` because `clusterDomain` is already `apps.<cluster>` → double `apps` (`gitlab.apps.apps.*`) breaks integrations, proxy, scaffolder, pipelines UI
-- **Software templates:** Backstage cannot read GitLab `/-/raw/` URLs. Bundle Location in `catalog-software-templates.yaml` with explicit `/-/blob/main/...` targets; mount at `/opt/app-root/src/catalog-data/software-templates/`
+- **Software templates:** Backstage cannot read GitLab `/-/raw/` URLs (no `readTree` support). Software templates are now bundled directly in `catalog-software-template-manifests.yaml` to ensure they are available even if the GitLab provider is unavailable. They are mounted at `/opt/app-root/src/catalog-data/software-templates/manifests/`.
 - **OpenAPI catalog entities:** `spec.definition` must be a **string** — use `definition: |` for inline YAML; `$text: <url>` only for external URLs; nested YAML objects fail validation
 - **RBAC:** `plugins.rbac.enabled: true` — unauthenticated `/api/catalog/entities?filter=kind=template` returns `[]`; templates visible only after OIDC login
 - **Rollout triggers:** changes to `Backstage` CR `extraFiles`, `dynamic-plugins-rhdh`, or init-heavy config → expect 5–10 min `install-dynamic-plugins` init before pod Ready
