@@ -179,7 +179,11 @@ data:
         - type: file
           target: /opt/app-root/src/catalog-data/neuroface-cv/neuroface-cv-system.yaml
           rules:
-            - allow: [System, Component]
+            - allow: [System, Component, API]
+        - type: file
+          target: /opt/app-root/src/catalog-data/neuroface/neuroface-system.yaml
+          rules:
+            - allow: [System, Component, API, Resource]
       providers:
         ocm:
           default:

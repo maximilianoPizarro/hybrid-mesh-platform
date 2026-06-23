@@ -16,8 +16,12 @@ data:
     metadata:
       name: hybrid-mesh-ai-platform
       title: Hybrid Mesh AI — Platform AI Services
-      description: AI Gateway (Kuadrant + Gateway API), MCP Gateway, NeuroFace vision, OpenShift AI
-      tags: [ai, gateway, mcp, workshop]
+      description: AI Gateway (Kuadrant + Gateway API), MCP Gateway, NeuroFace vision system, OpenShift AI
+      tags: [ai, gateway, mcp, workshop, neuroface]
+      links:
+        - url: https://developer-hub.{{ $hub }}/catalog/default/system/neuroface
+          title: NeuroFace system
+          icon: catalog
     spec:
       owner: platform-engineering
     ---
@@ -48,6 +52,7 @@ data:
       system: hybrid-mesh-ai-platform
       dependsOn:
         - component:ai-gateway-maas
+        - system:neuroface
     ---
     apiVersion: backstage.io/v1alpha1
     kind: Component
@@ -68,30 +73,6 @@ data:
           icon: catalog
     spec:
       type: service
-      lifecycle: production
-      owner: platform-engineering
-      system: hybrid-mesh-ai-platform
-    ---
-    apiVersion: backstage.io/v1alpha1
-    kind: Component
-    metadata:
-      name: neuroface-workshop
-      title: NeuroFace — Vision + MaaS chat
-      description: OVMS local face/object detection; /api/chat proxies to MaaS; hub ModelMesh optional
-      tags: [ai, neuroface, vision, maas]
-      annotations:
-        backstage.io/kubernetes-namespace: neuroface
-        backstage.io/kubernetes-cluster: hub
-        openshift.ai/project: neuroface
-      links:
-        - url: https://neuroface.{{ $hub }}
-          title: NeuroFace UI
-          icon: dashboard
-        - url: https://rh-ai.apps.{{ $hub }}
-          title: OpenShift AI Dashboard
-          icon: catalog
-    spec:
-      type: website
       lifecycle: production
       owner: platform-engineering
       system: hybrid-mesh-ai-platform

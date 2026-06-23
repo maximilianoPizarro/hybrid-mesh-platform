@@ -34,6 +34,8 @@ spec:
   lifecycle: production
   owner: platform-engineering
   system: neuroface-cv-journey
+  consumesApis:
+    - kserve-ppe-v2
   dependsOn:
     - component:edge-ppe-east
     - component:edge-ppe-west
@@ -53,10 +55,12 @@ metadata:
       title: ACM — east cluster
       icon: catalog
 spec:
-  type: service
+  type: ml-model
   lifecycle: production
   owner: platform-engineering
   system: neuroface-cv-journey
+  providesApis:
+    - kserve-ppe-v2
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -73,10 +77,12 @@ metadata:
       title: ACM — west cluster
       icon: catalog
 spec:
-  type: service
+  type: ml-model
   lifecycle: production
   owner: platform-engineering
   system: neuroface-cv-journey
+  providesApis:
+    - kserve-ppe-v2
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -85,6 +91,8 @@ metadata:
   title: NeuroFace CV Journey
   description: Federated computer-vision inference path; complements NeuroFace UI on hub
   tags: [neuroface, workshop, journey]
+  annotations:
+    devspaces.io/factory: https://github.com/maximilianoPizarro/neuroface
   links:
     - url: https://neuroface.__HUB_APPS_DOMAIN__/
       title: NeuroFace UI (hub)
@@ -92,11 +100,17 @@ metadata:
     - url: https://neuroface-cv.__HUB_APPS_DOMAIN__/
       title: NeuroFace CV gateway
       icon: web
+    - url: https://devspaces.__HUB_APPS_DOMAIN__/#https://github.com/maximilianoPizarro/neuroface
+      title: Open in DevSpaces
+      icon: catalog
+    - url: https://github.com/maximilianoPizarro/neuroface
+      title: GitHub repository
+      icon: github
 spec:
   type: website
   lifecycle: production
   owner: platform-engineering
   system: neuroface-cv-journey
   dependsOn:
-    - component:neuroface-workshop
+    - component:neuroface-frontend
     - component:neuroface-gateway
