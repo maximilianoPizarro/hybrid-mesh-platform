@@ -1,4 +1,4 @@
-{{- $base := printf "%s/-/raw/main/software-templates" (include "developer-hub.platformContentBaseUrl" .) -}}
+{{- $base := printf "%s/-/blob/main/software-templates" (include "developer-hub.platformContentBaseUrl" .) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

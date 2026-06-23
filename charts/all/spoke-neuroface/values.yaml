@@ -16,7 +16,11 @@ neuroface:
     modelName: "llama-scout-17b"
     apiKey: ""
   ovms:
-    enabled: false
+    enabled: true
+    externalUrl: "http://modelmesh-serving.redhat-ods-applications.svc.cluster.local:8008"
+    modelName: "face-detection-retail-0005"
+    modelmesh:
+      enabled: true
   litellm:
     enabled: false
   ppe:
