@@ -452,17 +452,7 @@ clusterGroup:
       argoProject: security
       path: charts/all/acs-init-bundle-sync
       syncWave: '7'
-    neuroface:
-      name: neuroface
-      namespace: neuroface
-      argoProject: ai
-      path: charts/all/neuroface
-      syncWave: '7'
-      overrides:
-        - name: neuroface.route.enabled
-          value: "false"
-        - name: ppeWorkbench.route.host
-          value: ppe-workbench.{{ $.Values.global.localClusterDomain }}
+    # neuroface: removed — full stack now runs on spokes via spoke-neuroface (PUSH)
     devspaces:
       name: devspaces
       namespace: devspaces
