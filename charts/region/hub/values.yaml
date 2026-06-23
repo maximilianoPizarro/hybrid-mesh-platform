@@ -459,8 +459,8 @@ clusterGroup:
       path: charts/all/neuroface
       syncWave: '7'
       overrides:
-        - name: neuroface.route.host
-          value: neuroface.{{ $.Values.global.localClusterDomain }}
+        - name: neuroface.route.enabled
+          value: "false"
         - name: ppeWorkbench.route.host
           value: ppe-workbench.{{ $.Values.global.localClusterDomain }}
     devspaces:

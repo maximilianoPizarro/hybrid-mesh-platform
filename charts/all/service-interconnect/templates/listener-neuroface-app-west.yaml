@@ -1,0 +1,11 @@
+apiVersion: skupper.io/v2alpha1
+kind: Listener
+metadata:
+  name: neuroface-app-west
+  namespace: service-interconnect
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  routingKey: neuroface-app-west
+  host: neuroface-app-west
+  port: 8080

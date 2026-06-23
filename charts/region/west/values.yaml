@@ -19,6 +19,7 @@ clusterGroup:
     devspaces: {}
     spoke-gateway-system: {}
     neuroface-cv: {}
+    neuroface: {}
     service-interconnect: {}
     kairos-system:
       operatorGroup: true
@@ -223,6 +224,17 @@ clusterGroup:
       path: charts/all/spoke-neuroface-cv
       overrides:
         - name: clusterName
+          value: west
+    spoke-neuroface:
+      name: spoke-neuroface
+      namespace: neuroface
+      argoProject: ai
+      syncWave: '8'
+      path: charts/all/spoke-neuroface
+      overrides:
+        - name: clusterName
+          value: west
+        - name: neuroface.clusterName
           value: west
     devspaces:
       name: devspaces
