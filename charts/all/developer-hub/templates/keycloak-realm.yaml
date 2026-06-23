@@ -64,6 +64,26 @@ spec:
         publicClient: false
         protocol: openid-connect
         fullScopeAllowed: true
+      - clientId: devspaces
+        name: DevSpaces
+        enabled: true
+        clientAuthenticatorType: client-secret
+        secret: {{ .Values.devspacesOidcClientSecret | default .Values.keycloakOidcClientSecret | default "CHANGEME-set-via-helm-or-sync-secret" | quote }}
+        redirectUris:
+          - "https://devspaces.{{ include "developer-hub.clusterDomain" . }}/api/oauth/callback"
+          - "https://devspaces.{{ include "developer-hub.clusterDomain" . }}/api/oauth/che/callback"
+        webOrigins:
+          - "https://devspaces.{{ include "developer-hub.clusterDomain" . }}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: true
+        publicClient: false
+        protocol: openid-connect
+        fullScopeAllowed: true
+        defaultClientScopes:
+          - profile
+          - email
+          - roles
+          - basic
     users:
       # Service account for KeycloakOrgEntityProvider — needs realm-management roles to list users/groups
       - username: service-account-developer-hub-catalog

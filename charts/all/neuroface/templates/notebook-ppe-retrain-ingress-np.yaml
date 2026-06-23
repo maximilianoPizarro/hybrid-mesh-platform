@@ -1,0 +1,29 @@
+{{- if .Values.ppeRetrainWorkbench.enabled }}
+{{- if .Values.ppeRetrainWorkbench.route.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.ppeRetrainWorkbench.name }}-route-ingress
+  namespace: neuroface
+  labels:
+    app.kubernetes.io/part-of: neuroface
+    app.kubernetes.io/component: ppe-retrain-workbench
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  podSelector:
+    matchLabels:
+      notebook-name: {{ .Values.ppeRetrainWorkbench.name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+      ports:
+        - protocol: TCP
+          port: 8888
+{{- end }}
+{{- end }}

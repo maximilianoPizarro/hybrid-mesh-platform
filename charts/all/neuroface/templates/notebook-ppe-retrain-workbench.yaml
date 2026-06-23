@@ -97,7 +97,7 @@ spec:
     name: {{ $wb.name }}
     weight: 100
   port:
-    targetPort: notebook-port
+    targetPort: http-notebook
   tls:
     termination: edge
   wildcardPolicy: None

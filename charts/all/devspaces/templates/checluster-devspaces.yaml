@@ -17,7 +17,9 @@ spec:
       logLevel: INFO
     dashboard: {}
     devWorkspace: {}
-    devfileRegistry: {}
+    devfileRegistry:
+      externalDevfileRegistries:
+        - url: https://registry.devfile.io
     imagePuller:
       enable: true
       spec:
@@ -35,4 +37,10 @@ spec:
     storage:
       pvcStrategy: per-user
   gitServices: {}
-  networking: {}
+  networking:
+    {{- if .Values.keycloakOidc.enabled }}
+    auth:
+      identityProviderURL: "https://sso.{{ include "devspaces.clusterDomain" . }}/realms/backstage"
+      oAuthClientName: devspaces
+      oAuthSecret: devspaces-oidc-secret
+    {{- end }}

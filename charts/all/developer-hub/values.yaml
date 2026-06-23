@@ -5,6 +5,8 @@ userCount: 30
 defaultPassword: "Welcome123!"
 # OIDC client secret for developer-hub + Keycloak backstage realm (set via --set, never commit real values)
 keycloakOidcClientSecret: ""
+# OIDC client secret for DevSpaces (Keycloak client `devspaces`; defaults to keycloakOidcClientSecret)
+devspacesOidcClientSecret: ""
 # GitLab personal access token for root/scaffolder (PostSync gitlab-token-setup, never commit real values)
 gitlabToken: ""
 sessionSecret: ""

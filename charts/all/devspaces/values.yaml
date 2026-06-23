@@ -1,6 +1,12 @@
 clusterDomain: ""
 userCount: 50
 hubClusterDomain: ""
+keycloakOidc:
+  enabled: true
+  # Must match Keycloak client `devspaces` secret in developer-hub keycloak-realm.yaml
+  clientSecret: ""
+  # Legacy alias — prefer keycloakOidc.clientSecret
+keycloakOidcClientSecret: ""
 continueAi:
   apiBase: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
   model: "deepseek-r1-distill-qwen-14b"
