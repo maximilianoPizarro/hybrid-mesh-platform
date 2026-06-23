@@ -16,6 +16,11 @@ components:
     namespace: openshift-operators
     argoProject: operators-platform
     syncWave: "2"
+  - id: spoke-neuroface
+    path: charts/all/spoke-neuroface
+    namespace: neuroface
+    argoProject: fleet-push
+    syncWave: "8"
 
 subscriptions:
   - name: servicemeshoperator3

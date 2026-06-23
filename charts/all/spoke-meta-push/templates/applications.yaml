@@ -39,6 +39,9 @@ spec:
         global:
           localClusterDomain: {{ $clusterDomain | quote }}
           hubClusterDomain: {{ include "spoke-meta-push.hubClusterDomain" $ | quote }}
+{{- with .extraValues }}
+{{ toYaml . | indent 8 }}
+{{- end }}
   destination:
     name: {{ $.Values.clusterName | quote }}
     namespace: {{ .namespace | quote }}
