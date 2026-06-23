@@ -86,7 +86,7 @@ jobs:
           retention-days: 30
 
       - name: Publish test results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Interop Test Report
