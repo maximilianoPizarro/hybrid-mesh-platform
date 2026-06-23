@@ -4,13 +4,15 @@ neuroface:
   fullnameOverride: neuroface
   backend:
     image:
-      tag: v1.4.1
+      tag: v1.5.0
   frontend:
     image:
-      tag: v1.4.1
+      tag: v1.5.0
   chat:
     enabled: true
     autoServiceAccount: false
+    # Direct MaaS (default). For Kuadrant API keys use AI Gateway instead:
+    # modelEndpoint: "https://ai-gateway.<hub-domain>/v1"
     modelEndpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
     modelName: "llama-scout-17b"
     apiKey: ""
@@ -22,7 +24,7 @@ neuroface:
     enabled: false
   ppe:
     enabled: true
-    # Hub-local YOLO InferenceService (KServe v1.4.1).
+    # Hub-local YOLO InferenceService (KServe v1.5.0).
     # CV gateway (neuroface-cv.<hub>) handles federated 50/50 east/west separately.
     useFederatedGateway: false
     # Injected into neuroface-config ConfigMap as NEUROFACE_PPE_* (backend envFrom).
@@ -32,11 +34,15 @@ neuroface:
     serving:
       image:
         repository: quay.io/maximilianopizarro/neuroface-ppe-serving
-        tag: v1.4.1
+        tag: v1.5.0
     kafka:
       enabled: true
       bootstrap: "kafka-east-tst.service-interconnect.svc:9092"
       topic: "cv.ppe.detections"
+      camelConsumer:
+        enabled: true
+      mailpitConsumer:
+        enabled: false
     dataPersistence:
       enabled: true
       s3Endpoint: "http://minio.industrial-edge-ml-workspace.svc:9000"
@@ -53,7 +59,7 @@ neuroface:
 yoloPpeServing:
   enabled: true
   replicas: 1
-  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.4.1
+  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.5.0
   modelFile: best.pt
   storageSecretName: aws-connection-ppe-models
   storagePath: ppe-detection/model

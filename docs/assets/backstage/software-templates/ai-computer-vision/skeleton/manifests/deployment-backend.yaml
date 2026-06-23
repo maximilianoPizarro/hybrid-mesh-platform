@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neuroface-backend
+  namespace: ${{ values.name }}-${{ values.owner }}
+  labels:
+    app: neuroface-backend
+    backstage.io/kubernetes-id: ${{ values.name }}-${{ values.owner }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neuroface-backend
+  template:
+    metadata:
+      labels:
+        app: neuroface-backend
+    spec:
+      containers:
+        - name: backend
+          image: quay.io/maximilianopizarro/neuroface-backend:v1.5.0
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: neuroface-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neuroface-backend
+  namespace: ${{ values.name }}-${{ values.owner }}
+spec:
+  selector:
+    app: neuroface-backend
+  ports:
+    - port: 8080
+      targetPort: 8080

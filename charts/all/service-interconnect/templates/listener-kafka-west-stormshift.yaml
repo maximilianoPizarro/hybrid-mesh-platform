@@ -1,3 +1,4 @@
+{{- if .Values.industrialEdge.enabled }}
 apiVersion: skupper.io/v2alpha1
 kind: Listener
 metadata:
@@ -9,3 +10,4 @@ spec:
   routingKey: kafka-west-stormshift
   host: kafka-west-stormshift
   port: 9092
+{{- end }}

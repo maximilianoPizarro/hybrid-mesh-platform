@@ -1,0 +1,13 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: neuroface
+  namespace: ${{ values.name }}-${{ values.owner }}
+spec:
+  to:
+    kind: Service
+    name: neuroface-frontend
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge

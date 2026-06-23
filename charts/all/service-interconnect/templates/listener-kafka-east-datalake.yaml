@@ -1,3 +1,4 @@
+{{- if .Values.industrialEdge.enabled }}
 apiVersion: skupper.io/v2alpha1
 kind: Listener
 metadata:
@@ -9,3 +10,4 @@ spec:
   routingKey: kafka-east-datalake
   host: kafka-east-datalake
   port: 9092
+{{- end }}

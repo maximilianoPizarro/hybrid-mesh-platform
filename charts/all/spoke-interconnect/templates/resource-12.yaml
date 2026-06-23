@@ -1,3 +1,4 @@
+{{- if .Values.industrialEdge.enabled }}
 apiVersion: skupper.io/v2alpha1
 kind: Connector
 metadata:
@@ -9,3 +10,4 @@ spec:
   routingKey: kafka-{{ include "spoke-interconnect.clusterName" . }}-stormshift
   host: factory-cluster-kafka-bootstrap.industrial-edge-stormshift-messaging.svc.cluster.local
   port: 9092
+{{- end }}

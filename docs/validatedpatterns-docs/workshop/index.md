@@ -24,10 +24,26 @@ Charts: `charts/all/showroom`, `charts/all/workshop-registration`, `charts/all/w
 | ---- | ------- | -------- | -------------- |
 | Welcome | index | All | Hub-spoke architecture + component map |
 | **Part A — Strategy** | 01–05 | Executive / show-and-tell | Hybrid cloud → ROSA → security → AWS AI → customer journey |
-| **Part B — Hands-on** | 10–28 | `userN` lab | Fleet → IE → mesh → GitOps → Vault/ESO → AI stack → operator apps |
+| **Part B — Hands-on** | 10–28 | `userN` lab | Fleet → **AI CV at the Edge** → mesh → GitOps → Vault/ESO → AI stack |
 | **Facilitator** | 29 (not in nav), 30 | Agents / facilitators | Full-stack verification · AI show-and-tell script |
 
-AI track order: **30** (facilitator) → **Vault & External Secrets** (after module 20) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **27** NeuroFace → **28** NeuroFace CV (federated PPE inference) → **28** End-user apps.
+### AI Computer Vision at the Edge track (primary)
+
+NeuroFace is the **reference app** for the **AI Computer Vision at the Edge** pattern — not the pattern name itself.
+
+| Module | Topic | Middleware heroes |
+| ------ | ----- | ----------------- |
+| **13** | AI CV architecture — NeuroFace, KServe, MinIO, ambient mesh, Developer Hub | OSSM3, OpenShift AI, Dev Hub |
+| **14** | PPE safety — webcam, YOLO, Kafka `cv.ppe.detections`, Mailpit alerts | KServe, Kafka/Strimzi, Camel K, Mailpit |
+| **15** | CV edge journey — Gateway API 50/50, Skupper federation, Grafana | Skupper, Gateway API, Grafana, ACM |
+| **16** | AI CV scaffolding — Backstage template, GitLab, DevSpaces | Developer Hub, GitLab, DevSpaces |
+| **17–21** | Platform services — mesh, scalability, network, security, Kubecost | Istio, Kuadrant, ACS, Kubecost |
+| **22** | OpenShift AI — workbenches, model training, KServe | ODH, KServe |
+| **23** | AI Gateway & MaaS — Kuadrant API keys, NeuroFace chat (direct MaaS default) | Kuadrant, AI Gateway, Vault/ESO |
+| **24–26** | MCP, LLM/RAG, predictive | MCP Gateway, LiteLLM, Kairos |
+| **27–28** | Industrial Edge sensors *(optional / advanced)* | IE stack disabled by default |
+
+AI track order: **30** (facilitator) → **Vault & External Secrets** (after module 20) → **22** OpenShift AI → **23** AI Gateway → **24** MCP → **25** LLM/RAG → **26** Predictive → **13–16** AI CV journey → **27–28** sensors (optional).
 
 ## Hero screenshots (Gemini + manual overrides)
 
@@ -47,6 +63,21 @@ Workshop heroes are **Gemini-generated diagrams** (Red Hat branding) under `docs
 - **Manual overrides** — never overwrite from Gemini without intent: `18-scalability`, `20-acs-kuadrant`, `23-ai-gateway`, `24-mcp-gateway`, `30-ai-show-and-tell`.
 - **`03-security-scale-hybrid.png`** — ACS Central (may match `20` unless manually edited).
 - **CNV module 19** — live Dev Hub template capture when KubeVirt CR is unavailable.
+
+## Showroom content repo (module reorder)
+
+Antora `.adoc` modules live in [showroom-hybrid-mesh-ai](https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai). After platform changes, sync heroes from this repo and update showroom modules **13–16** (AI CV primary) and **27–28** (sensors optional):
+
+```bash
+SHOWROOM_DIR=../showroom-hybrid-mesh-ai bash scripts/sync-showroom-content.sh
+cd ../showroom-hybrid-mesh-ai
+# Reorder nav: modules 13-16 AI CV, 27-28 IE optional callout
+git add content/ && git commit -m "content: AI Computer Vision at the Edge primary track"
+```
+
+Optional IE callout for modules 27–28:
+
+> **Optional module.** The sensor stack is disabled by default. Uncomment Industrial Edge apps in `charts/region/east|west/values.yaml` to enable.
 
 ## Publish content changes
 
@@ -96,7 +127,7 @@ Facilitator smoke test:
 
 1. Register at **workshop-registration** → redirect to Showroom with `USER_NAME=user1`.
 2. Open **Terminal** tab — embedded console links must reload after switching browser tabs (`workshop-runtime.js`).
-3. Spot-check heroes: modules **13** (Realtime Data), **20** (ACS intact), **26** (Mailpit), **29** (Argo CD tiles).
+3. Spot-check heroes: modules **13** (NeuroFace PPE / AI CV), **20** (ACS intact), **26** (Mailpit), **29** (Argo CD tiles).
 
 ## Showroom UX (terminal multi-tab)
 

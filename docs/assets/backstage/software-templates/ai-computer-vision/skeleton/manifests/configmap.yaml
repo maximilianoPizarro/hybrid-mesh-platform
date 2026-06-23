@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neuroface-config
+  namespace: ${{ values.name }}-${{ values.owner }}
+data:
+  NEUROFACE_PPE_ENABLED: "true"
+  NEUROFACE_PPE_ENDPOINT: "http://yolo-ppe-serving.neuroface.svc:8080"
+  NEUROFACE_PPE_CONFIDENCE: "0.15"
+  NEUROFACE_CHAT_ENABLED: "true"

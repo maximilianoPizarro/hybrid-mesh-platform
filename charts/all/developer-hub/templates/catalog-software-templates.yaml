@@ -26,3 +26,4 @@ data:
         - {{ $base }}/industrial-edge-api-product/template.yaml
         - {{ $base }}/openshift-ai-workspace/template.yaml
         - {{ $base }}/cnv-vm-workshop/template.yaml
+        - {{ $base }}/ai-computer-vision/template.yaml

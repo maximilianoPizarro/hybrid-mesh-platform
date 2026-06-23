@@ -1,0 +1,67 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: neuroface-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: |
+    {
+      "title": "AI Computer Vision at the Edge — NeuroFace (hub)",
+      "tags": ["neuroface", "ai-cv", "ppe", "kserve"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "panels": [
+        {"type": "row", "title": "NeuroFace API", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}, "id": 1},
+        {
+          "type": "timeseries",
+          "title": "PPE / API request rate (neuroface ns)",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 1},
+          "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
+          "targets": [
+            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\"}[5m]))", "legendFormat": "req/s", "refId": "A"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        },
+        {
+          "type": "timeseries",
+          "title": "PPE detection latency p95",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 1},
+          "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
+          "targets": [
+            {"expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_namespace=\"neuroface\",destination_workload=~\".*backend.*\"}[5m])) by (le)) / 1000", "legendFormat": "p95 s", "refId": "A"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {"type": "row", "title": "KServe YOLO PPE", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 9}, "id": 2},
+        {
+          "type": "timeseries",
+          "title": "yolo-ppe-serving inference req/s",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 10},
+          "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
+          "targets": [
+            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\",destination_workload=~\"yolo-ppe.*\"}[5m]))", "legendFormat": "infer req/s", "refId": "A"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        },
+        {
+          "type": "stat",
+          "title": "Chat API 5xx rate",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 10},
+          "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
+          "targets": [
+            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\",response_code=~\"5..\"}[5m]))", "legendFormat": "5xx/s", "refId": "A"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        }
+      ],
+      "templating": {
+        "list": [
+          {"name": "ds_hub", "type": "datasource", "query": "prometheus", "current": {"text": "Prometheus", "value": "Prometheus"}}
+        ]
+      }
+    }

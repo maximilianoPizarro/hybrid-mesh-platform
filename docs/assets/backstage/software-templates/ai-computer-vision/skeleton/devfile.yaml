@@ -1,0 +1,64 @@
+schemaVersion: 2.2.0
+metadata:
+  name: ${{ values.name }}
+  version: 1.0.0
+  displayName: ${{ values.name }} — AI Computer Vision at the Edge
+  description: Personal NeuroFace instance scaffolded from Developer Hub
+  tags:
+    - Python
+    - Angular
+    - FastAPI
+    - computer-vision
+    - ppe
+  projectType: Python
+  language: Python
+
+components:
+  - name: backend
+    container:
+      image: registry.access.redhat.com/ubi9/python-311:latest
+      command: ['tail', '-f', '/dev/null']
+      mountSources: true
+      sourceMapping: /projects/${{ values.name }}
+      memoryLimit: 1Gi
+      cpuLimit: "1"
+      endpoints:
+        - name: backend-api
+          targetPort: 8080
+          exposure: public
+          protocol: https
+
+  - name: frontend
+    container:
+      image: registry.access.redhat.com/ubi9/nodejs-20:latest
+      command: ['tail', '-f', '/dev/null']
+      mountSources: true
+      sourceMapping: /projects/${{ values.name }}
+      memoryLimit: 512Mi
+      cpuLimit: 500m
+      endpoints:
+        - name: frontend-dev
+          targetPort: 4200
+          exposure: public
+          protocol: https
+
+commands:
+  - id: install-backend
+    exec:
+      label: Install backend dependencies
+      component: backend
+      workingDir: /projects/${{ values.name }}/backend
+      commandLine: pip install --user -r requirements.txt
+      group:
+        kind: build
+        isDefault: true
+
+  - id: run-backend
+    exec:
+      label: Run backend
+      component: backend
+      workingDir: /projects/${{ values.name }}/backend
+      commandLine: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+      group:
+        kind: run
+        isDefault: true

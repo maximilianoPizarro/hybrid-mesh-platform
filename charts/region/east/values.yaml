@@ -7,15 +7,16 @@ main:
 clusterGroup:
   name: east
   namespaces:
-    industrial-edge-tst-all: {}
-    industrial-edge-stormshift-messaging: {}
-    industrial-edge-ml-workspace: {}
-    industrial-edge-ci: {}
-    ml-development: {}
-    industrial-edge-data-lake: {}
+    # --- Industrial Edge (optional): uncomment with IE applications below ---
+    # industrial-edge-tst-all: {}
+    # industrial-edge-stormshift-messaging: {}
+    # industrial-edge-ml-workspace: {}
+    # industrial-edge-ci: {}
+    # ml-development: {}
+    # industrial-edge-data-lake: {}
+    # camel-dashboard: {}
     stackrox: {}
     devspaces: {}
-    camel-dashboard: {}
     spoke-gateway-system: {}
     neuroface-cv: {}
     service-interconnect: {}
@@ -102,11 +103,11 @@ clusterGroup:
       channel: stable-v1
   argoProjects:
   - platform
-  - operators-edge
+  # - operators-edge  # optional with IE stack
   - security
   - mesh
   - observability
-  - industrial-edge
+  # - industrial-edge  # optional: enable IE sensor stack
   - workshop
   - external-secrets
   - fleet-pull
@@ -145,12 +146,13 @@ clusterGroup:
       argoProject: security
       syncWave: '3'
       path: charts/all/kairos
-    camel-dashboard-openshift:
-      name: camel-dashboard-openshift
-      namespace: camel-dashboard
-      argoProject: industrial-edge
-      syncWave: '3'
-      path: charts/all/camel-dashboard-openshift
+    # --- Industrial Edge sensor stack (optional — disabled by default for AI CV demo) ---
+    # camel-dashboard-openshift:
+    #   name: camel-dashboard-openshift
+    #   namespace: camel-dashboard
+    #   argoProject: industrial-edge
+    #   syncWave: '3'
+    #   path: charts/all/camel-dashboard-openshift
     servicemeshoperator3:
       name: servicemeshoperator3
       namespace: istio-system
@@ -202,59 +204,10 @@ clusterGroup:
       argoProject: observability
       syncWave: '4'
       path: charts/all/kiali
-    industrial-edge-tst:
-      name: industrial-edge-tst
-      namespace: industrial-edge-tst-all
-      argoProject: industrial-edge
-      syncWave: '5'
-      path: charts/all/industrial-edge-tst
-      overrides:
-        - name: clusterName
-          value: east
-        - name: global.hubClusterDomain
-          value: '{{ $.Values.global.hubClusterDomain }}'
-    industrial-edge-stormshift:
-      name: industrial-edge-stormshift
-      namespace: industrial-edge-stormshift-messaging
-      argoProject: industrial-edge
-      syncWave: '5'
-      path: charts/all/industrial-edge-stormshift
-      overrides:
-        - name: clusterName
-          value: east
-    industrial-edge-pipelines:
-      name: industrial-edge-pipelines
-      namespace: industrial-edge-ci
-      argoProject: industrial-edge
-      syncWave: '5'
-      path: charts/all/industrial-edge-pipelines
-    industrial-edge-data-science-cluster:
-      name: industrial-edge-data-science-cluster
-      namespace: redhat-ods-applications
-      argoProject: industrial-edge
-      syncWave: '7'
-      path: charts/all/industrial-edge-data-science-cluster
-    industrial-edge-data-lake:
-      name: industrial-edge-data-lake
-      namespace: industrial-edge-data-lake
-      argoProject: industrial-edge
-      syncWave: '5'
-      path: charts/all/industrial-edge-data-lake
-      overrides:
-        - name: clusterName
-          value: east
-    industrial-edge-data-science-project:
-      name: industrial-edge-data-science-project
-      namespace: ml-development
-      argoProject: industrial-edge
-      syncWave: '5'
-      path: charts/all/industrial-edge-data-science-project
-    ie-anomaly-alerter:
-      name: ie-anomaly-alerter
-      namespace: industrial-edge-tst-all
-      argoProject: industrial-edge
-      syncWave: '6'
-      path: charts/all/ie-anomaly-alerter
+    # industrial-edge-tst:
+    #   name: industrial-edge-tst
+    #   ...
+    # ie-anomaly-alerter: (see git history to re-enable full IE stack)
     spoke-gateway:
       name: spoke-gateway
       namespace: spoke-gateway-system
@@ -298,12 +251,12 @@ clusterGroup:
       chart: openshift-external-secrets
       chartVersion: 0.0.*
       syncWave: '3'
-    operators-edge:
-      name: operators-edge
-      namespace: openshift-operators
-      argoProject: operators-edge
-      path: charts/all/operators-edge
-      syncWave: '2'
+    # operators-edge:
+    #   name: operators-edge
+    #   namespace: openshift-operators
+    #   argoProject: operators-edge
+    #   path: charts/all/operators-edge
+    #   syncWave: '2'
 gitops:
   repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
   revision: main

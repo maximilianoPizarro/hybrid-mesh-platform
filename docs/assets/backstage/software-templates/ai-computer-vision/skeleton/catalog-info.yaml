@@ -1,0 +1,23 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}-${{ values.owner }}
+  title: NeuroFace — ${{ values.owner }} (AI CV)
+  description: User-scaffolded NeuroFace instance for AI Computer Vision at the Edge
+  annotations:
+    backstage.io/kubernetes-namespace: ${{ values.name }}-${{ values.owner }}
+    backstage.io/kubernetes-cluster: hub
+    gitlab.com/project-slug: ws-${{ values.owner }}/${{ values.name }}
+    devspaces.io/factory: https://gitlab.apps.${{ values.clusterDomain }}/ws-${{ values.owner }}/${{ values.name }}
+  links:
+    - url: https://${{ values.name }}-${{ values.owner }}.apps.${{ values.clusterDomain }}
+      title: NeuroFace UI
+      icon: dashboard
+    - url: https://developer-hub.apps.${{ values.clusterDomain }}/catalog/default/system/neuroface
+      title: AI CV system (Developer Hub)
+      icon: catalog
+spec:
+  type: website
+  lifecycle: production
+  owner: ${{ values.owner }}
+  system: neuroface

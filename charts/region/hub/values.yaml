@@ -28,6 +28,7 @@ clusterGroup:
 #    maas-workshop: {}
 #    showroom: {}
 #    neuroface: {}
+    devspaces: {}
 #    cnv-workshop: {}
     # openshift-cnv OG + Subscription: operators-platform chart (avoid duplicate OG from clustergroup)
     redhat-connectivity-link-operator:
@@ -127,6 +128,16 @@ clusterGroup:
       name: openshift-external-secrets-operator
       namespace: external-secrets-operator
       channel: stable-v1
+    devspaces:
+      name: devspaces
+      namespace: openshift-operators
+      channel: stable
+      source: redhat-operators
+    kubernetes-imagepuller-operator:
+      name: kubernetes-imagepuller-operator
+      namespace: openshift-operators
+      channel: stable
+      source: community-operators
   argoProjects:
   - platform
   - operators-platform
@@ -452,6 +463,17 @@ clusterGroup:
           value: neuroface.{{ $.Values.global.localClusterDomain }}
         - name: ppeWorkbench.route.host
           value: ppe-workbench.{{ $.Values.global.localClusterDomain }}
+    devspaces:
+      name: devspaces
+      namespace: devspaces
+      argoProject: workshop
+      path: charts/all/devspaces
+      syncWave: '7'
+      overrides:
+        - name: userCount
+          value: "30"
+        - name: hubClusterDomain
+          value: '{{ $.Values.global.localClusterDomain }}'
     # --- Wave 8: CNV ---
     cnv-example:
       name: cnv-example

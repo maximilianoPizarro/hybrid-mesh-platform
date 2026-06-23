@@ -1,0 +1,53 @@
+{{- if and .Values.neuroface.ppe.enabled .Values.neuroface.ppe.kafka.enabled (.Values.neuroface.ppe.kafka.camelConsumer.enabled | default false) }}
+{{- $kafka := .Values.neuroface.ppe.kafka -}}
+{{- $domain := include "neuroface.hubClusterDomain" . -}}
+---
+apiVersion: camel.apache.org/v1
+kind: Integration
+metadata:
+  name: ppe-kafka-to-mailpit
+  namespace: neuroface
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app.kubernetes.io/part-of: neuroface
+spec:
+  dependencies:
+    - camel:jackson
+    - camel:kafka
+    - camel:mail
+  sources:
+    - name: ppe-kafka-mailpit.yaml
+      content: |
+        - route:
+            id: ppe-violation-alerts
+            from:
+              uri: kafka:{{ $kafka.topic }}
+              parameters:
+                brokers: {{ $kafka.bootstrap | quote }}
+                groupId: ppe-camel-consumer
+                autoOffsetReset: earliest
+            steps:
+              - unmarshal:
+                  json: {}
+              - choice:
+                  when:
+                    - simple: "${body[ppe_status]} == 'violation' || ${body[ppe_status]} == 'no_persons'"
+                      steps:
+                        - setHeader:
+                            name: subject
+                            simple: "PPE Alert: ${body[ppe_status]}"
+                        - setBody:
+                            simple: |
+                              PPE status: ${body[ppe_status]}
+                              Persons: ${body[person_count]}
+                              Missing: ${body[missing_ppe]}
+                              Present: ${body[present_ppe]}
+                              Time: ${body[timestamp]}
+                              NeuroFace: https://neuroface.{{ $domain }}/
+                        - to:
+                            uri: smtp://mailpit.mailpit.svc:1025
+                            parameters:
+                              from: ppe-alerts@neuroface.local
+                              to: safety-team@workshop.local
+{{- end }}

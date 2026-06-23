@@ -1,3 +1,4 @@
+{{- if .Values.industrialEdge.enabled }}
 apiVersion: skupper.io/v2alpha1
 kind: Connector
 metadata:
@@ -9,3 +10,4 @@ spec:
   routingKey: ie-api-{{ include "spoke-interconnect.clusterName" . }}
   host: line-dashboard.industrial-edge-tst-all.svc.cluster.local
   port: 3000
+{{- end }}

@@ -62,11 +62,19 @@ screenshots:
     wait_for: "Software Template"
     notes: Developer Hub → Create → Software Template
 
+  - filename: 13-ai-computer-vision.png
+    dest: docs/assets/images/workshop/13-ai-computer-vision.png
+    url: "https://neuroface.{hub_domain}/ppe"
+    wait_for: "PPE"
+    notes: NeuroFace PPE Safety — primary AI CV hero (module 13)
+
   - filename: 13-deploy-industrial-edge.png
     dest: docs/assets/images/workshop/13-deploy-industrial-edge.png
+    preserve: true
+    optional: true
     url: "https://industrial-edge.{hub_domain}/sensors"
     wait_for: "temperature"
-    notes: ManuELA Realtime Data — pump-1 temperature/vibration charts (east spoke IE stack)
+    notes: OPTIONAL — ManuELA sensors (IE stack disabled by default; modules 27-28)
 
   - filename: 14-kairos-scaling.png
     dest: docs/assets/images/workshop/14-kairos-scaling.png

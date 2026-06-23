@@ -1,4 +1,4 @@
-{{- if and .Values.neuroface.ppe.enabled .Values.neuroface.ppe.kafka.enabled }}
+{{- if and .Values.neuroface.ppe.enabled .Values.neuroface.ppe.kafka.enabled (not (.Values.neuroface.ppe.kafka.camelConsumer.enabled | default false)) (.Values.neuroface.ppe.kafka.mailpitConsumer.enabled | default true) }}
 {{- $kafka := .Values.neuroface.ppe.kafka -}}
 {{- $domain := include "neuroface.hubClusterDomain" . -}}
 ---

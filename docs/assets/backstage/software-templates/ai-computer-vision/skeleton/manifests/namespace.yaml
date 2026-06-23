@@ -1,10 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: neuroface
+  name: ${{ values.name }}-${{ values.owner }}
   labels:
-    istio.io/dataplane-mode: ambient
+    app.kubernetes.io/part-of: neuroface
     kubecost.io/team: neuroface
     kubecost.io/product: ai-vision
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"

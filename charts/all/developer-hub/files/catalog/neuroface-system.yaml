@@ -58,8 +58,11 @@ metadata:
       title: Open in DevSpaces
       icon: catalog
     - url: https://ai-gateway.__HUB_APPS_DOMAIN__/v1/chat/completions
-      title: AI Gateway — MaaS LLM
+      title: AI Gateway — MaaS (Kuadrant alternative)
       icon: api
+    - url: https://developer-hub.__HUB_APPS_DOMAIN__/kuadrant/api-products/ai-gateway-system/workshop-llm-tokens
+      title: Request API key (MaaS LLM)
+      icon: catalog
 spec:
   type: service
   lifecycle: production
@@ -71,6 +74,7 @@ spec:
     - ppe-kafka-events
   consumesApis:
     - kserve-ppe-v2
+    - workshop-maas-openapi
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -192,7 +196,7 @@ spec:
     openapi: 3.0.3
     info:
       title: NeuroFace PPE Detection API
-      version: 1.4.1
+      version: 1.5.0
       description: PPE safety detection via webcam frames (base64 JPEG)
     servers:
       - url: https://neuroface.__HUB_APPS_DOMAIN__
@@ -275,7 +279,7 @@ spec:
     openapi: 3.0.3
     info:
       title: KServe YOLO PPE Inference API
-      version: 1.4.1
+      version: 1.5.0
       description: YOLO PPE model serving via KServe RawDeployment
     servers:
       - url: http://yolo-ppe-serving.neuroface.svc:8080
@@ -339,7 +343,7 @@ spec:
     openapi: 3.0.3
     info:
       title: NeuroFace MaaS Chat API
-      version: 1.4.1
+      version: 1.5.0
       description: Chat with Granite LLM via AI Gateway; optional vision context from frame
     servers:
       - url: https://neuroface.__HUB_APPS_DOMAIN__
@@ -402,7 +406,7 @@ spec:
     asyncapi: 2.6.0
     info:
       title: PPE Kafka Events
-      version: 1.4.1
+      version: 1.5.0
       description: PPE detection events from NeuroFace backend to east Kafka via Skupper
     defaultContentType: application/json
     servers:

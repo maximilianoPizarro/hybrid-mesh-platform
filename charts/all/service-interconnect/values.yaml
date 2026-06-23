@@ -1,5 +1,10 @@
 clusterDomain: ""
 
+# Industrial Edge Skupper listeners (ie-gateway, ie-api, kafka stormshift/datalake).
+# Disabled by default — AI Computer Vision at the Edge uses neuroface-cv Kafka instead.
+industrialEdge:
+  enabled: false
+
 namespace: service-interconnect
 
 # Hub-only: push Skupper AccessTokens to spokes via ManagedClusterAction (sensitive

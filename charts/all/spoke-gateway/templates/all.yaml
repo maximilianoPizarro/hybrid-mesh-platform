@@ -24,6 +24,7 @@ spec:
       allowedRoutes:
         namespaces:
           from: Same
+{{- if .Values.industrialEdge.enabled }}
 ---
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
@@ -81,7 +82,8 @@ spec:
         - name: line-dashboard
           namespace: industrial-edge-tst-all
           port: 8080
-{{- if .Values.inferenceRoute.enabled }}
+{{- end }}
+{{- if and .Values.industrialEdge.enabled .Values.inferenceRoute.enabled }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

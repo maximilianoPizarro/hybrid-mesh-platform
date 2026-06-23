@@ -26,7 +26,7 @@ showroom:
       - ai-gateway-system
       - developer-hub
       - mcp-system
-      - industrial-edge-tst-all
+      # industrial-edge-tst-all — optional; enable Industrial Edge apps on spokes first
       - maas-workshop
       - neuroface
       - neuroface-cv
