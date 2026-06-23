@@ -13,7 +13,7 @@ Recorded against the live RHDP hub-spoke fleet while the workshop still runs the
 | `oc get managedcluster` east/west | **Available** |
 | Skupper hub site | **Ready**, 3 sites in network |
 | RHCL operator | **Installed** (stable channel) |
-| APIProduct (workshop) | workshop-httpbin, workshop-llm-tokens, workshop-restcountries |
+| APIProduct (workshop) | workshop-httpbin, workshop-llm-tokens, workshop-restcountries (via countriesnow.space) |
 
 ## Pattern install
 
