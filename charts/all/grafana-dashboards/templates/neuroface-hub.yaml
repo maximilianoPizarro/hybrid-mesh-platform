@@ -14,7 +14,7 @@ spec:
       "tags": ["neuroface", "ai-cv", "ppe", "kserve"],
       "timezone": "browser",
       "schemaVersion": 39,
-      "version": 1,
+      "version": 2,
       "panels": [
         {"type": "row", "title": "NeuroFace API", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}, "id": 1},
         {
@@ -23,40 +23,42 @@ spec:
           "gridPos": {"h": 8, "w": 12, "x": 0, "y": 1},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\"}[5m]))", "legendFormat": "req/s", "refId": "A"}
+            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\"}[5m])) or vector(0)", "legendFormat": "istio req/s", "refId": "A"},
+            {"expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"neuroface\",container=~\"neuroface-backend|neuroface-frontend\"}[5m]))", "legendFormat": "{{container}} CPU", "refId": "B"}
           ],
-          "fieldConfig": {"defaults": {"unit": "reqps"}}
+          "fieldConfig": {"defaults": {"unit": "short"}}
         },
         {
           "type": "timeseries",
-          "title": "PPE detection latency p95",
+          "title": "Container memory (neuroface pods)",
           "gridPos": {"h": 8, "w": 12, "x": 12, "y": 1},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_service_namespace=\"neuroface\",destination_workload=~\".*backend.*\"}[5m])) by (le)) / 1000", "legendFormat": "p95 s", "refId": "A"}
+            {"expr": "sum by (container) (container_memory_working_set_bytes{namespace=\"neuroface\",container=~\"neuroface-backend|neuroface-frontend|yolo-ppe.*\"})", "legendFormat": "{{container}}", "refId": "A"}
           ],
-          "fieldConfig": {"defaults": {"unit": "s"}}
+          "fieldConfig": {"defaults": {"unit": "bytes"}}
         },
         {"type": "row", "title": "KServe YOLO PPE", "gridPos": {"h": 1, "w": 24, "x": 0, "y": 9}, "id": 2},
         {
           "type": "timeseries",
-          "title": "yolo-ppe-serving inference req/s",
+          "title": "YOLO PPE serving — CPU usage",
           "gridPos": {"h": 8, "w": 12, "x": 0, "y": 10},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\",destination_workload=~\"yolo-ppe.*\"}[5m]))", "legendFormat": "infer req/s", "refId": "A"}
+            {"expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"neuroface\",pod=~\"yolo-ppe.*\"}[5m]))", "legendFormat": "CPU cores", "refId": "A"}
           ],
-          "fieldConfig": {"defaults": {"unit": "reqps"}}
+          "fieldConfig": {"defaults": {"unit": "short"}}
         },
         {
           "type": "stat",
-          "title": "Chat API 5xx rate",
+          "title": "NeuroFace pods ready",
           "gridPos": {"h": 8, "w": 12, "x": 12, "y": 10},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "sum(rate(istio_requests_total{destination_service_namespace=\"neuroface\",response_code=~\"5..\"}[5m]))", "legendFormat": "5xx/s", "refId": "A"}
+            {"expr": "count(kube_pod_status_ready{namespace=\"neuroface\",condition=\"true\"})", "legendFormat": "Ready", "refId": "A"}
           ],
-          "fieldConfig": {"defaults": {"unit": "reqps"}}
+          "fieldConfig": {"defaults": {"unit": "short"}},
+          "options": {"colorMode": "value", "graphMode": "none"}
         }
       ],
       "templating": {
