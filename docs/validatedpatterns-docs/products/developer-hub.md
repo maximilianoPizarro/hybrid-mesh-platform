@@ -126,7 +126,7 @@ targets:
   # ... (all templates use /-/blob/ not /-/raw/ for GitLab reader readTree support)
 ```
 
-> **Note:** Backstage `FetchUrlReader` (plain `url:`) does **not** implement `readTree`. Template targets must use `/-/blob/` (GitlabUrlReader) or `https://github.com/...` (GithubUrlReader). Never use `/-/raw/` for template files.
+- **Software Templates (Backstage/Developer Hub)** now natively support reading from Git directories using `url:` and GithubUrlReader/GitlabUrlReader. Note that if you bundle templates into ConfigMaps, the UI shows them immediately without GitLab being ready.
 
 Scaffolding flow (after template run):
 
@@ -235,14 +235,14 @@ Post-install: Argo app `hub-post-install-bootstrap` PostSync Jobs + `bash script
 | TechDocs `readTree` not implemented | GitHub Pages URL in `techdocs-ref` | Use GitHub repo tree URL: `url:https://github.com/<owner>/<repo>/tree/main/<path>` |
 | GitLab API calls return 404 `/repos/` | GitLab host under `integrations.github` | Remove GitLab from `github` block; leave only in `integrations.gitlab` |
 | Catalog warns `cnv-workshop.yaml does not exist` | Missing `extraFiles` mount | Add mount for `developer-hub-catalog-cnv-workshop` in `backstage-developer-hub.yaml` |
-| Software templates empty after login | GitLab `/-/raw/` URL | Bundle `catalog-software-templates.yaml` with `/-/blob/main/...` targets |
+| Software templates empty after login | Target not found | We now bundle `catalog-software-template-manifests.yaml` to avoid fetching issues |
 | DH rollout slow (5–10 min) | OCI plugin `install-dynamic-plugins` init | Expected — `oc rollout status deployment/backstage-developer-hub -n developer-hub` |
 
 ## GitLab integration notes
 
 - `integrations.gitlab` — correct host and `apiBaseUrl`
 - `integrations.github` — **only** `github.com`; never add GitLab host here (causes `/repos/` 404)
-- Software templates use `/-/blob/main/...` targets (not `/-/raw/`) — `GitlabUrlReader` supports readTree
+- Software templates are bundled directly in the Helm chart (`catalog-software-template-manifests.yaml`) to ensure they are always visible even if the external Git provider is down.
 - Onboarding TechDocs points to GitHub repo tree URL (not GitHub Pages) — `GithubUrlReader` supports readTree
 
 See also [Backstage assets README]({{ site.baseurl }}/assets/backstage/README.html) and the **developer-hub-scaffolder** Cursor skill.

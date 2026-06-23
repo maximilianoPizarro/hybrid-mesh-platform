@@ -5,10 +5,11 @@ metadata:
   description: Software Templates for Developer Hub
 spec:
   targets:
-    - ./industrial-edge/template.yaml
-    - ./industrial-edge-camel-kaoto/template.yaml
-    - ./camel-kaoto-cdc/template.yaml
-    - ./industrial-edge-delete/template.yaml
-    - ./industrial-edge-api-product/template.yaml
-    - ./openshift-ai-workspace/template.yaml
-    - ./cnv-vm-workshop/template.yaml
+    - ./industrial-edge.yaml
+    - ./industrial-edge-camel-kaoto.yaml
+    - ./camel-kaoto-cdc.yaml
+    - ./industrial-edge-delete.yaml
+    - ./industrial-edge-api-product.yaml
+    - ./openshift-ai-workspace.yaml
+    - ./cnv-vm-workshop.yaml
+    - ./ai-computer-vision.yaml
