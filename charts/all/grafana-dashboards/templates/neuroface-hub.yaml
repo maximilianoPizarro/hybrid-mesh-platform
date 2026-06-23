@@ -36,7 +36,7 @@ spec:
           "gridPos": {"h": 8, "w": 8, "x": 8, "y": 1},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "sum by (container) (rate(container_cpu_usage_seconds_total{namespace=\"neuroface\",container=~\"neuroface-backend|neuroface-frontend|yolo-ppe.*\"}[5m]))", "legendFormat": "{{container}}", "refId": "A"}
+            {"expr": "sum by (container) (rate(container_cpu_usage_seconds_total{namespace=\"neuroface\",container=~\"neuroface-backend|neuroface-frontend|yolo-ppe.*\"}[5m]))", "legendFormat": "{{ "{{" }}container{{ "}}" }}", "refId": "A"}
           ],
           "fieldConfig": {"defaults": {"unit": "short"}}
         },
@@ -46,7 +46,7 @@ spec:
           "gridPos": {"h": 8, "w": 8, "x": 16, "y": 1},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "sum by (container) (container_memory_working_set_bytes{namespace=\"neuroface\",container=~\"neuroface-backend|neuroface-frontend|yolo-ppe.*\"})", "legendFormat": "{{container}}", "refId": "A"}
+            {"expr": "sum by (container) (container_memory_working_set_bytes{namespace=\"neuroface\",container=~\"neuroface-backend|neuroface-frontend|yolo-ppe.*\"})", "legendFormat": "{{ "{{" }}container{{ "}}" }}", "refId": "A"}
           ],
           "fieldConfig": {"defaults": {"unit": "bytes"}}
         },
@@ -67,7 +67,7 @@ spec:
           "gridPos": {"h": 8, "w": 12, "x": 12, "y": 10},
           "datasource": {"type": "prometheus", "uid": "${ds_hub}"},
           "targets": [
-            {"expr": "sum by (pod) (kube_pod_container_status_restarts_total{namespace=\"neuroface\",pod=~\"yolo-ppe.*\"})", "legendFormat": "{{pod}}", "refId": "A"}
+            {"expr": "sum by (pod) (kube_pod_container_status_restarts_total{namespace=\"neuroface\",pod=~\"yolo-ppe.*\"})", "legendFormat": "{{ "{{" }}pod{{ "}}" }}", "refId": "A"}
           ],
           "fieldConfig": {"defaults": {"unit": "short"}}
         },
