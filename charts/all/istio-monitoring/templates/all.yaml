@@ -54,7 +54,7 @@ spec:
       - key: gateway.istio.io/managed
         operator: Exists
   podMetricsEndpoints:
-    - port: metrics
+    - port: http-envoy-prom
       interval: 15s
       path: /stats/prometheus
       scheme: http
