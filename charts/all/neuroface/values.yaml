@@ -4,10 +4,10 @@ neuroface:
   fullnameOverride: neuroface
   backend:
     image:
-      tag: v1.4.0
+      tag: v1.4.1
   frontend:
     image:
-      tag: v1.4.0
+      tag: v1.4.1
   chat:
     enabled: true
     autoServiceAccount: false
