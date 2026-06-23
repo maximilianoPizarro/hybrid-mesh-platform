@@ -44,6 +44,18 @@ Deep dive: [NeuroFace & CV journey](validatedpatterns-docs/products/neuroface.md
 | Troubleshooting | [Troubleshooting](validatedpatterns-docs/troubleshooting.md) |
 | **Workshop Showroom** | [Hybrid Mesh AI Workshop](validatedpatterns-docs/workshop/index.md) |
 
+## Cluster sizing
+
+| Role | Recommended | Minimum demo |
+| ---- | ----------- | ------------ |
+| **Hub** | 4 × 16 vCPU × 64 GiB | 3 × 8 × 32 GiB |
+| **Spoke (CPU)** | 3 × 8 vCPU × 32 GiB | 2 × 4 × 16 GiB |
+| **Spoke (GPU, optional)** | 3 × 8 vCPU × 32 GiB + 1× T4/A10G | — |
+
+Full tables, workload budgets, and GPU operators: [Bill of Materials — Cluster sizing](bill-of-materials.md#cluster-sizing).
+
+Verify: `bash scripts/verify-node-capacity.sh` · `ROLE=spoke bash scripts/verify-node-capacity.sh`
+
 ## Reference
 
 | Topic | Page |

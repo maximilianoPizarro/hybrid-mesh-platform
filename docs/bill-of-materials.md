@@ -85,6 +85,83 @@ This document lists all Red Hat and community products/operators consumed by the
 - Community operators may have different support lifecycle than Red Hat operators
 - For production deployments, pin specific versions in subscription manifests
 
+## Cluster sizing
+
+Sizing for **v2.2 AI CV at the Edge** (NeuroFace + OVMS ModelMesh + KServe YOLO on spokes). Industrial Edge optional and disabled by default.
+
+### Hub (CPU-only)
+
+| Tier | Workers | vCPU / worker | Memory / worker | Total alloc | Use case |
+|------|---------|---------------|-----------------|-------------|----------|
+| Recommended (workshop 30–50) | 4 | 16 | 64 GiB | 64 vCPU / 256 GiB | Full platform stack |
+| Minimum demo (1–5 users) | 3 | 8 | 32 GiB | 24 vCPU / 96 GiB | Disable Kubecost/CNV under pressure |
+
+Verify: `bash scripts/verify-node-capacity.sh` (hub 30: ≥16 CPU / 64 GiB; hub 50: ≥20 CPU / 80 GiB).
+
+### Spokes — CPU-only (default)
+
+| Tier | Workers | vCPU / worker | Memory / worker | Total alloc | Use case |
+|------|---------|---------------|-----------------|-------------|----------|
+| Recommended (AI CV + DevSpaces) | 3 | 8 | 32 GiB | 24 vCPU / 96 GiB | NeuroFace + OVMS + YOLO + DevSpaces |
+| Minimum demo (AI CV only) | 2 | 4 | 16 GiB | 8 vCPU / 32 GiB | NeuroFace + OVMS only |
+
+Verify: `ROLE=spoke bash scripts/verify-node-capacity.sh` (recommended: ≥24 CPU / 96 GiB; minimum: `SPOKE_TIER=minimum` ≥8 CPU / 32 GiB).
+
+**Spoke CPU workload budget (approximate):**
+
+| Component | CPU | Memory |
+|-----------|-----|--------|
+| OVMS ModelMesh (face detection) | 1 | 2 GiB |
+| KServe YOLO PPE (HPA 1–4) | 0.2–2 | 1–3 GiB |
+| NeuroFace app | 0.5 | 1 GiB |
+| Kafka (cv-kafka) | 1 | 2 GiB |
+| Skupper connectors | 0.2 | 0.5 GiB |
+| ACS Secured Cluster | 0.5 | 1.5 GiB |
+| Istio ambient + ztunnel | 0.3 | 0.5 GiB |
+| DevSpaces (per workspace) | 1 | 2 GiB |
+| Optional IE stack | +2 | +4 GiB |
+
+### Spokes — GPU-accelerated (optional)
+
+| Tier | Workers | vCPU / worker | Memory / worker | GPU / worker | Use case |
+|------|---------|---------------|-----------------|--------------|----------|
+| Recommended | 3 | 8 | 32 GiB | 1× T4 / A10G | OVMS GPU, YOLO GPU, vLLM 7B |
+| Production-like | 3 | 16 | 64 GiB | 1× A100 (24+ GB VRAM) | Multi-model, LLM 14–70B |
+
+**GPU VRAM budget:** OVMS ~2 GiB, YOLO ~2 GiB, vLLM 7B ~16 GiB, vLLM 14–70B ~24–80 GiB.
+
+## GPU operators (optional)
+
+Not installed by pattern default (CPU inference path). Required when GPU nodes are present.
+
+### Required (install order)
+
+| Operator | Channel | Catalog | Purpose |
+|----------|---------|---------|---------|
+| Node Feature Discovery (NFD) | stable | redhat-operators | Labels GPU nodes (`feature.node.kubernetes.io/pci-10de.present`) |
+| NVIDIA GPU Operator | stable | certified-operators | Drivers, device plugin, DCGM, container toolkit |
+
+### Optional
+
+| Operator | Channel | Catalog | When needed |
+|----------|---------|---------|-------------|
+| NVIDIA Network Operator | stable | certified-operators | GPUDirect RDMA, multi-node training |
+| OpenShift Serverless | stable | redhat-operators | Knative KServe (scale-to-zero on GPU) |
+| NVIDIA NIM Operator | stable | certified-operators | NVIDIA NIM optimized LLM containers |
+
+### Recommended cloud GPU instances
+
+| Cloud | Instance | GPU | VRAM | Use case |
+|-------|----------|-----|------|----------|
+| AWS | g4dn.xlarge | 1× T4 | 16 GB | OVMS + YOLO demo |
+| AWS | g5.2xlarge | 1× A10G | 24 GB | OVMS + YOLO + vLLM 7B |
+| AWS | p4d.24xlarge | 8× A100 | 320 GB | Large LLM 70B+ |
+| Azure | Standard_NC4as_T4_v3 | 1× T4 | 16 GB | Demo |
+| Azure | Standard_NC24ads_A100_v4 | 1× A100 | 80 GB | Large LLM |
+| GCP | a2-highgpu-1g | 1× A100 | 40 GB | Production inference |
+
+**Verify GPU:** `CHECK_GPU=1 ROLE=spoke bash scripts/verify-node-capacity.sh`
+
 ## Updating Versions
 
 To update operator versions:

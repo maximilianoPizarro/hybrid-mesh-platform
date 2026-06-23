@@ -2,18 +2,27 @@
 # Verify worker allocatable CPU/memory meets workshop minimums.
 #
 # Usage:
-#   bash scripts/verify-node-capacity.sh          # hub, 30 users (default)
-#   WORKSHOP_USERS=50 bash scripts/verify-node-capacity.sh
-#   ROLE=spoke bash scripts/verify-node-capacity.sh
+#   bash scripts/verify-node-capacity.sh                    # hub, 30 users (default)
+#   WORKSHOP_USERS=50 bash scripts/verify-node-capacity.sh  # hub, 50 users
+#   ROLE=spoke bash scripts/verify-node-capacity.sh         # spoke recommended (AI CV + DevSpaces)
+#   SPOKE_TIER=minimum ROLE=spoke bash scripts/verify-node-capacity.sh
+#   CHECK_GPU=1 ROLE=spoke bash scripts/verify-node-capacity.sh
 #
 # Thresholds (allocatable sum across workers, excluding control plane):
-#   hub 30 users: >= 16 CPU, >= 64 GiB
-#   hub 50 users: >= 20 CPU, >= 80 GiB
-#   spoke:        >= 10 CPU, >= 40 GiB
+#   hub 30 users:       >= 16 CPU, >= 64 GiB
+#   hub 50 users:       >= 20 CPU, >= 80 GiB
+#   spoke recommended:  >= 24 CPU, >= 96 GiB  (3×8×32 — NeuroFace + OVMS + YOLO + DevSpaces)
+#   spoke minimum:      >=  8 CPU, >= 32 GiB  (2×4×16 — NeuroFace + OVMS only)
+#
+# Spoke CPU workload budget (approximate):
+#   OVMS ModelMesh 1 CPU/2 GiB, YOLO PPE 0.2-2 CPU/1-3 GiB, NeuroFace 0.5/1 GiB,
+#   Kafka 1/2 GiB, Skupper 0.2/0.5 GiB, ACS 0.5/1.5 GiB, DevSpaces 1/2 GiB per workspace
 set -euo pipefail
 
 ROLE="${ROLE:-hub}"
 WORKSHOP_USERS="${WORKSHOP_USERS:-30}"
+SPOKE_TIER="${SPOKE_TIER:-recommended}"
+CHECK_GPU="${CHECK_GPU:-0}"
 MIN_CPU="${MIN_CPU:-}"
 MIN_MEM_GIB="${MIN_MEM_GIB:-}"
 
@@ -32,8 +41,20 @@ case "$ROLE" in
     fi
     ;;
   spoke)
-    MIN_CPU="${MIN_CPU:-10}"
-    MIN_MEM_GIB="${MIN_MEM_GIB:-40}"
+    if [[ -z "$MIN_CPU" ]]; then
+      case "$SPOKE_TIER" in
+        minimum)
+          MIN_CPU=8
+          MIN_MEM_GIB="${MIN_MEM_GIB:-32}"
+          ;;
+        recommended|*)
+          MIN_CPU=24
+          MIN_MEM_GIB="${MIN_MEM_GIB:-96}"
+          ;;
+      esac
+    else
+      MIN_MEM_GIB="${MIN_MEM_GIB:-96}"
+    fi
     ;;
   *)
     echo "ERROR: ROLE must be hub or spoke (got: $ROLE)" >&2
@@ -83,7 +104,7 @@ done < <(
 total_cpu=$(awk "BEGIN {printf \"%.1f\", ${total_cpu_m}/1000}")
 total_mem_gib=$(awk "BEGIN {printf \"%.1f\", ${total_mem_ki}/1024/1024}")
 
-echo "Role: ${ROLE} (workshop users: ${WORKSHOP_USERS})"
+echo "Role: ${ROLE} (workshop users: ${WORKSHOP_USERS}, spoke tier: ${SPOKE_TIER})"
 echo "Workers: ${count}"
 echo "Allocatable total: ${total_cpu} CPU, ${total_mem_gib} GiB"
 echo "Required minimum:  ${MIN_CPU} CPU, ${MIN_MEM_GIB} GiB"
@@ -92,9 +113,20 @@ fail=0
 awk -v have="$total_cpu" -v need="$MIN_CPU" 'BEGIN { exit (have+0 >= need+0) ? 0 : 1 }' || { echo "FAIL: CPU below minimum" >&2; fail=1; }
 awk -v have="$total_mem_gib" -v need="$MIN_MEM_GIB" 'BEGIN { exit (have+0 >= need+0) ? 0 : 1 }' || { echo "FAIL: memory below minimum" >&2; fail=1; }
 
+if [[ "$CHECK_GPU" == "1" ]]; then
+  gpu_total=$(oc get nodes -l node-role.kubernetes.io/worker= \
+    -o jsonpath='{range .items[*]}{.status.allocatable.nvidia\.com/gpu}{"\n"}{end}' 2>/dev/null \
+    | awk '{sum += ($1 == "" ? 0 : $1+0)} END {print sum+0}')
+  echo "GPU allocatable (nvidia.com/gpu): ${gpu_total}"
+  if [[ "${gpu_total:-0}" -lt 1 ]]; then
+    echo "FAIL: no nvidia.com/gpu allocatable on worker nodes (install NFD + NVIDIA GPU Operator)" >&2
+    fail=1
+  fi
+fi
+
 if (( fail > 0 )); then
   echo ""
-  echo "Hint: hub workshop-50 tier = 4 workers × 16 vCPU × 64 GiB (see README cluster sizing)."
+  echo "Hint: hub workshop-50 = 4×16×64 GiB; spoke recommended = 3×8×32 GiB (see README cluster sizing)."
   exit 1
 fi
 

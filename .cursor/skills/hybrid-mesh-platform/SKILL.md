@@ -24,6 +24,7 @@ hybrid-mesh-platform/
 │   ├── verify-workshop-http200.sh  # console links + workshop/AI strict 200 (skips IE when off)
 │   ├── verify-neuroface-cv.sh      # NeuroFace CV gateway + PPE path (primary edge AI gate)
 │   ├── verify-industrial-edge.sh   # Skupper VAN + IE route — skip unless VERIFY_IE=1 or hub-gateway
+│   ├── verify-node-capacity.sh     # hub/spoke CPU+mem thresholds; CHECK_GPU=1 for GPU nodes
 │   ├── lib/ie-enabled.sh           # IE optional detection (hub-gateway or VERIFY_IE=1)
 │   ├── verify-fleet.sh
 │   ├── sync-showroom-content.sh          # PNGs → showroom-hybrid-mesh-ai
@@ -83,6 +84,21 @@ Legacy names (`field-content-acm-hub-spoke`, `connectivityLink.apps[]`) are obso
 | **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, Skupper listeners, Grafana, Kafka Console, **`neuroface-gateway`** (50/50 CV), RHCL |
 | **East/West** | `charts/region/east\|west` | **`spoke-neuroface`** (full app + OVMS ModelMesh), **`spoke-neuroface-cv`** (PPE KServe), ACS Secured, Skupper connectors, ambient mesh |
 | **Optional** | region values (commented) | `hub-gateway`, `industrial-edge-*`, `spoke-gateway` — enable explicitly for factory telemetry demo |
+
+## Cluster sizing (v2.2 AI CV)
+
+| Role | Recommended | Minimum demo | Verify |
+|------|-------------|--------------|--------|
+| **Hub** | 4×16 vCPU×64 GiB (64 CPU / 256 GiB) | 3×8×32 GiB | `bash scripts/verify-node-capacity.sh` |
+| **Spoke CPU** | 3×8×32 GiB (24 CPU / 96 GiB) | 2×4×16 GiB | `ROLE=spoke bash scripts/verify-node-capacity.sh` |
+| **Spoke GPU** | 3×8×32 + 1× T4/A10G per worker | — | `CHECK_GPU=1 ROLE=spoke bash scripts/verify-node-capacity.sh` |
+
+- Hub does not run inference; GitLab ~20 GiB, Kubecost ~14 GiB (optional).
+- Spoke CPU budget: OVMS 1/2 GiB, YOLO 0.2–2/1–3 GiB, NeuroFace 0.5/1 GiB, Kafka 1/2 GiB, DevSpaces 1/2 GiB per workspace.
+- **GPU operators (not in pattern by default):** NFD (`redhat-operators`) → NVIDIA GPU Operator (`certified-operators`) → `ClusterPolicy` → InferenceService with `nvidia.com/gpu: "1"`.
+- Optional GPU ops: NVIDIA Network Operator, OpenShift Serverless, NVIDIA NIM Operator.
+
+Full tables: `docs/bill-of-materials.md#cluster-sizing` · `README.md#cluster-sizing`
 
 ## GitOps Strategy
 

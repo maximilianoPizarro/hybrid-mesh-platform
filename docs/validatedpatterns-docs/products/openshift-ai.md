@@ -88,6 +88,41 @@ Endpoint: `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` — keys via RHDP 
 - Catalog: **openshift-ai-workshop** / **maas-workshop-shared**
 - Kuadrant LLM API: `/kuadrant` → workshop MaaS API Product
 
+## GPU inference (optional)
+
+Default pattern path is **CPU-only** (`RawDeployment` KServe, OVMS `openvino_ir` on spokes). GPU accelerates OVMS face-detection, YOLO PPE, and enables self-hosted LLM (vLLM/TGIS) without external MaaS.
+
+### Prerequisites (install order)
+
+1. **Node Feature Discovery (NFD)** — `redhat-operators`, channel `stable`; create `NodeFeatureDiscovery` CR
+2. **NVIDIA GPU Operator** — `certified-operators`, channel `stable`; create `ClusterPolicy` CR (defaults OK for T4/A10G/A100)
+3. Wait for `nvidia-driver-daemonset` Ready on GPU nodes (~5 min)
+4. Verify: `oc exec -n nvidia-gpu-operator <driver-pod> -- nvidia-smi`
+5. OpenShift AI `DataScienceCluster` detects GPUs automatically in the dashboard
+
+Optional: **NVIDIA Network Operator** (distributed training), **OpenShift Serverless** (Knative KServe), **NVIDIA NIM Operator** (enterprise LLM).
+
+### InferenceService with GPU
+
+Add to predictor container resources when GPU nodes are labeled:
+
+```yaml
+resources:
+  limits:
+    nvidia.com/gpu: "1"
+```
+
+| Workload | CPU path | GPU path | VRAM |
+|----------|----------|----------|------|
+| OVMS face-detection | ~1 CPU, ~2 GiB | ~0.5 GPU | ~2 GiB |
+| YOLO PPE | ~0.2–2 CPU | ~0.5 GPU | ~2 GiB |
+| vLLM 7B (self-hosted) | N/A (use MaaS) | 1 GPU | ~16 GiB |
+| vLLM 14–70B | N/A | 1× A100 | 24–80 GiB |
+
+**Sizing:** see [Bill of Materials — GPU](../bill-of-materials.md#gpu-operators-optional). **Verify:** `CHECK_GPU=1 ROLE=spoke bash scripts/verify-node-capacity.sh`
+
+> Pattern charts do not install NFD/GPU Operator by default. GPU support in `spoke-neuroface` / `neuroface` charts is roadmap (optional `gpu.enabled` flag).
+
 ## Documentation
 
 - [Red Hat OpenShift AI documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/)

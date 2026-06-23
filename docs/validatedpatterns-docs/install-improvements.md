@@ -269,10 +269,19 @@ PostSync jobs:
 - `gitlab-workshop-bootstrap` — groups `ws-user1` … `ws-userN`, `developer-hub`, `app-of-apps`, `workshop-demos`
 - `gitlab-token-setup` (Developer Hub) — PAT → `GITLAB_TOKEN` in `developer-hub-oidc-auth`
 
-**Hub sizing (workshop 50):** GitLab standard consumes **8–16 GiB RAM** steady state. Use **4 workers × 16 vCPU × 64 GiB** — the old **3×8/32** tier causes **Evicted** pods during sync (kubelet memory pressure). Verify:
+**Hub sizing (workshop 30–50):** GitLab standard consumes **~20 GiB RAM** steady state; Kubecost adds **~14 GiB** (optional). Use **4 workers × 16 vCPU × 64 GiB** (64 vCPU / 256 GiB allocatable). The old **3×8×32** tier causes **Evicted** pods during sync (kubelet memory pressure). Minimum demo: **3×8×32** with Kubecost/CNV disabled.
+
+**Spoke sizing (AI CV default, CPU):** **3×8×32** (24 vCPU / 96 GiB) for NeuroFace + OVMS ModelMesh + KServe YOLO PPE + DevSpaces. Minimum demo: **2×4×16** (8 vCPU / 32 GiB), no DevSpaces.
+
+**Spoke sizing (GPU, optional):** add **1× NVIDIA T4/A10G per worker** for GPU-accelerated OVMS/YOLO or self-hosted vLLM 7B. Install **Node Feature Discovery** then **NVIDIA GPU Operator** before deploying InferenceServices with `nvidia.com/gpu` limits. Not included in pattern charts by default — see [Bill of Materials — GPU operators](../bill-of-materials.md#gpu-operators-optional).
+
+Verify:
 
 ```bash
 bash scripts/verify-node-capacity.sh
+WORKSHOP_USERS=50 bash scripts/verify-node-capacity.sh
+ROLE=spoke bash scripts/verify-node-capacity.sh
+CHECK_GPU=1 ROLE=spoke bash scripts/verify-node-capacity.sh
 ```
 
 **OpenShift AI 3.4:** subscription channel `stable-3.4`; dashboard URL `https://rh-ai.apps.<hub-domain>/`. Notebooks are **opt-in** (`notebook.deployCr: false`); PostSync scales `neuroface-ml-lab` StatefulSets to 0 until the AI module.

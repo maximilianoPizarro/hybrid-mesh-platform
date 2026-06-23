@@ -128,17 +128,58 @@ See [Region Strategy](docs/validatedpatterns-docs/region-strategy.md) for detail
 
 ## Cluster sizing
 
-| Role | Workers | vCPU / worker | Memory / worker | OpenShift | Notes |
-|------|---------|---------------|-----------------|-----------|-------|
-| **Hub (workshop 50)** | **4** | **16** | **64 GiB** | 4.17+ | GitLab standard + OpenShift AI 3.4; allocatable ≥ 20 CPU / 80 GiB |
-| Hub (minimum demo) | 3 | 8 | 32 GiB | 4.17+ | Insufficient for GitLab + 50 AI namespaces — expect Evicted pods |
-| **Spoke** | **3** | **4** | **16 GiB** | 4.17+ | NeuroFace/CV + DevSpaces (IE optional) |
+Sizing reflects **v2.2 AI CV at the Edge** (NeuroFace + OVMS ModelMesh + KServe YOLO on spokes). Industrial Edge is **optional** and off by default. Hub runs GitOps and platform services only — inference runs on spokes.
 
-Verify hub capacity after cluster provision:
+### Hub (CPU-only)
+
+| Tier | Workers | vCPU / worker | Memory / worker | Total alloc | Use case |
+|------|---------|---------------|-----------------|-------------|----------|
+| **Recommended (workshop 30–50)** | **4** | **16** | **64 GiB** | 64 vCPU / 256 GiB | Full stack: GitLab, Developer Hub, OpenShift AI 3.4, Kubecost, Quay, CNV, Kuadrant, Lightspeed, ACS |
+| Minimum demo (1–5 users) | 3 | 8 | 32 GiB | 24 vCPU / 96 GiB | Tight; disable Kubecost/CNV or expect Evicted pods under load |
+
+**Notes:** On RHDP, control-plane nodes are schedulable and carry ~50% of memory (kube-apiserver, etcd, monitoring). GitLab alone uses ~20 GiB steady state. Kubecost adds ~14 GiB — disable on minimum-demo tiers.
+
+### Spokes — CPU-only (default)
+
+All inference on CPU: OVMS `openvino_ir` face-detection, KServe YOLO PPE `best.pt`.
+
+| Tier | Workers | vCPU / worker | Memory / worker | Total alloc | Use case |
+|------|---------|---------------|-----------------|-------------|----------|
+| **Recommended (AI CV + DevSpaces)** | **3** | **8** | **32 GiB** | 24 vCPU / 96 GiB | NeuroFace + OVMS ModelMesh + YOLO PPE + DevSpaces + Kafka + Skupper |
+| Minimum demo (AI CV only) | 2 | 4 | 16 GiB | 8 vCPU / 32 GiB | NeuroFace + OVMS only; no DevSpaces; tight on KServe cold starts |
+
+### Spokes — GPU-accelerated (optional)
+
+For faster OVMS/YOLO throughput or self-hosted LLM (vLLM). Requires **NFD** + **NVIDIA GPU Operator** on the spoke (not in pattern by default).
+
+| Tier | Workers | vCPU / worker | Memory / worker | GPU / worker | Total GPU | Use case |
+|------|---------|---------------|-----------------|--------------|-----------|----------|
+| Recommended (inference + DevSpaces) | 3 | 8 | 32 GiB | 1× T4 / A10G | 3 | OVMS GPU, YOLO GPU, local vLLM 7B, DevSpaces |
+| Production-like (multi-model) | 3 | 16 | 64 GiB | 1× A100 / A10G (24+ GB VRAM) | 3 | Multiple InferenceServices, self-hosted LLM 14–70B |
+
+Set `resources.limits.nvidia.com/gpu: "1"` on InferenceService predictors when GPU nodes are available.
+
+### GPU operators (install before AI workloads on GPU nodes)
+
+| Operator | Channel | Catalog | Install on |
+|----------|---------|---------|------------|
+| **Node Feature Discovery (NFD)** | stable | redhat-operators | Spokes (or hub) with GPU nodes |
+| **NVIDIA GPU Operator** | stable | certified-operators | Spokes with GPU nodes |
+
+Optional: **NVIDIA Network Operator** (distributed training), **OpenShift Serverless** (Knative KServe scale-to-zero), **NVIDIA NIM Operator** (enterprise LLM).
+
+**Cloud examples:** AWS `g4dn.xlarge` (T4), `g5.2xlarge` (A10G + vLLM 7B); Azure `Standard_NC4as_T4_v3`; GCP `a2-highgpu-1g` (A100).
+
+See [Bill of Materials — Cluster sizing](docs/bill-of-materials.md#cluster-sizing) and [OpenShift AI — GPU inference](docs/validatedpatterns-docs/products/openshift-ai.md#gpu-inference-optional).
+
+Verify capacity after cluster provision:
 
 ```bash
 bash scripts/verify-node-capacity.sh
+WORKSHOP_USERS=50 bash scripts/verify-node-capacity.sh
 ROLE=spoke bash scripts/verify-node-capacity.sh
+SPOKE_TIER=minimum ROLE=spoke bash scripts/verify-node-capacity.sh
+CHECK_GPU=1 ROLE=spoke bash scripts/verify-node-capacity.sh
 ```
 
 ## Verification

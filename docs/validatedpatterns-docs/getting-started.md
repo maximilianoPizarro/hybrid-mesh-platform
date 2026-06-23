@@ -25,7 +25,9 @@ This guide bootstraps the **hub** with one Helm install, registers **east** and 
 ## Prerequisites
 
 - OpenShift **4.17+** on hub + two spokes
-- **Hub workshop 50:** **4 workers × 16 vCPU × 64 GiB** (GitLab + OpenShift AI 3.4). Spokes: **3 × 4 vCPU × 16 GiB**.
+- **Hub (workshop 30–50):** **4 workers × 16 vCPU × 64 GiB** (GitLab + OpenShift AI 3.4 + Developer Hub). Minimum demo: 3 × 8 × 32 GiB (disable Kubecost/CNV).
+- **Spokes (CPU, default):** **3 × 8 vCPU × 32 GiB** for AI CV + DevSpaces; minimum demo **2 × 4 × 16 GiB** (NeuroFace/OVMS only).
+- **Spokes (GPU, optional):** add **1 GPU worker** (T4/A10G) per spoke; install **NFD** + **NVIDIA GPU Operator** before InferenceServices — see [Cluster sizing](../bill-of-materials.md#cluster-sizing).
 - **Helm 3** and **`oc`** (cluster-admin on hub for ACM import)
 - Fork of this repository; RHDP injects `deployer.domain` / `deployer.apiUrl` per cluster — see [RHDP field content](rhdp-field-content.md)
 
