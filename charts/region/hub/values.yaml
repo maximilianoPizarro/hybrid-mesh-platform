@@ -288,12 +288,13 @@ clusterGroup:
       overrides:
         - name: workshopGateways.enabled
           value: "true"
-    industrial-edge-minio:
-      name: industrial-edge-minio
-      namespace: industrial-edge-ml-workspace
-      argoProject: ai
-      path: charts/all/industrial-edge-minio
-      syncWave: '2'
+    # industrial-edge-minio: disabled — IE stack not deployed
+    # industrial-edge-minio:
+    #   name: industrial-edge-minio
+    #   namespace: industrial-edge-ml-workspace
+    #   argoProject: ai
+    #   path: charts/all/industrial-edge-minio
+    #   syncWave: '2'
     mailpit:
       name: mailpit
       namespace: mailpit
@@ -378,12 +379,13 @@ clusterGroup:
       path: charts/all/workshop-registration
       syncWave: '4'
     # --- Wave 5: Gateway + AI + tracing ---
-    hub-gateway:
-      name: hub-gateway
-      namespace: hub-gateway-system
-      argoProject: mesh
-      path: charts/all/hub-gateway
-      syncWave: '5'
+    # hub-gateway: disabled — IE not deployed; neuroface uses its own gateway
+    # hub-gateway:
+    #   name: hub-gateway
+    #   namespace: hub-gateway-system
+    #   argoProject: mesh
+    #   path: charts/all/hub-gateway
+    #   syncWave: '5'
     neuroface-gateway:
       name: neuroface-gateway
       namespace: neuroface-gateway-system

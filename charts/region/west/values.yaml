@@ -17,7 +17,7 @@ clusterGroup:
     # camel-dashboard: {}
     stackrox: {}
     devspaces: {}
-    spoke-gateway-system: {}
+    # spoke-gateway-system: {} # disabled — IE not deployed
     neuroface-cv: {}
     neuroface: {}
     service-interconnect: {}
@@ -201,12 +201,13 @@ clusterGroup:
       syncWave: '4'
       path: charts/all/kiali
     # industrial-edge-tst through ie-anomaly-alerter: disabled (see east/values.yaml)
-    spoke-gateway:
-      name: spoke-gateway
-      namespace: spoke-gateway-system
-      argoProject: mesh
-      syncWave: '6'
-      path: charts/all/spoke-gateway
+    # spoke-gateway: disabled — IE not deployed; neuroface has its own gateway in spoke-neuroface
+    # spoke-gateway:
+    #   name: spoke-gateway
+    #   namespace: spoke-gateway-system
+    #   argoProject: mesh
+    #   syncWave: '6'
+    #   path: charts/all/spoke-gateway
     spoke-interconnect:
       name: spoke-interconnect
       namespace: service-interconnect
