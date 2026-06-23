@@ -88,7 +88,7 @@ metadata:
     backstage.io/kubernetes-cluster: hub
     openshift.ai/project: neuroface
   links:
-    - url: https://rh-ai.apps.__HUB_APPS_DOMAIN__/projects/neuroface
+    - url: https://rh-ai.__HUB_APPS_DOMAIN__/projects/neuroface
       title: OpenShift AI — neuroface project
       icon: dashboard
     - url: https://neuroface.__HUB_APPS_DOMAIN__/api/ready
@@ -120,7 +120,7 @@ metadata:
     - url: https://ppe-workbench.__HUB_APPS_DOMAIN__
       title: PPE Workbench
       icon: dashboard
-    - url: https://rh-ai.apps.__HUB_APPS_DOMAIN__/projects/neuroface
+    - url: https://rh-ai.__HUB_APPS_DOMAIN__/projects/neuroface
       title: OpenShift AI Dashboard
       icon: catalog
 spec:
@@ -144,7 +144,7 @@ metadata:
     - url: https://ppe-retrain-workbench.__HUB_APPS_DOMAIN__
       title: PPE Retrain Workbench
       icon: dashboard
-    - url: https://rh-ai.apps.__HUB_APPS_DOMAIN__/projects/neuroface
+    - url: https://rh-ai.__HUB_APPS_DOMAIN__/projects/neuroface
       title: OpenShift AI Dashboard
       icon: catalog
 spec:
@@ -499,7 +499,7 @@ metadata:
     backstage.io/kubernetes-cluster: hub
     openshift.ai/project: neuroface
   links:
-    - url: https://rh-ai.apps.__HUB_APPS_DOMAIN__/projects/neuroface
+    - url: https://rh-ai.__HUB_APPS_DOMAIN__/projects/neuroface
       title: OpenShift AI — Model Serving
       icon: dashboard
 spec:
