@@ -4,10 +4,10 @@ neuroface:
   fullnameOverride: neuroface
   backend:
     image:
-      tag: v1.5.0
+      tag: v1.4.1
   frontend:
     image:
-      tag: v1.5.0
+      tag: v1.4.1
   chat:
     enabled: true
     autoServiceAccount: false
@@ -24,7 +24,7 @@ neuroface:
     enabled: false
   ppe:
     enabled: true
-    # Hub-local YOLO InferenceService (KServe v1.5.0).
+    # Hub-local YOLO InferenceService (KServe v1.4.1).
     # CV gateway (neuroface-cv.<hub>) handles federated 50/50 east/west separately.
     useFederatedGateway: false
     # Injected into neuroface-config ConfigMap as NEUROFACE_PPE_* (backend envFrom).
@@ -34,7 +34,7 @@ neuroface:
     serving:
       image:
         repository: quay.io/maximilianopizarro/neuroface-ppe-serving
-        tag: v1.5.0
+        tag: v1.4.1
     kafka:
       enabled: true
       bootstrap: "kafka-east-tst.service-interconnect.svc:9092"
@@ -59,7 +59,7 @@ neuroface:
 yoloPpeServing:
   enabled: true
   replicas: 1
-  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.5.0
+  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.4.1
   modelFile: best.pt
   storageSecretName: aws-connection-ppe-models
   storagePath: ppe-detection/model
