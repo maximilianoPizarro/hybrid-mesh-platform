@@ -1,6 +1,6 @@
 dependencies:
 - name: neuroface
   repository: https://maximilianopizarro.github.io/neuroface/
-  version: 1.4.1
-digest: sha256:f55b8645afee1ecf311fab7edd9c11cd45b3434bda18406204a1a5f152fecbe0
-generated: "2026-06-22T20:09:45.1615615-03:00"
+  version: 1.4.2
+digest: sha256:b322493314f122af1656a825847888e73193431ee3dd483444d7ebc54a70e00d
+generated: "2026-06-23T15:02:00.0000000-03:00"

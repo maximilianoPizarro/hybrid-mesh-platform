@@ -24,6 +24,8 @@ spec:
           value: /mnt/models/{{ $modelFile }}
         - name: MODEL_NAME
           value: yolo-ppe
+        - name: CLUSTER_NAME
+          value: hub
       ports:
         - containerPort: 8080
           protocol: TCP

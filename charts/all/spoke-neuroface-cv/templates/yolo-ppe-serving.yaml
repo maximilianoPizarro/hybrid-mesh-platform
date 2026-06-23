@@ -23,6 +23,8 @@ spec:
           value: /mnt/models/{{ $modelFile }}
         - name: MODEL_NAME
           value: yolo-ppe
+        - name: CLUSTER_NAME
+          value: {{ include "spoke-neuroface-cv.clusterName" . | quote }}
       ports:
         - containerPort: 8080
           protocol: TCP

@@ -2,12 +2,13 @@ clusterDomain: ""
 
 neuroface:
   fullnameOverride: neuroface
+  clusterName: hub
   backend:
     image:
-      tag: v1.5.0
+      tag: v1.5.1
   frontend:
     image:
-      tag: v1.5.0
+      tag: v1.5.1
   chat:
     enabled: true
     autoServiceAccount: false
@@ -34,7 +35,7 @@ neuroface:
     serving:
       image:
         repository: quay.io/maximilianopizarro/neuroface-ppe-serving
-        tag: v1.5.0
+        tag: v1.5.1
     kafka:
       enabled: true
       bootstrap: "kafka-east-tst.service-interconnect.svc:9092"
@@ -59,7 +60,7 @@ neuroface:
 yoloPpeServing:
   enabled: true
   replicas: 1
-  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.5.0
+  image: quay.io/maximilianopizarro/neuroface-ppe-serving:v1.5.1
   modelFile: best.pt
   storageSecretName: aws-connection-ppe-models
   storagePath: ppe-detection/model
