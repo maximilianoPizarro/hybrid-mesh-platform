@@ -21,6 +21,8 @@ components:
     namespace: neuroface
     argoProject: fleet-push
     syncWave: "8"
+    subchartClusterName:
+      - neuroface
 
 subscriptions:
   - name: servicemeshoperator3

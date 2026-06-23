@@ -42,6 +42,10 @@ spec:
 {{- with .extraValues }}
 {{ toYaml . | indent 8 }}
 {{- end }}
+{{- range .subchartClusterName | default list }}
+        {{ . }}:
+          clusterName: {{ $.Values.clusterName | quote }}
+{{- end }}
   destination:
     name: {{ $.Values.clusterName | quote }}
     namespace: {{ .namespace | quote }}
