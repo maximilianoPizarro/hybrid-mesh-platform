@@ -2,6 +2,10 @@
 # Curl every ConsoleLink href and report HTTP status (hub or current oc context).
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/ie-enabled.sh
+source "$ROOT/scripts/lib/ie-enabled.sh"
+
 TIMEOUT="${CURL_TIMEOUT:-5}"
 MIN_OK="${MIN_OK_CODE:-200}"
 MAX_OK="${MAX_OK_CODE:-399}"
@@ -47,6 +51,12 @@ link_ok() {
     platform-ai-gateway)
       # Kuadrant gateway: route up; 401/404 without APIKEY is expected in smoke tests
       [[ "$code" == "401" || "$code" == "403" || "$code" == "404" ]] && return 0
+      ;;
+    platform-industrial-edge)
+      # IE disabled by default — ConsoleLink may remain while hub-gateway is off
+      if ! ie_enabled; then
+        [[ "$code" == "503" || "$code" == "404" ]] && return 0
+      fi
       ;;
     vault-link)
       [[ "$code" == "302" || "$code" == "303" || "$code" == "307" || "$code" == "401" || "$code" == "403" ]] && return 0

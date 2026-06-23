@@ -2,16 +2,29 @@
 layout: default
 title: Home
 nav_order: 1
-description: "Hybrid Mesh Platform — secure multi-cluster GitOps on OpenShift with ACM, Skupper, AI, and Industrial Edge. Sandbox-tier Validated Pattern."
+description: "Hybrid Mesh Platform — secure multi-cluster GitOps on OpenShift with ACM, Skupper, AI Computer Vision at the Edge, and optional Industrial Edge. Sandbox-tier Validated Pattern."
 ---
 
 # Hybrid Mesh Platform
 
-**One Git repo governs three OpenShift clusters** — secure connectivity, fleet GitOps, AI inference, and Industrial Edge workloads across hub and spokes without manual operator management.
+**One Git repo governs three OpenShift clusters** — secure connectivity, fleet GitOps, **AI Computer Vision at the Edge**, and optional factory telemetry across hub and spokes.
 
-> Deploy hub + east + west on OpenShift via RHDP or `./pattern.sh install`, connect clusters with ACM and Skupper, and run Industrial Edge workloads from Developer Hub templates.
+> **Primary demo (v2.2+):** NeuroFace full stack on **east/west spokes** — face detection (OVMS ModelMesh), PPE safety (YOLO/KServe), Kafka events, Grafana — federated via **Skupper** and **Gateway API 50/50** from the hub (`neuroface`, `neuroface-cv` routes).
 
-**Multi-cluster GitOps** using Red Hat Advanced Cluster Management, OpenShift GitOps (Argo CD), ambient Service Mesh, Connectivity Link (Kuadrant), Skupper, Grafana, ACS, Developer Hub, and Industrial Edge.
+> **Optional:** Industrial Edge (MQTT → Kafka → line-dashboard, sensors) is **disabled by default**. Uncomment IE apps in `charts/region/*/values.yaml` to enable.
+
+**Multi-cluster GitOps** using Red Hat Advanced Cluster Management, OpenShift GitOps (Argo CD), ambient Service Mesh, Connectivity Link (Kuadrant), Skupper, Grafana, ACS, Developer Hub, and OpenShift AI.
+
+## AI Computer Vision at the Edge (primary)
+
+| Surface | URL | What it shows |
+| ------- | --- | ------------- |
+| NeuroFace app | `https://neuroface.<hub-domain>/` | Full UI — 50/50 east/west via hub Gateway |
+| NeuroFace CV | `https://neuroface-cv.<hub-domain>/` | PPE gateway (YOLO on spokes) |
+| Developer Hub | `https://developer-hub.<hub-domain>/create` | **AI Computer Vision at the Edge** template |
+| Grafana | `https://grafana.<hub-domain>/` | NeuroFace east/west + hub gateway metrics |
+
+Deep dive: [NeuroFace & CV journey](validatedpatterns-docs/products/neuroface.md) · [Workshop modules 13–16](validatedpatterns-docs/workshop/index.md)
 
 ## Quick links
 
@@ -27,6 +40,7 @@ description: "Hybrid Mesh Platform — secure multi-cluster GitOps on OpenShift 
 | Secrets (`values-secret.yaml`) | [Secrets configuration](validatedpatterns-docs/secrets-configuration.md) |
 | Red Hat products | [Products index](validatedpatterns-docs/products/index.md) |
 | Scaffolding | [Scaffolding](validatedpatterns-docs/scaffolding.md) |
+| Industrial Edge *(optional)* | [Industrial Edge](validatedpatterns-docs/industrial-edge.md) |
 | Troubleshooting | [Troubleshooting](validatedpatterns-docs/troubleshooting.md) |
 | **Workshop Showroom** | [Hybrid Mesh AI Workshop](validatedpatterns-docs/workshop/index.md) |
 
@@ -45,21 +59,23 @@ description: "Hybrid Mesh Platform — secure multi-cluster GitOps on OpenShift 
 | `charts/region/hub/` | Hub cluster bootstrap + clusterGroup values |
 | `charts/region/east/` | East spoke bootstrap + clusterGroup values |
 | `charts/region/west/` | West spoke bootstrap + clusterGroup values |
-| `charts/all/` | Cross-cluster Helm components (50+ charts) |
+| `charts/all/` | Cross-cluster Helm charts (50+ charts) |
 | `values-global.yaml` | Pattern-wide globals |
 | `overrides/` | Platform-specific value overrides |
 | `docs/` | GitHub Pages documentation |
 
-## Key charts
+## Key charts (default deploy)
 
 | Chart | Purpose |
 | ----- | ------- |
+| `spoke-neuroface` | Full NeuroFace stack on spokes + OVMS ModelMesh + spoke Gateway |
+| `spoke-neuroface-cv` | YOLO PPE InferenceService, Kafka, MinIO data path |
+| `neuroface-gateway` | Hub routes 50/50 east/west + CV gateway |
 | `acm-operator` | ACM MultiClusterHub installation |
 | `acm-hub-spoke` | Spoke registration + GitOpsCluster |
-| `console-links` | OpenShift Console quick links |
-| `platform-validation` | Automated validation CronJobs |
+| `developer-hub` | Catalog, software templates, scaffolder |
 | `fleet-values-sync` | Cross-cluster domain sync |
 
 Pattern repo: [github.com/maximilianoPizarro/hybrid-mesh-platform](https://github.com/maximilianoPizarro/hybrid-mesh-platform)
 
-**Next →** [Architecture](validatedpatterns-docs/architecture.md)
+**Next →** [NeuroFace & AI CV](validatedpatterns-docs/products/neuroface.md)

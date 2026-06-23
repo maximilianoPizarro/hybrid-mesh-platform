@@ -17,12 +17,14 @@ When validation fails, start with [Verification scripts](validatedpatterns-docs/
 | Outcome | Validation |
 | ------- | ---------- |
 | Fleet inventory | `oc get managedclusters` — east/west **Available** |
-| One-click platform access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **20** links HTTP 200 (see [checklist](#hub-console-links-20-expected)) |
-| Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — **20** surfaces (incl. DevSpaces, IE line-dashboard, AI gateway) |
+| One-click platform access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **19–20** links HTTP 200 (IE link 503 OK when disabled) |
+| **AI CV at edge** | `bash scripts/verify-neuroface-cv.sh` — NeuroFace CV gateway + PPE path |
+| Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — skips IE/line-dashboard when `hub-gateway` not deployed |
 | Kuadrant protection | `bash scripts/verify-workshop-kuadrant-curl.sh` — `workshop-apis` and `ai-gateway` return **401** without API key |
-| Private hub↔spoke mesh | `bash scripts/verify-industrial-edge.sh` — Skupper `sitesInNetwork: 3`, hub IE route 200 |
+| Private hub↔spoke mesh | Skupper `sitesInNetwork: 3` on hub site |
+| Industrial Edge *(optional)* | `VERIFY_IE=1 bash scripts/verify-industrial-edge.sh` — hub IE route 200 |
 | Fleet GitOps | `bash scripts/verify-fleet.sh` — east/west **Available** |
-| VP Interop Tests | `make qe-tests` → `tests/interop/run_tests.sh` — subscription, pod health, HTTP surfaces |
+| VP Interop Tests | `make qe-tests` → `tests/interop/run_tests.sh` — subscription, pod health, HTTP surfaces (IE tests skip unless `VERIFY_IE=1`) |
 
 Allow **60–90 minutes** after hub sync for all console links to converge; **503** usually means the route exists but backends are still starting (see playbook).
 

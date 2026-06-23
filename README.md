@@ -15,12 +15,13 @@ Enterprise teams need **secure multi-cluster connectivity**, **centralized GitOp
 Hybrid Mesh Platform combines:
 
 - **Hub-spoke fleet management** (ACM) with dual GitOps (PUSH ApplicationSet + PULL clustergroup per spoke)
-- **Cross-cluster service connectivity** (Skupper VAN) so the hub reaches spoke Kafka, metrics, and gateways privately
-- **Industrial Edge** factory telemetry (MQTT → Kafka → ML → dashboards) on east/west spokes
+- **Cross-cluster service connectivity** (Skupper VAN) so the hub reaches spoke Kafka, metrics, NeuroFace gateways, and CV inference privately
+- **AI Computer Vision at the Edge** — NeuroFace full stack on east/west spokes (OVMS ModelMesh face detection, YOLO PPE, Kafka, Grafana), federated 50/50 from hub Gateway API
+- **Industrial Edge** factory telemetry (MQTT → Kafka → ML → dashboards) — **optional, disabled by default** on spokes
 - **Centralized security and observability** (ACS Central, Grafana, Kafka Console on the hub)
-- **Developer experience** (Developer Hub templates, OpenShift AI / MaaS, Gateway API ingress via RHCL/Kuadrant)
+- **Developer experience** (Developer Hub templates incl. `ai-computer-vision`, OpenShift AI / MaaS, Gateway API ingress via RHCL/Kuadrant)
 
-See the [architecture overview](docs/validatedpatterns-docs/architecture.md) for hub→spoke diagrams and an end-to-end sensor trace.
+See the [NeuroFace & CV journey](docs/validatedpatterns-docs/products/neuroface.md) for the primary demo path, or [architecture overview](docs/validatedpatterns-docs/architecture.md) for hub→spoke diagrams.
 
 ## Architecture at a glance
 
@@ -41,8 +42,8 @@ flowchart TB
     ACM[ACM]
   end
   subgraph spokes["Spokes"]
-    PULL[PULL: IE · mesh · observability]
-    PUSH[PUSH: operators-ci · operators-platform]
+    PULL[PULL: neuroface · mesh · observability]
+    PUSH[PUSH: operators-ci · operators-platform · spoke-neuroface]
   end
   H --> FC
   E --> PULL
@@ -63,11 +64,12 @@ flowchart TB
 
 | Component | What it does for you |
 | --------- | -------------------- |
-| **ACM + dual GitOps** | Fleet inventory, placement, PUSH operators + PULL IE/mesh per spoke |
-| **Skupper** | Private TCP bridge hub ↔ spokes (Kafka Console, Grafana, hub-gateway) |
+| **ACM + dual GitOps** | Fleet inventory, placement, PUSH operators + PULL neuroface/mesh per spoke |
+| **Skupper** | Private TCP bridge hub ↔ spokes (NeuroFace gateways, Kafka, Grafana datasources) |
 | **RHCL / Kuadrant** | Gateway API ingress with optional rate limits and API keys |
-| **Industrial Edge** | MQTT, Camel K, Kafka, Tekton CI, anomaly ML at the edge |
-| **OpenShift AI + MaaS** | Hub workbenches, model serving, external LLM via RHDP LiteMaaS |
+| **NeuroFace / AI CV** | Full app + PPE inference on spokes; hub `neuroface-gateway` 50/50 routing |
+| **Industrial Edge** *(optional)* | MQTT, Camel K, Kafka, Tekton CI, line-dashboard — enable in region values |
+| **OpenShift AI + MaaS** | Hub workbenches, ModelMesh/OVMS on spokes, external LLM via RHDP LiteMaaS |
 | **ACS** | Central vulnerability and runtime policy across hub + spokes |
 | **Developer Hub** | Catalog, scaffolding, multi-cluster topology, Tekton visibility |
 
@@ -118,9 +120,9 @@ hybrid-mesh-platform/
 
 | Cluster | Bootstrap Path | Description |
 |---------|----------------|-------------|
-| **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, GitLab, Quay |
-| **East** | `charts/region/east` | Industrial Edge, ACS Secured, Skupper |
-| **West** | `charts/region/west` | Industrial Edge, ACS Secured, Skupper |
+| **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, GitLab, neuroface-gateway |
+| **East** | `charts/region/east` | NeuroFace/CV (default), ACS Secured, Skupper |
+| **West** | `charts/region/west` | NeuroFace/CV (default), ACS Secured, Skupper |
 
 See [Region Strategy](docs/validatedpatterns-docs/region-strategy.md) for details.
 
@@ -130,7 +132,7 @@ See [Region Strategy](docs/validatedpatterns-docs/region-strategy.md) for detail
 |------|---------|---------------|-----------------|-----------|-------|
 | **Hub (workshop 50)** | **4** | **16** | **64 GiB** | 4.17+ | GitLab standard + OpenShift AI 3.4; allocatable ≥ 20 CPU / 80 GiB |
 | Hub (minimum demo) | 3 | 8 | 32 GiB | 4.17+ | Insufficient for GitLab + 50 AI namespaces — expect Evicted pods |
-| **Spoke** | **3** | **4** | **16 GiB** | 4.17+ | Industrial Edge + DevSpaces |
+| **Spoke** | **3** | **4** | **16 GiB** | 4.17+ | NeuroFace/CV + DevSpaces (IE optional) |
 
 Verify hub capacity after cluster provision:
 
@@ -147,8 +149,17 @@ Prove the **product surfaces** — not only that Argo CD apps exist:
 # Hub: log in so OAuth-protected links (OpenShift AI) get a bearer token
 oc login --token=<token> --server=<hub-api-url>
 
-# Console menu links — expect 19 OK on a full hub install
+# Console menu links — expect 19–20 OK on a full hub install (IE link may 503 when disabled)
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
+
+# AI CV surfaces (NeuroFace app + PPE gateway)
+bash scripts/verify-neuroface-cv.sh
+
+# Workshop HTTP smoke (skips IE when hub-gateway not deployed)
+bash scripts/verify-workshop-http200.sh
+
+# Industrial Edge — only when IE enabled (set VERIFY_IE=1)
+bash scripts/verify-industrial-edge.sh
 
 # Fleet inventory + Skupper + ApplicationSet
 bash scripts/verify-fleet.sh

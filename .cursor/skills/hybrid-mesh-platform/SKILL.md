@@ -4,7 +4,7 @@
 
 Hub-spoke multi-cluster GitOps on OpenShift (Validated Patterns, Sandbox tier). Fork of multicloud-gitops with **region paths** (`charts/region/{hub,east,west}`) and **50+ charts** under `charts/all/`.
 
-**Problem it solves:** secure multi-cluster connectivity (Skupper VAN), centralized fleet GitOps (ACM + dual PUSH/PULL), Industrial Edge on spokes, hub-resident AI/security/observability.
+**Problem it solves:** secure multi-cluster connectivity (Skupper VAN), centralized fleet GitOps (ACM + dual PUSH/PULL), **AI Computer Vision at the edge** (NeuroFace + OVMS ModelMesh on spokes, federated hub gateway), optional Industrial Edge factory telemetry, hub-resident AI/security/observability.
 
 ## Repository Structure
 
@@ -20,8 +20,11 @@ hybrid-mesh-platform/
 │   ├── validatedpatterns-docs/   # VP / GitHub Pages content
 │   └── index.md                    # Public docs index
 ├── scripts/
-│   ├── verify-console-links.sh     # curl all ConsoleLink hrefs
-│   ├── verify-workshop-http200.sh  # console links + workshop/AI strict 200
+│   ├── verify-console-links.sh     # curl all ConsoleLink hrefs (IE link 503 OK when disabled)
+│   ├── verify-workshop-http200.sh  # console links + workshop/AI strict 200 (skips IE when off)
+│   ├── verify-neuroface-cv.sh      # NeuroFace CV gateway + PPE path (primary edge AI gate)
+│   ├── verify-industrial-edge.sh   # Skupper VAN + IE route — skip unless VERIFY_IE=1 or hub-gateway
+│   ├── lib/ie-enabled.sh           # IE optional detection (hub-gateway or VERIFY_IE=1)
 │   ├── verify-fleet.sh
 │   ├── sync-showroom-content.sh          # PNGs → showroom-hybrid-mesh-ai
 │   ├── workshop-screenshot-manifest.yaml # live hub URL per hero
@@ -38,19 +41,23 @@ Validate **what the platform delivers**, not only Argo CD sync status:
 | Fleet GitOps | `managedclusters` east/west **Available**; `fleet-spoke-push` ApplicationSet present |
 | Cross-cluster observability | Grafana + Kiali + Kafka Console console links HTTP 200 |
 | Secure fleet | ACS Central link 200; SecuredClusters on spokes |
-| Developer experience | Developer Hub 200; catalog IE + demos + Kuadrant APIs; software templates in `/create` (auth required) |
-| Edge reachability | `industrial-edge.<hub-domain>` 200 after spokes + Skupper |
+| Developer experience | Developer Hub 200; catalog demos + Kuadrant APIs; software templates in `/create` after OIDC login (GitLab `/-/blob/` URLs) |
+| **AI CV at edge** | `bash scripts/verify-neuroface-cv.sh` — `neuroface-cv.<hub>` health + PPE status 2xx; spoke `yolo-ppe-serving` Ready in `neuroface-cv` |
+| NeuroFace app | `neuroface.<hub>` 200; hub `neuroface-gateway` 50/50 to east/west Skupper listeners |
+| Industrial Edge *(optional)* | `VERIFY_IE=1 bash scripts/verify-industrial-edge.sh` — hub IE route 200, Skupper VAN=3; **skipped by default** when `hub-gateway` not deployed |
 | Private mesh | Skupper `sitesInNetwork: 3` on hub site |
 
-Smoke test (hub):
+Smoke test (hub — default install, IE disabled):
 
 ```bash
 oc login --token=<token> --server=<hub-api-url>
-MIN_OK_CODE=200 bash scripts/verify-console-links.sh   # expect 19 OK, exit 0
-bash scripts/verify-workshop-http200.sh                # 20 workshop surfaces (incl. AI gateway, workshop-apis)
+MIN_OK_CODE=200 bash scripts/verify-console-links.sh   # expect 19–20 OK (IE may 503), exit 0
+bash scripts/verify-workshop-http200.sh                # skips industrial-edge + line-dashboard when IE off
+bash scripts/verify-neuroface-cv.sh                    # primary AI CV gate
 bash scripts/verify-workshop-kuadrant-curl.sh            # 401 without API key = OK
-bash scripts/verify-industrial-edge.sh                 # Skupper VAN=3, hub IE route 200
 bash scripts/verify-fleet.sh
+# IE only when enabled:
+VERIFY_IE=1 bash scripts/verify-industrial-edge.sh
 ```
 
 Allow **60–90 min** after hub sync; **503** often means route exists but backend still starting.
@@ -73,15 +80,16 @@ Legacy names (`field-content-acm-hub-spoke`, `connectivityLink.apps[]`) are obso
 
 | Role | Path | Key components |
 |------|------|----------------|
-| **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, Skupper listeners, Grafana, Kafka Console, RHCL hub-gateway |
-| **East/West** | `charts/region/east\|west` | Industrial Edge, ACS Secured, Skupper connectors, spoke-gateway, ambient mesh |
+| **Hub** | `charts/region/hub` | ACM, Developer Hub, ACS Central, Skupper listeners, Grafana, Kafka Console, **`neuroface-gateway`** (50/50 CV), RHCL |
+| **East/West** | `charts/region/east\|west` | **`spoke-neuroface`** (full app + OVMS ModelMesh), **`spoke-neuroface-cv`** (PPE KServe), ACS Secured, Skupper connectors, ambient mesh |
+| **Optional** | region values (commented) | `hub-gateway`, `industrial-edge-*`, `spoke-gateway` — enable explicitly for factory telemetry demo |
 
 ## GitOps Strategy
 
 | Strategy | Mechanism | Charts (examples) |
 |----------|-----------|-------------------|
-| **PUSH** | Hub ApplicationSet `fleet-spoke-push` | `operators-ci`, `operators-platform` via `spoke-meta-push` |
-| **PULL** | Spoke clustergroup / managedClusterGroups | IE stack, mesh, observability, `operators-edge` |
+| **PUSH** | Hub ApplicationSet `fleet-spoke-push` | `operators-ci`, `operators-platform`, **`spoke-neuroface`** via `spoke-meta-push` |
+| **PULL** | Spoke clustergroup / managedClusterGroups | **`spoke-neuroface-cv`**, mesh, observability, `operators-edge`; IE stack only when uncommented in region values |
 
 See `docs/validatedpatterns-docs/gitops-push-vs-pull.md`.
 
@@ -110,7 +118,7 @@ See `docs/validatedpatterns-docs/gitops-push-vs-pull.md`.
 | Skupper Network Observer | `skupper-network-observer-service-interconnect.<domain>` | Wrapper chart `charts/all/skupper-network-observer` (OCI subchart + Route **TLS passthrough** → port `https`). Deploy to **`service-interconnect`**, not `default` |
 | NeuroFace | `neuroface.<domain>` | Requires clustergroup override `neuroface.route.host` — default subchart Route is `neuroface-neuroface.<domain>` |
 | Kafka Console | `kafka-console.<domain>` | Console CR `spec.hostname` |
-| Industrial Edge (hub GW) | `industrial-edge.<hubDomain>` | `charts/all/hub-gateway` — link 200 when Route exists; full factory UI needs spoke Skupper connectors + mesh |
+| Industrial Edge (hub GW) | `industrial-edge.<hubDomain>` | **Optional** — `charts/all/hub-gateway` disabled by default; link may 503 until enabled |
 | GitLab | `gitlab.apps.<domain>` | GitLab Operator standard profile; approve Manual InstallPlans |
 | OpenShift AI | `rh-ai.apps.<domain>` | AllNamespaces OG; legacy `rhods-dashboard-*` redirects to rh-ai |
 | Kubecost | `kubecost.<domain>` | OG **`kubecost-operator-group`** |
@@ -122,14 +130,19 @@ Verify:
 ```bash
 oc login --token=<token> --server=<hub-api-url>
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
-bash scripts/verify-industrial-edge.sh   # IE dashboard chain
+bash scripts/verify-neuroface-cv.sh          # AI CV primary gate
+bash scripts/verify-workshop-http200.sh
+# VERIFY_IE=1 bash scripts/verify-industrial-edge.sh   # only when IE enabled
 ```
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `charts/region/hub/values.yaml` | Hub apps, sync waves, neuroface/skupper overrides |
+| `charts/region/hub/values.yaml` | Hub apps, sync waves, neuroface-gateway/skupper overrides |
+| `charts/all/spoke-neuroface/` | Full NeuroFace stack on spokes (OVMS ModelMesh face detection, Kafka, Grafana) |
+| `charts/all/spoke-neuroface/templates/modelmesh-*.yaml` | Wrapper InferenceService + model download (subchart hooks don't run on Argo upgrade) |
+| `charts/all/neuroface-gateway/` | Hub Gateway API 50/50 to east/west CV listeners |
 | `charts/all/acm-hub-spoke/` | Placement, ApplicationSet `fleet-spoke-push`, GitOpsCluster |
 | `charts/all/openshift-gitops/templates/argocd.yaml` | ArgoCD CR + ACM 2.16 resourceExclusions |
 | `charts/all/acm-operator/` | ACM subscription + MCE `cluster-proxy-addon: false` automation |
@@ -248,9 +261,11 @@ Verify from hub: query `kafka_server_kafkaserver_brokerstate` via `prometheus-ea
 - **ConfigMap endpoint drift:** Argo may revert `neuroface-config` ConfigMap `NEUROFACE_PPE_ENDPOINT` to subchart default; after fix in values.yaml, patch live + restart backend: `oc patch configmap neuroface-config -n neuroface --type merge -p '{"data":{"NEUROFACE_PPE_ENDPOINT":"http://yolo-ppe-serving:8080"}}' && oc rollout restart deploy/neuroface-backend -n neuroface`
 - **PVC Multi-Attach:** `neuroface-data` is RWO; rolling update blocks if old pod holds PVC — force-delete old pod: `oc delete pod <old> -n neuroface --force --grace-period=0`
 
-### Industrial Edge GitOps (east/west spokes)
+### Industrial Edge GitOps (optional — east/west spokes)
 
-- Hub app `industrial-edge-tst-all` only has ambient waypoint (expected)
+**Default:** IE apps commented out in `charts/region/east|west/values.yaml`; `hub-gateway` commented in hub values. Validation scripts skip IE unless `VERIFY_IE=1` or `hub-gateway` Gateway exists.
+
+When enabled:
 - Full IE stack deploys on **east/west** via `industrial-edge-tst` Argo app on spoke GitOps
 - **PostSync hook trap:** `camel-k-registry-bootstrap` as PostSync hook can stall sync indefinitely — use sync-wave Job instead; TTL extended to 24h to survive Argo resync
 - **AMQ broker security:** sensors connect without MQTT credentials — `ActiveMQArtemisSecurity` CR with `guestLoginModule` + `brokerProperties: securityEnabled=false` in `messaging.yaml`
@@ -373,8 +388,8 @@ Test files:
 - `test_subscription_status_hub.py` — 13 hub operators (ACM, GitLab, RHCL, Kairos, ESO…)
 - `test_subscription_status_edge.py` — 4 spoke operators
 - `test_validate_hub_site_components.py` — pods, ArgoCD apps, ACM spokes
-- `test_validate_edge_site_components.py` — IE, Skupper, Argo CD on spoke
-- `test_workshop_surfaces.py` — 17 HTTP checks + Kuadrant 401 assertions
+- `test_validate_edge_site_components.py` — neuroface/neuroface-cv ns; IE ns only if `VERIFY_IE=1`
+- `test_workshop_surfaces.py` — HTTP checks + Kuadrant 401; IE surfaces skipped unless `VERIFY_IE=1`
 - `test_platform_components.py` — Skupper VAN sites, GitLab Gateway, Kairos policies, Kuadrant
 - `test_modify_web_content.py` — E2E GitOps roundtrip via showroom title
 
@@ -389,10 +404,11 @@ oc patch cronjob unsealvault-cronjob -n imperative --type merge -p '{"spec":{"su
 oc delete pods -n imperative --field-selector=status.phase=Failed
 ```
 
-### NeuroFace CV Journey (hub-and-spoke)
+### NeuroFace CV Journey (primary demo — hub-and-spoke)
 
+- **Spoke full stack:** `charts/all/spoke-neuroface/` — NeuroFace app, Kafka, Grafana, **OVMS ModelMesh** face detection (`externalUrl: modelmesh-serving.redhat-ods-applications.svc:8008`)
+- **Spoke PPE inference:** `charts/all/spoke-neuroface-cv/` — KServe `yolo-ppe-serving` in `neuroface-cv` namespace; model from MinIO via Skupper
 - **Gateway:** `charts/all/neuroface-gateway/` — Gateway API `HTTPRoute` with 50/50 weights to Skupper listeners `neuroface-cv-east` / `neuroface-cv-west`
-- **Spoke inference:** `charts/all/spoke-neuroface-cv/` — KServe InferenceService in `neuroface-cv` namespace with HPA (min 1, max 4); model from MinIO via Skupper `minio-hub`
 - **Skupper connector:** `neuroface-cv-<clusterName>` routing key; spoke publishes `yolo-ppe-serving.neuroface-cv.svc:8080`
 - **Grafana dashboard:** `neuroface-cv` — gateway req/s, east vs west split, inference latency
 - **Monitoring:** `istio-monitoring` PodMonitors extended for `neuroface` (hub) and `neuroface-cv` (spokes via `clusterSuffix`)

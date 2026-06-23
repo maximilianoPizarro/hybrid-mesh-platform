@@ -3,8 +3,9 @@ name: hybrid-mesh-platform
 description: >-
   Hub-spoke multi-cluster GitOps on OpenShift with ACM, ambient Service Mesh,
   Service Interconnect (Skupper), Red Hat Connectivity Link (RHCL/Kuadrant),
-  Industrial Edge, OpenShift AI, ACS, and observability — Validated Patterns layout.
-pattern_version: "1.7.3"
+  AI Computer Vision at the Edge (NeuroFace on spokes), optional Industrial Edge,
+  OpenShift AI, ACS, and observability — Validated Patterns layout.
+pattern_version: "2.2.0"
 display_name: Hybrid Mesh Platform
 repo_url: https://github.com/maximilianoPizarro/hybrid-mesh-platform
 docs_repo_url: https://github.com/validatedpatterns/docs
@@ -54,7 +55,7 @@ requirements:
         gcp:
           replicas: 3
           type: n1-standard-4
-  # Spoke clusters: Industrial Edge, ACS Secured, Skupper
+  # Spoke clusters: NeuroFace/CV (default), optional Industrial Edge, ACS Secured, Skupper
   spoke:
     minimum:
       workers: 3

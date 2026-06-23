@@ -6,6 +6,8 @@ parent: Hybrid Mesh Platform
 
 # Architecture
 
+> **v2.2+ default deploy:** **AI Computer Vision at the Edge** — `spoke-neuroface` + `spoke-neuroface-cv` on east/west, hub `neuroface-gateway` (50/50). **Industrial Edge** (MQTT, line-dashboard, sensors) is **optional and disabled by default**; enable by uncommenting IE apps in region values.
+
 ## Hub-spoke theory in multi-cluster Kubernetes
 
 In multi-cluster Kubernetes, a **hub-spoke** model designates one administrative cluster (the **hub**) and one or more workload clusters (**spokes**). The hub owns fleet APIs: cluster inventory, policy placement, credentials for spoke registration, and often centralized GitOps controllers that fan out desired state.

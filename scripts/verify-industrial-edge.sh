@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Validate Industrial Edge path: spoke line-dashboard → Skupper → hub-gateway → public Route.
+# IE is optional (disabled by default). Skips with exit 0 unless VERIFY_IE=1.
 set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/ie-enabled.sh
+source "$ROOT/scripts/lib/ie-enabled.sh"
 
 TIMEOUT="${CURL_TIMEOUT:-5}"
 HUB_DOMAIN="${HUB_DOMAIN:-}"
@@ -18,6 +23,11 @@ fi
 if [[ -z "$HUB_DOMAIN" ]]; then
   echo "ERROR: set HUB_DOMAIN or log in to hub cluster" >&2
   exit 1
+fi
+
+if ! ie_enabled; then
+  ie_skip_msg
+  exit 0
 fi
 
 fail=0

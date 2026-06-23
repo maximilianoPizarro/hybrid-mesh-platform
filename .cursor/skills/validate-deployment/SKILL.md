@@ -7,12 +7,12 @@ Before diving into Argo sync status, prove the platform delivers value:
 | Outcome | Check |
 | ------- | ----- |
 | Fleet inventory | `oc get managedclusters` — east/west **Available** |
-| One-click access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **20** links HTTP 200 |
-| Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — **20** links (incl. AI gateway 401, workshop-apis 401, vault `/ui/`) |
+| One-click access | `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` on hub — **19–20** links HTTP 200 (IE link 503 OK when disabled) |
+| **AI CV at edge** | `bash scripts/verify-neuroface-cv.sh` — `neuroface-cv.<hub>` health + PPE status 2xx |
+| Workshop + AI surfaces | `bash scripts/verify-workshop-http200.sh` — skips IE/line-dashboard when `hub-gateway` not deployed |
 | Kuadrant enforcement | `bash scripts/verify-workshop-kuadrant-curl.sh` — 401 without API key |
-| Industrial Edge | `bash scripts/verify-industrial-edge.sh` — hub route 200, Skupper `sitesInNetwork=3` |
+| Industrial Edge *(optional)* | `VERIFY_IE=1 bash scripts/verify-industrial-edge.sh` — hub route 200, Skupper `sitesInNetwork=3` |
 | Private mesh | `oc get site hub -n service-interconnect -o jsonpath='sitesInNetwork={.status.sitesInNetwork}{"\n"}'` → **3** |
-| Edge ingress | `curl -sk -o /dev/null -w '%{http_code}\n' https://industrial-edge.apps.<hub-domain>/` |
 | Fleet GitOps | `oc get applicationset fleet-spoke-push -n openshift-gitops` |
 
 Allow **60–90 min** after hub sync for all console links to reach HTTP 200. RHDP playbook: `docs/validatedpatterns-docs/install-improvements.md`
@@ -99,16 +99,18 @@ oc get applications -n openshift-gitops -o jsonpath='{range .items[*]}{.metadata
 ```bash
 oc login --token=<token> --server=<hub-api-url>
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
+bash scripts/verify-neuroface-cv.sh
 bash scripts/verify-workshop-http200.sh
 bash scripts/verify-workshop-kuadrant-curl.sh
-bash scripts/verify-industrial-edge.sh
+# VERIFY_IE=1 bash scripts/verify-industrial-edge.sh   # only when IE enabled
 bash scripts/verify-fleet.sh
 ```
 
 **Success criteria:**
 
-- `verify-console-links.sh`: `Summary: 20 OK (200-399), 0 503` — exit **0**
-- `verify-workshop-http200.sh`: `Summary: 20 OK` — exit **0** (401 on `platform-ai-gateway` and `platform-workshop-apis` counts as OK)
+- `verify-console-links.sh`: `Summary: 19-20 OK (200-399), 0 503` — exit **0** (IE link 503 tolerated when `hub-gateway` not deployed)
+- `verify-neuroface-cv.sh`: `NeuroFace CV validation OK` — exit **0**
+- `verify-workshop-http200.sh`: all non-IE surfaces **200** — exit **0** (401 on `platform-ai-gateway` and `platform-workshop-apis` counts as OK when using expect-one-of)
 
 Script behavior: uses `oc whoami -t` for OAuth routes; excludes operator duplicate **`rhodslink`** ConsoleLinks.
 
@@ -123,7 +125,7 @@ Script behavior: uses `oc whoami -t` for OAuth routes; excludes operator duplica
 | `platform-gitlab` | GitLab SCM |
 | `platform-grafana` | Grafana |
 | `platform-hybrid-mesh-workshop` | Workshop registration |
-| `platform-industrial-edge` | IE hub-gateway |
+| `platform-industrial-edge` | IE hub-gateway *(optional — 503 OK when disabled)* |
 | `platform-kafka-console` | Kafka Console |
 | `platform-kairos-console` | Kairos |
 | `platform-kiali` | Kiali |
@@ -220,9 +222,13 @@ oc get console.streamshub.github.com -n kafka-console 2>/dev/null
 
 ```bash
 oc get application hybrid-mesh-platform-east -n openshift-gitops   # or -west
-oc get pods -n industrial-edge-tst-all
+oc get pods -n neuroface
+oc get pods -n neuroface-cv
+oc get inferenceservice yolo-ppe-serving -n neuroface-cv
 oc get site -n service-interconnect
 oc get pods -n open-cluster-management-agent
+# IE (only when enabled):
+# oc get pods -n industrial-edge-tst-all
 ```
 
 ## Component Validation Matrix
@@ -233,15 +239,15 @@ oc get pods -n open-cluster-management-agent
 | ACM / fleet | ✓ | - | `oc get managedclusters` |
 | ApplicationSet PUSH | ✓ | - | `oc get applicationset fleet-spoke-push` |
 | Skupper VAN | ✓ | ✓ | `oc get site,link -n service-interconnect` |
-| Industrial Edge | - | ✓ | `bash scripts/verify-industrial-edge.sh`; pods in `industrial-edge-tst-all` on east |
+| Industrial Edge *(optional)* | - | ✓ | `VERIFY_IE=1 bash scripts/verify-industrial-edge.sh`; pods in `industrial-edge-tst-all` only when enabled |
+| **spoke-neuroface** | - | ✓ | `oc get pods -n neuroface`; OVMS ModelMesh InferenceService Ready |
+| **NeuroFace CV (spokes)** | - | ✓ | `oc get inferenceservice yolo-ppe-serving -n neuroface-cv` → READY=True |
 | GitLab Gateway | ✓ | - | `oc get gateway gitlab-gateway -n gitlab` → PROGRAMMED=True |
 | Kairos SmartScalingPolicies | ✓ | - | `oc get smartscalingpolicy -n kairos-system -l kairos.io/policy-type=workshop-platform` |
 | Unsealvault CronJob | ✓ | - | `oc get cronjob unsealvault-cronjob -n imperative -o jsonpath='{.spec.suspend}'` → true (if vault initialized) |
 | Grafana Kafka metrics | ✓ | ✓ | Explore `kafka_server_kafkaserver_brokerstate` via `prometheus-east`/`west` |
-| Developer Hub templates | ✓ | - | Login → `/create` — industrial-edge, cnv-vm-workshop, openshift-ai-workspace |
-| NeuroFace PPE (KServe) | ✓ | - | `oc get inferenceservice yolo-ppe-serving -n neuroface` → READY=True |
-| NeuroFace CV PPE (spokes) | - | ✓ | `oc get inferenceservice yolo-ppe-serving -n neuroface-cv` |
-| NeuroFace CV gateway | ✓ | - | `curl -sk https://neuroface-cv.<hub>/health` → `status: ok` |
+| Developer Hub templates | ✓ | - | Login → `/create` — ai-computer-vision, cnv-vm-workshop, openshift-ai-workspace |
+| NeuroFace CV gateway | ✓ | - | `bash scripts/verify-neuroface-cv.sh` or `curl -sk https://neuroface-cv.<hub>/health` |
 | NeuroFace KServe v2 | ✓ | ✓ | `curl -sk https://neuroface-cv.<hub>/v2/models/yolo-ppe/ready` → HTTP 200 |
 | fleet-values-sync | ✓ | ✓ | `oc get cronjob -n openshift-gitops \| grep fleet-values` |
 

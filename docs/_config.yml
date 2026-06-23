@@ -4,7 +4,7 @@ plugins:
   - jekyll-remote-theme
 
 title: "Hybrid Mesh Platform"
-description: "Multi-cluster GitOps platform with ACM, Connectivity Link, and Industrial Edge on Red Hat OpenShift"
+description: "Multi-cluster GitOps platform with ACM, AI Computer Vision at the Edge, Skupper, and optional Industrial Edge on Red Hat OpenShift"
 url: "https://maximilianopizarro.github.io"
 baseurl: "/hybrid-mesh-platform"
 
@@ -65,3 +65,4 @@ exclude:
   - assets/backstage/software-templates/industrial-edge-camel-kaoto/skeleton/
   - assets/backstage/software-templates/industrial-edge-delete/skeleton/
   - assets/backstage/software-templates/openshift-ai-workspace/skeleton/
+  - assets/backstage/software-templates/ai-computer-vision/skeleton/

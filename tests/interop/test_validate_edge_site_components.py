@@ -49,9 +49,12 @@ def test_check_pod_status_edge(openshift_dyn_client):
         "istio-system",
         # Skupper connector
         "service-interconnect",
-        # Industrial Edge
-        "industrial-edge-tst-all",
+        # NeuroFace CV (default spoke workload)
+        "neuroface",
+        "neuroface-cv",
     ]
+    if os.environ.get("VERIFY_IE", "0") == "1":
+        projects.append("industrial-edge-tst-all")
     err_msg = components.check_pod_status(openshift_dyn_client, projects)
     if err_msg:
         logger.error(f"FAIL: {err_msg}")

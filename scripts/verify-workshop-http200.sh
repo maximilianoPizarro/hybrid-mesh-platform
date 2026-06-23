@@ -4,6 +4,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/ie-enabled.sh
+source "$ROOT/scripts/lib/ie-enabled.sh"
 FAIL=0
 
 hub_domain() {
@@ -70,7 +72,11 @@ check lightspeed "https://developer-hub.$HUB/lightspeed"
 check kafka-console "https://kafka-console.$HUB/"
 check neuroface "https://neuroface.$HUB/"
 check neuroface-cv "https://neuroface-cv.$HUB/api/ppe/status"
-check industrial-edge "https://industrial-edge.$HUB/"
+if ie_enabled; then
+  check industrial-edge "https://industrial-edge.$HUB/"
+else
+  printf 'SKIP     industrial-edge (IE disabled by default)\n'
+fi
 check skupper-observer "https://skupper-network-observer-service-interconnect.$HUB/"
 check mcp-gateway "https://mcp-gateway.$HUB/mcp"
 check_expect_one_of workshop-apis-no-key "https://workshop-apis.$HUB/httpbin/get" "401" "200"
@@ -83,7 +89,11 @@ if [[ -n "${EAST:-}" ]]; then
   echo ""
   echo "== Spokes (east: $EAST) =="
   check devspaces-east "https://devspaces.$EAST/"
-  check line-dashboard-east "https://line-dashboard-industrial-edge-tst-all.$EAST/"
+  if ie_enabled; then
+    check line-dashboard-east "https://line-dashboard-industrial-edge-tst-all.$EAST/"
+  else
+    printf 'SKIP     line-dashboard-east (IE disabled by default)\n'
+  fi
 fi
 
 if [[ -n "${WEST:-}" ]]; then

@@ -25,9 +25,9 @@ MIN_OK_CODE=200 bash scripts/verify-console-links.sh
 | Kubecost | Duplicate OG or wrong domain (`example.com`) — OG name **`kubecost-operator-group`** |
 | Kairos | Duplicate OperatorGroup — OG only from clustergroup (`kairos-system.operatorGroup`), not `charts/all/kairos/templates/operator.yaml` |
 | Skupper observer | OCI chart in `default`; missing wrapper Route **passthrough** — use `charts/all/skupper-network-observer` in **`service-interconnect`** |
-| Industrial Edge | Spokes not imported or Skupper VAN incomplete; or missing hub-gateway Service until Istio/mesh ready |
+| Industrial Edge | Spokes not imported or Skupper VAN incomplete; or **IE disabled by default** (`hub-gateway` not deployed — link 503 is expected; use `VERIFY_IE=1` only when IE enabled) |
 
-**Action:** Wait 60–90 min; fix specific blocker per `install-improvements.md`; re-run with `MIN_OK_CODE=200`. Target: **19 OK, 0 503**.
+**Action:** Wait 60–90 min; fix specific blocker per `install-improvements.md`; re-run with `MIN_OK_CODE=200`. Target: **19–20 OK, 0 503** (except `platform-industrial-edge` when IE disabled).
 
 ---
 
@@ -396,7 +396,9 @@ oc delete pod <old-backend-pod> -n neuroface --force --grace-period=0
 
 ---
 
-### 3k. Industrial Edge Argo sync stall (east spoke)
+### 3k. Industrial Edge Argo sync stall (east spoke) — optional component
+
+**Note:** IE is **disabled by default**. Only troubleshoot when IE apps are uncommented in region values.
 
 **Symptom:** `industrial-edge-tst` stuck on PostSync `camel-k-registry-bootstrap`.
 
@@ -660,9 +662,10 @@ oc get applicationset fleet-spoke-push -n openshift-gitops
 
 # Console + routes + workshop surfaces
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
+bash scripts/verify-neuroface-cv.sh
 bash scripts/verify-workshop-http200.sh
 bash scripts/verify-workshop-kuadrant-curl.sh
-bash scripts/verify-industrial-edge.sh
+# VERIFY_IE=1 bash scripts/verify-industrial-edge.sh
 oc get routes -A | wc -l
 
 # Developer Hub

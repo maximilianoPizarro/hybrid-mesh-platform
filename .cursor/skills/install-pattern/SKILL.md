@@ -16,7 +16,7 @@
 2. East / West in parallel
 3. Import spokes in ACM (after MCH Running)
 4. `fleet-values-sync` manual job (domains only)
-5. `oc login` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` — expect **19 OK**
+5. `oc login` then `MIN_OK_CODE=200 bash scripts/verify-console-links.sh` — expect **19–20 OK** (IE link may 503 when disabled)
 
 **Option B — Three orders in parallel:** valid; cross-cluster features converge when ACM import + domain sync complete.
 
@@ -107,7 +107,7 @@ Key clustergroup apps (see `charts/region/hub/values.yaml`):
 
 | syncWave | App | Purpose |
 |----------|-----|---------|
-| 0 | openshift-gitops, developer-hub, hub-gateway, … | Platform base |
+| 0 | openshift-gitops, developer-hub, neuroface-gateway, … | Platform base (**hub-gateway IE optional, disabled by default**) |
 | 5 | fleet-values-sync | Cross-cluster domain sync |
 | 6 | acm-hub-spoke | ApplicationSet `fleet-spoke-push` |
 | 10 | console-links | OpenShift Console menu links |
@@ -125,8 +125,10 @@ oc get multiclusterhub -n open-cluster-management -o jsonpath='{.items[0].status
 oc get managedclusters
 oc get applicationset fleet-spoke-push -n openshift-gitops
 
-# Primary smoke test — 19 hub console links
+# Primary smoke test — 19–20 hub console links (IE may 503 when disabled)
 MIN_OK_CODE=200 bash scripts/verify-console-links.sh
+bash scripts/verify-neuroface-cv.sh
+bash scripts/verify-workshop-http200.sh
 bash scripts/verify-fleet.sh
 
 # Offline
@@ -134,7 +136,7 @@ bash scripts/argocd-preflight.sh
 python scripts/verify-gitops-strategies.py
 ```
 
-**Success:** `Summary: 19 OK (200-399), 0 503, 0 other`, exit code **0**. Requires `oc login` for OpenShift AI (OAuth).
+**Success:** `Summary: 19-20 OK (200-399), 0 503, 0 other` (or IE link counted as OK when disabled), exit code **0**. Requires `oc login` for OpenShift AI (OAuth).
 
 **503 on first hour is normal** for Developer Hub, GitLab, ODS, Skupper — routes exist, backends still syncing. Strict gate: `MIN_OK_CODE=200 bash scripts/verify-console-links.sh`.
 
@@ -144,12 +146,14 @@ python scripts/verify-gitops-strategies.py
 2. Register east/west — **`ManagedCluster` first** (ACM creates namespace); **one-time** tokens, not in auto-syncing GitOps values
 3. Trigger domain sync: `oc create job --from=cronjob/fleet-values-sync fleet-values-sync-manual -n openshift-gitops`
 4. Verify `east-spoke-components` / `west-spoke-components` on hub Argo CD
-5. Console links — expect partial 503 until operators/CRs converge (60–90 min); target **19/19 HTTP 200**
-6. Full workshop gate: `bash scripts/verify-workshop-http200.sh` (**20** surfaces), `verify-workshop-kuadrant-curl.sh`, `verify-industrial-edge.sh`
-7. Skupper: hub `Site` + spoke `Site` + AccessToken sync job (`accesstoken-sync`); target `sitesInNetwork: 3`
-8. MaaS secrets on hub if not via RHDP: `kairos-ai-credentials`, `openshift-ai-maas-credentials`
-9. GitLab platform-content seed: CronJob `gitlab-platform-content-seed` in `gitlab` namespace (software templates for Developer Hub)
-10. Developer Hub rollout after catalog/plugin changes: allow 5–10 min for `install-dynamic-plugins` init
+5. Console links — expect partial 503 until operators/CRs converge (60–90 min); target **19–20/20 HTTP 200** (IE optional)
+6. AI CV gate: `bash scripts/verify-neuroface-cv.sh`; workshop gate: `bash scripts/verify-workshop-http200.sh` (skips IE when off), `verify-workshop-kuadrant-curl.sh`
+7. Industrial Edge (optional): uncomment IE apps in `charts/region/east|west/values.yaml` + hub `hub-gateway`; then `VERIFY_IE=1 bash scripts/verify-industrial-edge.sh`
+8. Skupper: hub `Site` + spoke `Site` + AccessToken sync job (`accesstoken-sync`); target `sitesInNetwork: 3`
+9. MaaS secrets on hub if not via RHDP: `kairos-ai-credentials`, `openshift-ai-maas-credentials`
+10. GitLab platform-content seed: CronJob `gitlab-platform-content-seed` in `gitlab` namespace (software templates — **`/-/blob/`** URLs in catalog)
+11. Developer Hub rollout after catalog/plugin changes: allow 5–10 min for `install-dynamic-plugins` init
+12. Spoke NeuroFace: PUSH app `spoke-neuroface` via `fleet-spoke-push`; OVMS ModelMesh InferenceService via wrapper templates in `charts/all/spoke-neuroface/templates/`
 
 ## Known install gotchas
 
@@ -163,7 +167,7 @@ python scripts/verify-gitops-strategies.py
 - **hub-post-install RBAC:** SA needs `bind`/`escalate` on `rbac.authorization.k8s.io` to create ClusterRoleBindings — already in chart; if deadlock, terminate operation + patch live + resync
 - **VP Tests:** `make qe-tests` → `tests/interop/run_tests.sh`; requires `KUBECONFIG` + `INFRA_PROVIDER`; auto-resolves `HUB_APPS_DOMAIN` from cluster
 - **Unsealvault:** suspend CronJob if Vault already initialized (`oc patch cronjob unsealvault-cronjob -n imperative --type merge -p '{"spec":{"suspend":true}}'`)
-- **hub-gateway:** default **`gateway.mode: proxy`** (nginx → Skupper); syncWave **5** after `fleet-values-sync`
+- **hub-gateway / Industrial Edge:** **disabled by default** — uncomment in region values to enable factory telemetry demo; validation uses `scripts/lib/ie-enabled.sh`
 - **Workshop users:** IdP **`workshop-users`**; `grantClusterReader: true`; fix job `scripts/fix-htpasswd-users-secret-job.yaml`
 - **CNV:** `cnv-example` includes Subscription + VM in **`cnv-workshop`**
 - **Helm CI:** vendored `charts/*.tgz` for skupper/camel/neuroface; run `scripts/vendor-*-chart.sh`

@@ -14,6 +14,13 @@ from . import __loggername__
 
 logger = logging.getLogger(__loggername__)
 
+VERIFY_IE = os.environ.get("VERIFY_IE", "0") == "1"
+
+
+def _skip_if_ie_disabled():
+    if not VERIFY_IE:
+        pytest.skip("Industrial Edge disabled by default — set VERIFY_IE=1 to require IE surfaces.")
+
 # Disable SSL warnings for self-signed OpenShift certs
 requests.packages.urllib3.disable_warnings()  # type: ignore[attr-defined]
 
@@ -126,6 +133,7 @@ def test_surface_neuroface_cv():
 def test_surface_industrial_edge():
     """Industrial Edge hub gateway route is reachable."""
     _skip_if_no_hub()
+    _skip_if_ie_disabled()
     url = f"https://industrial-edge.{HUB_DOMAIN}"
     err = _check_url(url)
     assert not err, f"Industrial Edge hub GW unreachable at {url}: {err}"
@@ -220,6 +228,7 @@ def test_surface_east_devspaces():
 @pytest.mark.workshop_surface_east_line_dashboard
 def test_surface_east_line_dashboard():
     """Industrial Edge Line Dashboard on east spoke is reachable."""
+    _skip_if_ie_disabled()
     if not EAST_DOMAIN:
         pytest.skip("EAST_APPS_DOMAIN not set — skipping east spoke check.")
     url = f"https://line-dashboard-industrial-edge-tst-all.{EAST_DOMAIN}/"
