@@ -103,7 +103,7 @@ clusterGroup:
       channel: stable-v1
   argoProjects:
   - platform
-  # - operators-edge  # optional with IE stack
+  - operators-edge
   - security
   - mesh
   - observability
@@ -251,12 +251,12 @@ clusterGroup:
       chart: openshift-external-secrets
       chartVersion: 0.0.*
       syncWave: '3'
-    # operators-edge:
-    #   name: operators-edge
-    #   namespace: openshift-operators
-    #   argoProject: operators-edge
-    #   path: charts/all/operators-edge
-    #   syncWave: '2'
+    operators-edge:
+      name: operators-edge
+      namespace: openshift-operators
+      argoProject: operators-edge
+      path: charts/all/operators-edge
+      syncWave: '2'
 gitops:
   repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
   revision: main

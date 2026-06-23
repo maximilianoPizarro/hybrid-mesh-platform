@@ -243,7 +243,12 @@ clusterGroup:
       chart: openshift-external-secrets
       chartVersion: 0.0.*
       syncWave: '3'
-    # operators-edge: disabled with IE stack
+    operators-edge:
+      name: operators-edge
+      namespace: openshift-operators
+      argoProject: operators-edge
+      path: charts/all/operators-edge
+      syncWave: '2'
 gitops:
   repoURL: https://github.com/maximilianoPizarro/hybrid-mesh-platform
   revision: main
