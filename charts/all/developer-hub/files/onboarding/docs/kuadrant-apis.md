@@ -16,7 +16,7 @@ Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** and **AI Gateway (M
 | Product | Gateway | External backend |
 |---------|---------|------------------|
 | httpbin | workshop-apis | `httpbin.org` (ExternalName) |
-| REST Countries | workshop-apis | `restcountries.com` |
+| REST Countries | workshop-apis | `countriesnow.space` |
 | MCP Gateway | workshop-apis | `mcp-gateway-istio` (ExternalName → in-cluster) |
 | MaaS LLM | ai-gateway | MaaS RHDP (ExternalName) |
 
@@ -28,6 +28,15 @@ Console: **Platform Hub-Spoke → Workshop APIs (Kuadrant)** and **AI Gateway (M
 4. **My API Keys** (Kuadrant sidebar) → copy key
 5. **Definition** tab on the same API entity for Swagger / curl examples
 6. Call with: `Authorization: APIKEY <your-key>`
+
+## Try it out (Swagger)
+
+On any **API** entity (e.g. `workshop-httpbin-openapi`):
+
+1. Open the **Definition** tab (Swagger UI)
+2. Click **Authorize**
+3. Enter your key as `APIKEY <your-key>` in the **Authorization** field (include the `APIKEY` prefix)
+4. **Try it out** on an operation — expect HTTP 200 when the key is valid
 
 > Do **not** use the pencil (Edit) icon on API Products — use the product **name** or the Catalog **API** entity **Kuadrant** tab instead.
 
@@ -48,7 +57,7 @@ export WORKSHOP="https://workshop-apis.<hub-domain>"
 export AI="https://ai-gateway.<hub-domain>"
 
 curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/httpbin/get"
-curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/countries/name/chile"
+curl -H "Authorization: APIKEY $KEY" "$WORKSHOP/countries/population/q?country=argentina"
 curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
   -X POST "$AI/v1/chat/completions" \
   -d '{"model":"granite-3-2-8b-instruct","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'

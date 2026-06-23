@@ -21,11 +21,12 @@ apis:
     displayName: Workshop httpbin (httpbin.org)
   restcountries:
     enabled: true
-    host: restcountries.com
+    # restcountries.com v3.1 is deprecated; countriesnow.space is a stable free JSON API.
+    host: countriesnow.space
     port: 443
     pathPrefix: /countries
-    rewritePathPrefix: /
-    displayName: Workshop REST Countries (restcountries.com)
+    rewritePathPrefix: /api/v0.1/countries
+    displayName: Workshop Countries API (countriesnow.space)
   mcp:
     enabled: true
     # In-cluster MCP gateway (Kuadrant MCP CRDs); exposed via workshop-apis with API key

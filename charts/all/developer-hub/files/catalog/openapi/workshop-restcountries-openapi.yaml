@@ -1,8 +1,9 @@
       openapi: 3.0.3
       info:
-        title: REST Countries (via workshop-apis)
+        title: Countries API (via workshop-apis)
         description: |
-          Kuadrant-protected REST Countries v3.1 proxy. Use `Authorization: APIKEY <key>`.
+          Kuadrant-protected proxy to countriesnow.space. Use `Authorization: APIKEY <key>`.
+          Example: `/countries/population/q?country=argentina`
         version: v1
       servers:
         - url: https://workshop-apis.__HUB_APPS_DOMAIN__/countries
@@ -16,160 +17,37 @@
             in: header
             name: Authorization
             description: "Kuadrant API key — format: `APIKEY <your-key>`"
-        schemas:
-          CountryName:
-            type: object
-            properties:
-              common:
-                type: string
-                example: Chile
-              official:
-                type: string
-                example: Republic of Chile
-          Country:
-            type: object
-            properties:
-              name:
-                $ref: "#/components/schemas/CountryName"
-              cca2:
-                type: string
-                example: CL
-              cca3:
-                type: string
-                example: CHL
-              capital:
-                type: array
-                items:
-                  type: string
-                example: ["Santiago"]
-              region:
-                type: string
-                example: Americas
-              subregion:
-                type: string
-                example: South America
-              population:
-                type: integer
-                example: 19212126
-              flags:
-                type: object
-                properties:
-                  png:
-                    type: string
-                    format: uri
-                  svg:
-                    type: string
-                    format: uri
-          ErrorResponse:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Country not found
       paths:
-        /all:
+        /codes:
           get:
-            summary: Get all countries
-            operationId: getAllCountries
-            parameters:
-              - name: fields
-                in: query
-                schema:
-                  type: string
-                description: Comma-separated field filter (e.g. name,capital,region)
-                example: name,cca2,region
+            summary: List country names and dial codes
+            operationId: getCountryCodes
             responses:
               "200":
-                description: List of countries
-                content:
-                  application/json:
-                    schema:
-                      type: array
-                      items:
-                        $ref: "#/components/schemas/Country"
+                description: Country codes JSON
               "401":
                 description: Missing or invalid APIKEY
-        /name/{country}:
+        /population/q:
           get:
-            summary: Search countries by name
-            operationId: getCountryByName
+            summary: Population time series for a country
+            operationId: getCountryPopulation
             parameters:
               - name: country
-                in: path
-                required: true
-                schema:
-                  type: string
-                example: chile
-              - name: fullText
                 in: query
+                required: true
                 schema:
-                  type: boolean
-                description: Match full country name only
+                  type: string
+                example: argentina
             responses:
               "200":
-                description: Matching countries
+                description: Population data for the country
                 content:
                   application/json:
-                    schema:
-                      type: array
-                      items:
-                        $ref: "#/components/schemas/Country"
                     example:
-                      - name:
-                          common: Chile
-                          official: Republic of Chile
-                        cca2: CL
-                        region: Americas
-              "404":
-                description: Country not found
-              "401":
-                description: Missing or invalid APIKEY
-        /alpha/{code}:
-          get:
-            summary: Get country by ISO alpha-2 or alpha-3 code
-            operationId: getCountryByCode
-            parameters:
-              - name: code
-                in: path
-                required: true
-                schema:
-                  type: string
-                  minLength: 2
-                  maxLength: 3
-                example: CL
-            responses:
-              "200":
-                description: Country details
-                content:
-                  application/json:
-                    schema:
-                      type: array
-                      items:
-                        $ref: "#/components/schemas/Country"
-              "404":
-                description: Country not found
-              "401":
-                description: Missing or invalid APIKEY
-        /region/{region}:
-          get:
-            summary: Get countries by region
-            operationId: getCountriesByRegion
-            parameters:
-              - name: region
-                in: path
-                required: true
-                schema:
-                  type: string
-                  enum: [Africa, Americas, Asia, Europe, Oceania, Antarctic]
-                example: Americas
-            responses:
-              "200":
-                description: Countries in region
-                content:
-                  application/json:
-                    schema:
-                      type: array
-                      items:
-                        $ref: "#/components/schemas/Country"
+                      error: false
+                      msg: Argentina with population
+                      data:
+                        country: Argentina
+                        code: ARG
               "401":
                 description: Missing or invalid APIKEY

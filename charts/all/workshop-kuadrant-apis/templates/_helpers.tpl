@@ -11,6 +11,15 @@
 {{- .Values.hubClusterDomain | default $g.hubClusterDomain | default (include "workshop-kuadrant-apis.clusterDomain" .) -}}
 {{- end -}}
 
+{{/*
+  Any Developer Hub API key minted for workshop-kuadrant-apis works on all workshop-apis routes.
+*/}}
+{{- define "workshop-kuadrant-apis.workshopApiKeySelector" -}}
+matchLabels:
+  kuadrant.io/apikey: "true"
+  devportal.kuadrant.io/apikey-namespace: {{ .Values.workshopGateway.namespace | quote }}
+{{- end -}}
+
 {{- define "workshop-kuadrant-apis.maasApiKey" -}}
 {{- $key := .Values.apis.maas.apiKey | default "" -}}
 {{- if not $key -}}

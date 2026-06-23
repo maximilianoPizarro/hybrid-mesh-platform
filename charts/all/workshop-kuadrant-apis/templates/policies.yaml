@@ -22,9 +22,7 @@ spec:
         apiKey:
           allNamespaces: true
           selector:
-            matchLabels:
-              app: workshop-httpbin
-              kuadrant.io/apikey: "true"
+            {{- include "workshop-kuadrant-apis.workshopApiKeySelector" . | nindent 12 }}
         credentials:
           authorizationHeader:
             prefix: APIKEY
@@ -72,9 +70,7 @@ spec:
         apiKey:
           allNamespaces: true
           selector:
-            matchLabels:
-              app: workshop-restcountries
-              kuadrant.io/apikey: "true"
+            {{- include "workshop-kuadrant-apis.workshopApiKeySelector" . | nindent 12 }}
         credentials:
           authorizationHeader:
             prefix: APIKEY
@@ -122,9 +118,7 @@ spec:
         apiKey:
           allNamespaces: true
           selector:
-            matchLabels:
-              app: workshop-mcp-gateway
-              kuadrant.io/apikey: "true"
+            {{- include "workshop-kuadrant-apis.workshopApiKeySelector" . | nindent 12 }}
         credentials:
           authorizationHeader:
             prefix: APIKEY

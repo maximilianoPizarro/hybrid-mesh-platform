@@ -80,6 +80,10 @@ spec:
           mountPath: /opt/app-root/src/catalog-data/software-templates
           containers:
             - "*"
+        - name: developer-hub-catalog-software-template-manifests
+          mountPath: /opt/app-root/src/catalog-data/software-templates/manifests
+          containers:
+            - "*"
     route:
       enabled: true
       host: developer-hub.{{ include "developer-hub.clusterDomain" . }}

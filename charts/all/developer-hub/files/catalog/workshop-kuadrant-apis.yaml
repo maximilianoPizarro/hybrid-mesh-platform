@@ -34,7 +34,7 @@ metadata:
     ```bash
     export KEY="<from Kuadrant → My API Keys>"
     curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/httpbin/get
-    curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/countries/name/chile
+    curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/countries/population/q?country=argentina
     ```
   annotations:
     backstage.io/kubernetes-namespace: workshop-kuadrant-apis
@@ -144,6 +144,9 @@ metadata:
     - url: https://developer-hub.__HUB_APPS_DOMAIN__/kuadrant/api-products/workshop-kuadrant-apis/workshop-mcp-gateway
       title: Request API key
       icon: catalog
+    - url: https://developer-hub.__HUB_APPS_DOMAIN__/catalog/default/api/workshop-mcp-openapi
+      title: Swagger
+      icon: docs
 spec:
   type: service
   lifecycle: production
@@ -164,7 +167,7 @@ metadata:
     External restcountries.com via workshop-apis.
 
     ```bash
-    curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/countries/name/chile
+    curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/countries/population/q?country=argentina
     ```
   annotations:
     kuadrant.io/api-product: workshop-restcountries
@@ -220,7 +223,7 @@ metadata:
     Kuadrant-protected REST Countries proxy.
 
     ```bash
-    curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/countries/name/chile
+    curl -H "Authorization: APIKEY $KEY" https://workshop-apis.__HUB_APPS_DOMAIN__/countries/population/q?country=argentina
     ```
   tags: [kuadrant, external-api, workshop, swagger]
   annotations:

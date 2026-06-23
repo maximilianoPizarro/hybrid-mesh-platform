@@ -4,6 +4,8 @@
 {{- $aiHost := .Values.aiGateway.hostname | default (printf "ai-gateway.%s" (include "workshop-kuadrant-apis.clusterDomain" .)) }}
 {{- $workshopBase := printf "https://%s" $workshopHost }}
 {{- $aiBase := printf "https://%s" $aiHost }}
+{{- $dhHost := printf "developer-hub.%s" (include "workshop-kuadrant-apis.clusterDomain" .) -}}
+{{- $dhApiDef := printf "https://%s/api/catalog/entities/by-name/api/default" $dhHost -}}
 {{- if .Values.apis.httpbin.enabled }}
 ---
 apiVersion: devportal.kuadrant.io/v1alpha1
@@ -23,7 +25,7 @@ spec:
   version: v1
   tags: [workshop, httpbin, external-api]
   documentation:
-    openAPISpecURL: https://httpbin.org/spec.json
+    openAPISpecURL: {{ printf "%s/workshop-httpbin-openapi/definition" $dhApiDef | quote }}
   contact:
     email: platform@example.com
   targetRef:
@@ -44,13 +46,14 @@ metadata:
     backstage.io/owner: group:default/platform-engineering
 spec:
   displayName: {{ .Values.apis.restcountries.displayName | default "Workshop REST Countries (external)" }}
-  description: External restcountries.com via workshop-apis gateway. Kuadrant API keys + PlanPolicy.
+  description: External countriesnow.space via workshop-apis gateway. Kuadrant API keys + PlanPolicy.
   publishStatus: Published
   approvalMode: {{ .Values.approvalMode | default "manual" }}
   version: v1
   tags: [workshop, restcountries, external-api]
   documentation:
-    docsURL: https://restcountries.com
+    openAPISpecURL: {{ printf "%s/workshop-restcountries-openapi/definition" $dhApiDef | quote }}
+    docsURL: https://countriesnow.space
   contact:
     email: platform@example.com
   targetRef:
@@ -79,6 +82,7 @@ spec:
   version: v1
   tags: [workshop, mcp, gateway-api, external-api]
   documentation:
+    openAPISpecURL: {{ printf "%s/workshop-mcp-openapi/definition" $dhApiDef | quote }}
     docsURL: https://docs.kuadrant.io
   contact:
     email: platform@example.com
@@ -108,7 +112,7 @@ spec:
   version: v1
   tags: [workshop, llm, maas, ai-gateway, token-rate-limit]
   documentation:
-    openAPISpecURL: https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
+    openAPISpecURL: {{ printf "%s/workshop-maas-openapi/definition" $dhApiDef | quote }}
   contact:
     email: platform@example.com
   targetRef:
@@ -143,7 +147,7 @@ data:
     ## Examples
     ```bash
     curl -H "Authorization: APIKEY $KEY" {{ $workshopBase }}/httpbin/get
-    curl -H "Authorization: APIKEY $KEY" {{ $workshopBase }}/countries/name/chile
+    curl -H "Authorization: APIKEY $KEY" {{ $workshopBase }}/countries/population/q?country=argentina
     curl -H "Authorization: APIKEY $KEY" -H "Content-Type: application/json" \
       -X POST {{ $aiBase }}/v1/chat/completions \
       -d '{"model":"granite-3-2-8b-instruct","messages":[{"role":"user","content":"Hello"}],"max_tokens":50}'
