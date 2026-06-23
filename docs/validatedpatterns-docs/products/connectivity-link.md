@@ -24,7 +24,7 @@ Workshop chart `charts/all/workshop-kuadrant-apis` deploys dedicated **Gateway A
 | API Product | HTTPRoute | Plans | Policy types |
 | ----------- | --------- | ----- | -------------- |
 | `workshop-httpbin` | `workshop-httpbin` | bronze / silver / gold | AuthPolicy + PlanPolicy |
-| `workshop-restcountries` | `workshop-restcountries` | bronze / silver / gold | AuthPolicy + PlanPolicy |
+| `workshop-restcountries` | `workshop-restcountries` (countriesnow) | bronze / silver / gold | AuthPolicy + PlanPolicy |
 | `workshop-mcp-gateway` | `workshop-mcp` | bronze / gold | AuthPolicy + PlanPolicy |
 | `workshop-llm-tokens` | `ai-maas` | free / gold | AuthPolicy + PlanPolicy + TokenRateLimitPolicy |
 
