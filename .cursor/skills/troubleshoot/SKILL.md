@@ -315,11 +315,84 @@ oc get podmonitor -n istio-monitoring | grep strimzi
 
 ---
 
-### 3j. NeuroFace Missing / Argo stuck on PVC
+### 3j. NeuroFace PPE — InferenceService not Ready / model not found
 
-**Symptom:** `waiting for healthy state of PVC/yolo-ppe-model`; PVC Pending `WaitForFirstConsumer`.
+**Symptom:** `InferenceService` stays `BlockedByFailedLoad` or `MinimumReplicasUnavailable`.
 
-**Fix:** `yoloPpeServing.storageClassName: ocs-external-storagecluster-ceph-rbd-immediate`. If stuck: `oc patch application neuroface -n openshift-gitops --type merge -p '{"operation":null}'` then resync.
+**Checks:**
+
+```bash
+oc get inferenceservice yolo-ppe-serving -n neuroface
+oc logs -l serving.kserve.io/inferenceservice=yolo-ppe-serving -n neuroface -c storage-initializer --tail=10
+oc logs -l serving.kserve.io/inferenceservice=yolo-ppe-serving -n neuroface -c kserve-container --tail=10
+```
+
+**Common causes:**
+
+| Error | Fix |
+|-------|-----|
+| `No model found in ppe-detection/model` | MinIO seed job hasn't run; sync `industrial-edge-minio` or run seed manually |
+| `ModuleNotFoundError: No module named 'cv2'` | Image missing opencv-python-headless; rebuild with `--force-reinstall --no-deps` |
+| `ImportError: libGL.so.1` | Image has opencv-python (not headless); Dockerfile must uninstall + force-reinstall headless |
+| ServingRuntime shows old UBI9 image | Argo cached old spec; delete ServingRuntime + InferenceService, let Argo recreate |
+| `already present on machine` despite new build | Set `imagePullPolicy: Always` in ServingRuntime |
+
+**Manual model seed:**
+
+```bash
+oc run ppe-model-seed --rm -i --restart=Never -n industrial-edge-ml-workspace \
+  --image=registry.redhat.io/ubi9/python-311:latest \
+  -- bash -c 'pip install huggingface_hub boto3 >/dev/null 2>&1; python3 -c "
+from huggingface_hub import hf_hub_download; import boto3, shutil, os
+s3=boto3.client(\"s3\",endpoint_url=\"http://minio.industrial-edge-ml-workspace.svc:9000\",aws_access_key_id=\"minio\",aws_secret_access_key=\"minio123\",region_name=\"us-east-1\")
+src=hf_hub_download(repo_id=\"Hexmon/vyra-yolo-ppe-detection\",filename=\"best.pt\")
+os.makedirs(\"/tmp/m\",exist_ok=True); shutil.copy(src,\"/tmp/m/best.pt\")
+s3.upload_file(\"/tmp/m/best.pt\",\"models\",\"ppe-detection/model/best.pt\")
+print(\"Uploaded\")"'
+```
+
+**Force clean recreation:**
+
+```bash
+oc delete servingruntime yolo-ppe-runtime -n neuroface
+oc delete inferenceservice yolo-ppe-serving -n neuroface
+oc delete configmap yolo-ppe-serving -n neuroface --ignore-not-found
+# Then re-apply from Helm or let Argo recreate
+helm template neuroface charts/all/neuroface --set global.hubClusterDomain=<hub> \
+  --show-only templates/yolo-ppe-serving.yaml | oc apply -f -
+```
+
+### 3j2. NeuroFace PPE reachable: false
+
+**Symptom:** `/api/ppe/status` returns `reachable: false`.
+
+**Checks:**
+
+```bash
+oc get configmap neuroface-config -n neuroface -o jsonpath='{.data.NEUROFACE_PPE_ENDPOINT}'
+# Should be: http://yolo-ppe-serving:8080 (hub-local)
+# If it shows neuroface-gateway-istio → Argo reverted to subchart default
+```
+
+**Fix:** Patch ConfigMap + restart backend:
+
+```bash
+oc patch configmap neuroface-config -n neuroface --type merge \
+  -p '{"data":{"NEUROFACE_PPE_ENDPOINT":"http://yolo-ppe-serving:8080"}}'
+oc rollout restart deploy/neuroface-backend -n neuroface
+```
+
+**Note:** The federated gateway (`neuroface-gateway-istio`) requires Host header matching; internal backend calls get 404 without the correct hostname. Use hub-local endpoint for UI PPE; CV gateway is for the dedicated `neuroface-cv.<hub>` route.
+
+### 3j3. NeuroFace backend PVC Multi-Attach
+
+**Symptom:** New backend pod stuck `ContainerCreating`; events show `Multi-Attach error for volume`.
+
+**Fix:** Force-delete old pod holding the RWO PVC:
+
+```bash
+oc delete pod <old-backend-pod> -n neuroface --force --grace-period=0
+```
 
 ---
 

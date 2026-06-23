@@ -232,11 +232,21 @@ Hub Grafana queries `prometheus-east` / `prometheus-west` via `prometheus-auth-p
 
 Verify from hub: query `kafka_server_kafkaserver_brokerstate` via `prometheus-east` datasource in Grafana or Thanos.
 
-### NeuroFace YOLO serving
+### NeuroFace PPE serving (v1.4.1 — KServe InferenceService)
 
-- PVC `yolo-ppe-model` must use **Immediate** binding storage class (`ocs-external-storagecluster-ceph-rbd-immediate`) — default `WaitForFirstConsumer` blocks Argo sync (`waiting for healthy state of PVC`)
-- If Argo operation stuck on old PVC: `oc patch application neuroface -n openshift-gitops --type merge -p '{"operation":null}'` then resync
-- Chart: `charts/all/neuroface/values.yaml` → `yoloPpeServing.storageClassName`
+- **Pre-built image:** `quay.io/maximilianopizarro/neuroface-ppe-serving:v1.4.1` — torch+ultralytics+opencv-headless baked in; cold start ~60s (model load from MinIO, no pip install)
+- **KServe v1+v2:** `/v1/predict` (raw JPEG, backward compat) + `/v2/models/yolo-ppe/infer` + `/v2/models/yolo-ppe/ready`
+- **ServingRuntime + InferenceService:** RawDeployment mode; model from `aws-connection-ppe-models` DataConnection → `s3://models/ppe-detection/model/best.pt`
+- **MinIO model seed:** PostSync Job `minio-ppe-model-seed` in `industrial-edge-minio` downloads `best.pt` from HuggingFace → MinIO
+- **Hub endpoint:** `neuroface.ppe.endpoint: http://yolo-ppe-serving:8080` (hub-local InferenceService); federated CV gateway at `neuroface-cv.<hub>` is separate (50/50 east/west via Skupper)
+- **opencv-python-headless:** UBI9 base lacks `libGL.so.1`; image must use `opencv-python-headless` (not `opencv-python`). Dockerfile: `pip uninstall -y opencv-python && pip install --force-reinstall --no-deps opencv-python-headless` — the `--force-reinstall --no-deps` is required because `pip install` alone skips reinstall when metadata matches but shared `cv2/` module files were deleted by the uninstall
+- **imagePullPolicy:** `Always` on ServingRuntime to avoid stale cached image layers during iterative fixes
+- **PPE bypass routes:** Never create OpenShift Routes pointing `/api/ppe/*` directly to YOLO — YOLO expects raw JPEG binary, the backend does base64→JPEG conversion. Only Route `neuroface` → frontend is needed
+- **Data persistence:** `ppe.dataPersistence.enabled: true` — backend uploads detection frames + annotations to `s3://models/ppe-detection/training-data/` for retraining in `ppe-retrain-workbench`
+- **Ambient mesh:** `neuroface` (hub) and `neuroface-cv` (spokes) labeled `istio.io/dataplane-mode: ambient`; predictor pods labeled `istio.io/dataplane-mode: none` (CPU inference bypasses ztunnel)
+- **Argo CD caching:** ServingRuntime `spec.containers` can get cached after merge-patch; if Argo applies old spec, delete ServingRuntime + InferenceService then let Argo recreate: `oc delete servingruntime yolo-ppe-runtime -n neuroface && oc delete inferenceservice yolo-ppe-serving -n neuroface`
+- **ConfigMap endpoint drift:** Argo may revert `neuroface-config` ConfigMap `NEUROFACE_PPE_ENDPOINT` to subchart default; after fix in values.yaml, patch live + restart backend: `oc patch configmap neuroface-config -n neuroface --type merge -p '{"data":{"NEUROFACE_PPE_ENDPOINT":"http://yolo-ppe-serving:8080"}}' && oc rollout restart deploy/neuroface-backend -n neuroface`
+- **PVC Multi-Attach:** `neuroface-data` is RWO; rolling update blocks if old pod holds PVC — force-delete old pod: `oc delete pod <old> -n neuroface --force --grace-period=0`
 
 ### Industrial Edge GitOps (east/west spokes)
 
@@ -379,7 +389,27 @@ oc patch cronjob unsealvault-cronjob -n imperative --type merge -p '{"spec":{"su
 oc delete pods -n imperative --field-selector=status.phase=Failed
 ```
 
+### NeuroFace CV Journey (hub-and-spoke)
+
+- **Gateway:** `charts/all/neuroface-gateway/` — Gateway API `HTTPRoute` with 50/50 weights to Skupper listeners `neuroface-cv-east` / `neuroface-cv-west`
+- **Spoke inference:** `charts/all/spoke-neuroface-cv/` — KServe InferenceService in `neuroface-cv` namespace with HPA (min 1, max 4); model from MinIO via Skupper `minio-hub`
+- **Skupper connector:** `neuroface-cv-<clusterName>` routing key; spoke publishes `yolo-ppe-serving.neuroface-cv.svc:8080`
+- **Grafana dashboard:** `neuroface-cv` — gateway req/s, east vs west split, inference latency
+- **Monitoring:** `istio-monitoring` PodMonitors extended for `neuroface` (hub) and `neuroface-cv` (spokes via `clusterSuffix`)
+- **Public Route:** `https://neuroface-cv.<hub-domain>` — inference-only (`/health`, `/v1/predict`, `/v2/models/yolo-ppe/infer`)
+- **Host header:** The gateway HTTPRoute matches by hostname; internal calls without `Host: neuroface-cv.<hub>` return 404. Backend PPE should use hub-local `yolo-ppe-serving:8080`, not the gateway
+
+### NeuroFace upstream repo (github.com/maximilianoPizarro/neuroface)
+
+- **Helm chart:** `helm/neuroface/` — published at `https://maximilianopizarro.github.io/neuroface/`
+- **PPE serving image:** `ppe-serving/Dockerfile` + `ppe-serving/requirements.txt` + `ppe-serving/server.py`
+- **GitHub Actions:** `.github/workflows/build-push-quay.yml` — builds backend, frontend, ppe-serving; publishes Helm chart
+- **Version bumps:** Update `helm/neuroface/Chart.yaml` version + `values.yaml` image tags + workflow `IMAGE_TAG` default; push triggers build + Helm chart publish
+- **Showroom:** Module 27 in `showroom-hybrid-mesh-ai` — architecture diagrams from `docs/screenshots/rh_*.png`
+
 ## External links
 
 - GitHub Pages: https://maximilianopizarro.github.io/hybrid-mesh-platform/
+- NeuroFace: https://github.com/maximilianoPizarro/neuroface
+- Showroom: https://github.com/maximilianoPizarro/showroom-hybrid-mesh-ai
 - Bill of Materials: `docs/bill-of-materials.md`

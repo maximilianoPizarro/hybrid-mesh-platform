@@ -157,7 +157,7 @@ Interpret results:
 - Kubecost: OG **`kubecost-operator-group`**; Route from `global.localClusterDomain`
 - Developer Hub: `developer-hub-catalog-demos`; TechDocs CM keys without `/`; all catalog CMs mounted in `backstage-developer-hub.yaml` (`cnv-workshop`, `software-templates`, …); GitLab host via `developer-hub.gitlabHost` (no double `apps`)
 - Grafana Kafka: spoke `prometheus-auth-proxy` Running; `strimzi-kafka-metrics` PodMonitors on east/west (`istio-monitoring` + `clusterSuffix`)
-- NeuroFace YOLO: PVC `yolo-ppe-model` Bound (`ocs-external-storagecluster-ceph-rbd-immediate`); `yolo-ppe-serving` deployment Available
+- NeuroFace PPE: InferenceService `yolo-ppe-serving` Ready=True (pre-built `v1.4.1` image); model from MinIO `s3://models/ppe-detection/model/best.pt`; `curl /api/ppe/status` → `reachable: true`
 
 After Git fix, refresh:
 
@@ -239,8 +239,10 @@ oc get pods -n open-cluster-management-agent
 | Unsealvault CronJob | ✓ | - | `oc get cronjob unsealvault-cronjob -n imperative -o jsonpath='{.spec.suspend}'` → true (if vault initialized) |
 | Grafana Kafka metrics | ✓ | ✓ | Explore `kafka_server_kafkaserver_brokerstate` via `prometheus-east`/`west` |
 | Developer Hub templates | ✓ | - | Login → `/create` — industrial-edge, cnv-vm-workshop, openshift-ai-workspace |
-| NeuroFace PPE | ✓ | - | `oc get deploy yolo-ppe-serving -n neuroface` |
-| NeuroFace CV PPE (spokes) | - | ✓ | `oc get deploy yolo-ppe-serving -n neuroface-cv` |
+| NeuroFace PPE (KServe) | ✓ | - | `oc get inferenceservice yolo-ppe-serving -n neuroface` → READY=True |
+| NeuroFace CV PPE (spokes) | - | ✓ | `oc get inferenceservice yolo-ppe-serving -n neuroface-cv` |
+| NeuroFace CV gateway | ✓ | - | `curl -sk https://neuroface-cv.<hub>/health` → `status: ok` |
+| NeuroFace KServe v2 | ✓ | ✓ | `curl -sk https://neuroface-cv.<hub>/v2/models/yolo-ppe/ready` → HTTP 200 |
 | fleet-values-sync | ✓ | ✓ | `oc get cronjob -n openshift-gitops \| grep fleet-values` |
 
 ## ArgoCD Sync Status
@@ -249,7 +251,7 @@ oc get pods -n open-cluster-management-agent
 |--------|---------|
 | Synced | Resources match Git |
 | OutOfSync | Drift from Git — **often OK** for runtime secrets (`developer-hub-oidc-auth`, `llama-stack-secrets`) |
-| Progressing | Long deploys: `openshift-ai-hub` (InferenceService), `workshop-demos` (Camel), `neuroface` (YOLO model) |
+| Progressing | Long deploys: `openshift-ai-hub` (InferenceService), `workshop-demos` (Camel), `neuroface` (KServe InferenceService + MinIO model download) |
 | Unknown | Often ACM 2.16 schema bug — **may block real sync on existing hubs** |
 | Healthy | Resource health OK (can coexist with Unknown/OutOfSync) |
 | ComparisonError | Schema load failure — apps won't sync until fixed |
