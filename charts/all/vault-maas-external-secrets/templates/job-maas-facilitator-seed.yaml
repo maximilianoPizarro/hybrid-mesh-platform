@@ -53,7 +53,8 @@ spec:
                 VAULT_ADDR=https://127.0.0.1:8200 VAULT_SKIP_VERIFY=1 VAULT_TOKEN="${ROOT}" \
                 vault kv put "secret/${MAAS_PATH}" "${ARGS[@]}"
               echo "Seeded Vault secret/${MAAS_PATH}; ESO will sync on refresh"
-              for NS in ai-gateway-system kairos-system maas-workshop neuroface developer-hub; do
+              for NS in ai-gateway-system kairos-system maas-workshop developer-hub; do
+                oc get ns "${NS}" &>/dev/null || continue
                 for ES in $(oc get externalsecret -n "${NS}" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true); do
                   oc annotate externalsecret "${ES}" -n "${NS}" \
                     "reconcile.external-secrets.io/request-id=$(date +%s)" --overwrite 2>/dev/null || true

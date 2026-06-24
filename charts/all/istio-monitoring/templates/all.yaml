@@ -1,7 +1,7 @@
 {{- $uwmNs := "openshift-user-workload-monitoring" }}
 {{- $promSa := "prometheus-user-workload" }}
 {{- $baseMeshNs := list "hub-gateway-system" "neuroface-gateway-system" "industrial-edge-tst-all" "industrial-edge-data-lake" "industrial-edge-stormshift-messaging" }}
-{{- $hubMeshNs := list "workshop-kuadrant-apis" "ai-gateway-system" "mcp-system" "neuroface" }}
+{{- $hubMeshNs := list "workshop-kuadrant-apis" "ai-gateway-system" "mcp-system" }}
 {{- $spokeMeshNs := list "neuroface-cv" "neuroface" }}
 {{- $meshNamespaces := $baseMeshNs }}
 {{- if .Values.workshopGateways.enabled }}

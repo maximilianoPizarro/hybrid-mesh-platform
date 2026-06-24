@@ -64,7 +64,7 @@ consumers:
     namespace: maas-workshop
     secretName: openshift-ai-maas-credentials
   neuroface:
-    enabled: true
+    enabled: false
     namespace: neuroface
     secretName: neuroface-maas-api-key
     vaultProperty: api-key
@@ -88,8 +88,6 @@ rolloutSync:
   schedule: "*/15 * * * *"
   image: registry.redhat.io/openshift4/ose-cli:latest
   deployments:
-    - namespace: neuroface
-      name: neuroface-backend
     - namespace: developer-hub
       name: backstage-developer-hub
     - namespace: kairos-system

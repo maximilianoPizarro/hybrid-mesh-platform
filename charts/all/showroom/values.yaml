@@ -28,8 +28,6 @@ showroom:
       - mcp-system
       # industrial-edge-tst-all — optional; enable Industrial Edge apps on spokes first
       - maas-workshop
-      - neuroface
-      - neuroface-cv
       - neuroface-gateway-system
       - cnv-workshop
       - hub-gateway-system

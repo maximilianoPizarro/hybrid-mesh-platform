@@ -64,20 +64,21 @@ requirements:
       openshift: "4.17"
     recommended:
       workers: 3
-      vcpu: 4
-      memory_gib: 16
+      vcpu: 8
+      memory_gib: 32
       openshift: "4.17+"
+      notes: "NeuroFace + OVMS ModelMesh + KServe YOLO PPE + DevSpaces; optional GPU (T4/A10G) for accelerated inference"
     compute:
       platform:
         aws:
           replicas: 3
-          type: m5.xlarge  # 4 vCPU, 16 GiB
+          type: m5.2xlarge  # 8 vCPU, 32 GiB
         azure:
           replicas: 3
-          type: Standard_D4s_v3  # 4 vCPU, 16 GiB
+          type: Standard_D8s_v3  # 8 vCPU, 32 GiB
         gcp:
           replicas: 3
-          type: n1-standard-4  # 4 vCPU, 15 GiB
+          type: n1-standard-8  # 8 vCPU, 30 GiB
     controlPlane:
       platform:
         aws:
@@ -92,6 +93,10 @@ requirements:
 extra_features:
   hypershift_support: false
   spoke_support: true
+  gpu_inference_optional: true
+  gpu_operators:
+    - Node Feature Discovery (redhat-operators)
+    - NVIDIA GPU Operator (certified-operators)
 external_requirements:
   - MaaS endpoint or OpenShift AI on hub for Kairos/Lightspeed optional features
   - Workshop Showroom content remains in showroom-hybrid-mesh-ai (separate repo)
